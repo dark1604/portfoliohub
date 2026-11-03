@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сердюк Богдан Романович — Освітній простір</title>
+  <meta name="description" content="Портфоліо вчителя інформатики, математики та фінансової грамотності й інтерактивний навчальний простір для учнів 5–11 класів." />
+
+  <!-- Тему застосовуємо до першого рендеру, щоб не було «спалаху» світлої/темної теми -->
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("edu_theme") === "light") document.documentElement.classList.remove("dark");
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Шрифти: Inter — основний текст; Fira Code — фолбек для Consolas (код, формули, технічні мітки) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+            mono: ["Consolas", '"Fira Code"', "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- KaTeX (формули) та Prism.js (підсвітка коду) — стилі -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+
+  <!-- Google Model-Viewer (3D-тренажер будови комп'ютера) -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+  <style>
+    /* ============================ БАЗА ============================ */
+    html { scroll-behavior: smooth; }
+    body { font-family: "Inter", system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    /* Consolas — лише для коду, формул і технічних міток */
+    code, pre, kbd, .font-tech { font-family: Consolas, "Fira Code", monospace; }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(113, 113, 122, .35); border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* Плавна поява екранів SPA */
+    .view-enter { animation: viewIn .5s cubic-bezier(.16, 1, .3, 1); }
+    @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    /* ===================== HERO: 3D TILT / ROLL ===================== */
+    .hero-glow {
+      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, .35), rgba(139, 92, 246, .18) 40%, rgba(245, 158, 11, .10) 62%, transparent 75%);
+      filter: blur(56px);
+    }
+    html:not(.dark) .hero-glow { opacity: .7; }
+
+    /* Обгортка: перспектива + м'яке «ширяння» у стані спокою */
+    .tilt-float { perspective: 1200px; animation: idleFloat 7s ease-in-out infinite; }
+    @keyframes idleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* Сама картка: нахил за координатами курсора (CSS-змінні оновлює JS) */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transform: rotateX(var(--rx, 6deg)) rotateY(var(--ry, -10deg)) rotateZ(var(--rz, 0deg));
+      transition: transform .7s cubic-bezier(.16, 1, .3, 1), box-shadow .5s ease;
+      will-change: transform;
+    }
+    .tilt-card.is-active { transition: transform .12s ease-out, box-shadow .5s ease; }
+
+    /* Відблиск (glare), що слідує за курсором */
+    .tilt-glare {
+      position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, .28), rgba(255, 255, 255, .06) 30%, transparent 60%);
+      opacity: 0; transition: opacity .35s ease; mix-blend-mode: overlay;
+    }
+    html:not(.dark) .tilt-glare { mix-blend-mode: soft-light; }
+    .tilt-card.is-active .tilt-glare { opacity: 1; }
+
+    /* Шари глибини всередині 3D-картки */
+    .depth-1 { transform: translateZ(28px); }
+    .depth-2 { transform: translateZ(55px); }
+
+    /* Плаваючі бейджі формул і коду */
+    .float-badge {
+      position: absolute; z-index: 5;
+      animation: floatBadge 6s ease-in-out infinite; animation-delay: var(--d, 0s);
+    }
+    @keyframes floatBadge {
+      0%, 100% { transform: translate3d(0, 0, 80px) rotate(var(--r, 0deg)); }
+      50% { transform: translate3d(0, -14px, 80px) rotate(calc(var(--r, 0deg) * -1)); }
+    }
+
+    /* Орбіта з бейджами технологій */
+    .orbit { animation: spin 28s linear infinite; }
+    .orbit-inner { animation: spin 18s linear infinite reverse; }
+    .orbit-slot { position: absolute; transform: translate(-50%, -50%); }
+    .orbit-badge { display: inline-block; animation: spin 28s linear infinite reverse; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .core-pulse { animation: corePulse 4s ease-in-out infinite; }
+    @keyframes corePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, .35); } 50% { box-shadow: 0 0 0 14px rgba(139, 92, 246, 0); } }
+
+    .grid-pattern {
+      background-image: linear-gradient(rgba(113, 113, 122, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(113, 113, 122, .09) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 75%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tilt-float, .float-badge, .orbit, .orbit-inner, .orbit-badge, .core-pulse, .view-enter { animation: none !important; }
+    }
+
+    /* ===================== НАВЧАЛЬНИЙ ПРОСТІР ===================== */
+    @media (min-width: 1024px) {
+      .hub-sticky { position: sticky; top: var(--hub-offset, 8.5rem); height: calc(100vh - var(--hub-offset, 8.5rem)); }
+    }
+
+    /* Типографіка читача (Reader View) */
+    .docs-prose { font-size: 1.075rem; line-height: 1.8; }
+    .docs-prose > *:first-child { margin-top: 0; }
+    .docs-prose h1 { font-size: 1.85rem; font-weight: 800; letter-spacing: -.02em; margin: 2rem 0 1rem; line-height: 1.25; }
+    .docs-prose h2 {
+      font-size: 1.45rem; font-weight: 700; letter-spacing: -.015em; margin: 2.4rem 0 .9rem; padding-top: 1.2rem;
+      border-top: 1px solid rgba(161, 161, 170, .18); scroll-margin-top: 9.5rem; line-height: 1.3;
+    }
+    .docs-prose h3 { font-size: 1.18rem; font-weight: 650; margin: 1.7rem 0 .6rem; scroll-margin-top: 9.5rem; }
+    .docs-prose p { margin: 0 0 1.1rem; }
+    .docs-prose a { color: #6366f1; text-decoration: underline; text-underline-offset: 3px; }
+    .docs-prose ul, .docs-prose ol { margin: 0 0 1.2rem 1.4rem; }
+    .docs-prose ul { list-style: disc; }
+    .docs-prose ol { list-style: decimal; }
+    .docs-prose li { margin-bottom: .4rem; padding-left: .2rem; }
+    .docs-prose li::marker { color: #8b5cf6; }
+    .docs-prose strong { font-weight: 650; }
+    .docs-prose hr { border: 0; border-top: 1px solid rgba(161, 161, 170, .2); margin: 2rem 0; }
+    .docs-prose blockquote {
+      margin: 1.4rem 0; padding: .95rem 1.2rem; border: 1px solid rgba(99, 102, 241, .22);
+      border-left: 4px solid #6366f1; border-radius: .9rem; background: rgba(99, 102, 241, .07);
+    }
+    .docs-prose blockquote p:last-child { margin-bottom: 0; }
+    .docs-prose :not(pre) > code {
+      font-size: .88em; padding: .15rem .42rem; border-radius: .4rem;
+      background: rgba(99, 102, 241, .12); color: #818cf8; font-weight: 500;
+    }
+    html:not(.dark) .docs-prose :not(pre) > code { color: #4f46e5; background: rgba(99, 102, 241, .09); }
+    .table-wrap { overflow-x: auto; margin: 1.4rem 0; border-radius: .9rem; border: 1px solid rgba(161, 161, 170, .22); }
+    .docs-prose table { width: 100%; border-collapse: collapse; font-size: .96rem; }
+    .docs-prose th, .docs-prose td { padding: .7rem 1rem; text-align: left; border-bottom: 1px solid rgba(161, 161, 170, .15); vertical-align: top; }
+    .docs-prose th { background: rgba(161, 161, 170, .09); font-weight: 600; }
+    .docs-prose tr:last-child td { border-bottom: 0; }
+
+    .katex { font-size: 1.08em; }
+    .katex-display {
+      margin: 1.3rem 0 !important; padding: 1rem 1.2rem; border-radius: .9rem;
+      background: rgba(161, 161, 170, .07); border: 1px solid rgba(161, 161, 170, .16);
+      overflow-x: auto; overflow-y: hidden;
+    }
+
+    .code-box { margin: 1.4rem 0; border-radius: .9rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, .08); background: #18181b; }
+    .code-box pre[class*="language-"] { margin: 0 !important; padding: 1.05rem 1.2rem !important; background: #18181b !important; font-size: .9rem !important; line-height: 1.65 !important; border-radius: 0 !important; }
+
+    /* Активний пункт змісту (TOC) */
+    .toc-link.active { color: #6366f1; border-color: #6366f1; }
+    html.dark .toc-link.active { color: #a5b4fc; border-color: #818cf8; }
+
+    /* ===================== 3D-ТРЕНАЖЕР (<model-viewer> + HOTSPOTS) ===================== */
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      --poster-color: transparent;
+      outline: none;
+    }
+    /* Важливо: на самому <button slot="hotspot-..."> НЕ задаємо transform,
+       бо <model-viewer> позиціонує кожен маркер через inline transform: translate3d(...) */
+    .mv-hotspot {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      outline: none;
+    }
+    .mv-hotspot-dot {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      border-radius: 9999px;
+      border: 2px solid #fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-family: Consolas, "Fira Code", monospace;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.55);
+      transform: translate(-50%, -50%) scale(1);
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mv-hotspot-dot::after {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: 9999px;
+      border: 2px solid rgba(99, 102, 241, 0.75);
+      animation: hotspotPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+      pointer-events: none;
+    }
+    .mv-hotspot:hover .mv-hotspot-dot,
+    .mv-hotspot.is-selected .mv-hotspot-dot {
+      transform: translate(-50%, -50%) scale(1.24);
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.65);
+    }
+    .mv-hotspot.is-selected .mv-hotspot-dot::after {
+      border-color: rgba(245, 158, 11, 0.9);
+    }
+    @keyframes hotspotPulse {
+      0% { transform: scale(0.85); opacity: 0.95; }
+      75% { transform: scale(1.55); opacity: 0; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    @media print {
+      header, #hubBar, #hubSidebar, #tocPane, #readerNav, footer { display: none !important; }
+      body { background: #fff !important; color: #000 !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500/20">
+
+  <!-- ======================================================================
+       ШАПКА (STICKY NAVBAR) — спільна для обох рівнів
+       ====================================================================== -->
+  <header id="siteHeader" class="sticky top-0 z-40 h-16 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
+    <div class="h-full w-full px-4 sm:px-6 lg:px-10 flex items-center gap-3">
+
+      <!-- Логотип + ім'я -->
+      <a href="#/" class="group flex items-center gap-3 min-w-0 mr-auto" title="На головну (портфоліо)">
+        <span class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-amber-400 p-[1.5px] shadow-sm">
+          <span class="w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center">
+            <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400 group-hover:rotate-45 transition-transform duration-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.4 7.2L22 12l-7.6 1.8L12 21l-2.4-7.2L2 12l7.6-1.8L12 3z"/></svg>
+          </span>
+        </span>
+        <span class="min-w-0 leading-tight">
+          <span class="block font-bold tracking-tight truncate">Сердюк Богдан Романович</span>
+          <span class="block text-xs text-zinc-500 dark:text-zinc-400 truncate">Інформатика · Математика · Алгебра · Геометрія · Фінграмотність</span>
+        </span>
+      </a>
+
+      <!-- Пошук (Ctrl+K) -->
+      <button type="button" id="openSearchBtn" class="hidden sm:flex items-center gap-2 w-56 xl:w-72 px-3 py-2 rounded-xl text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 transition-colors" title="Пошук тем (Ctrl+K)">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/></svg>
+        <span class="flex-1 text-left">Пошук тем…</span>
+        <kbd class="text-[11px] px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">Ctrl K</kbd>
+      </button>
+      <button type="button" id="openSearchBtnMobile" class="sm:hidden p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800" aria-label="Пошук">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/></svg>
+      </button>
+
+      <!-- Зовнішні системи та проєкти -->
+      <button type="button" data-goto-projects class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>Мої проєкти
+      </button>
+      <a href="https://classroom.google.com" target="_blank" rel="noopener noreferrer" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Classroom<span class="text-zinc-400">↗</span>
+      </a>
+      <a href="https://mriia.gov.ua" target="_blank" rel="noopener noreferrer" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>Щоденник «Мрія»<span class="text-zinc-400">↗</span>
+      </a>
+
+      <!-- Тема -->
+      <button type="button" id="themeToggleBtn" class="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 transition-colors" aria-label="Перемкнути тему" title="Світла / Темна тема">
+        <svg class="w-5 h-5 text-amber-400 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36-6.36l-1.41 1.41M7.05 16.95l-1.41 1.41m12.72 0l-1.41-1.41M7.05 7.05L5.64 5.64M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg class="w-5 h-5 text-indigo-600 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.35 15.35A9 9 0 018.65 3.65 9 9 0 1020.35 15.35z"/></svg>
+      </button>
+
+      <!-- Акцентна кнопка: Навчальний хаб / Портфоліо -->
+      <a href="#/hub" id="navHubBtn" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm shadow-indigo-500/30 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.25v13M12 6.25C10.83 5.48 9.25 5 7.5 5S4.17 5.48 3 6.25v13C4.17 18.48 5.75 18 7.5 18s3.33.48 4.5 1.25m0-13C13.17 5.48 14.75 5 16.5 5s3.33.48 4.5 1.25v13C19.83 18.48 18.25 18 16.5 18s-3.33.48-4.5 1.25"/></svg>
+        <span id="navHubLabel" class="hidden sm:inline">Навчальний хаб</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       РІВЕНЬ 1 — ПРЕЗЕНТАЦІЙНЕ ПОРТФОЛІО
+       ====================================================================== -->
+  <div id="portfolioView" class="flex-1">
+
+    <!-- ---------- HERO ---------- -->
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 grid-pattern pointer-events-none"></div>
+      <div class="relative w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-12 lg:py-16 grid lg:grid-cols-12 gap-12 items-center">
+
+        <!-- Ліворуч: привітання та кредо -->
+        <div class="lg:col-span-6 xl:col-span-7 space-y-7">
+          <div class="inline-flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full text-sm bg-white/70 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800">
+            <span class="font-tech text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300">5–11 кл</span>
+            <span class="text-zinc-600 dark:text-zinc-300">Вчитель-методист · вища категорія · 12+ років</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.08]">
+            Вчимо мислити<br />
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-violet-500 to-amber-500">як інженер і фінансист</span>
+          </h1>
+
+          <p class="text-lg xl:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
+            Вітаю! Я — Сердюк Богдан Романович, вчитель інформатики, математики, алгебри, геометрії та фінансової грамотності.
+            Поєдную точні науки, практичне IT й реальні фінансові рішення в одному сучасному навчальному просторі.
+          </p>
+
+          <blockquote class="max-w-2xl pl-5 border-l-4 border-violet-500/70 text-zinc-700 dark:text-zinc-300 italic">
+            «Математика вчить мислити, програмування — творити, а фінансова грамотність — відповідально жити.»
+          </blockquote>
+
+          <div class="flex flex-wrap gap-3 pt-1">
+            <button type="button" data-scroll-to="directions" class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 transition-all">
+              Обрати предмет
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <a href="#/hub/cs/cs-3d-hardware" class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500 hover:text-zinc-950 hover:-translate-y-0.5 transition-all">
+              <span aria-hidden="true">🖥</span>
+              <span>3D-лабораторія заліза</span>
+              <span class="font-tech text-xs px-1.5 py-0.5 rounded bg-amber-500/20">3D</span>
+            </a>
+            <button type="button" data-open-search class="inline-flex items-center gap-2 px-5 py-3.5 rounded-full font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+              Швидкий пошук <kbd class="text-xs px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">Ctrl K</kbd>
+            </button>
+          </div>
+        </div>
+
+        <!-- Праворуч: інтерактивна 3D Hero Card -->
+        <div class="lg:col-span-6 xl:col-span-5 relative" id="tiltScene">
+          <div class="hero-glow absolute -inset-10 pointer-events-none"></div>
+          <div class="tilt-float relative mx-auto w-full max-w-[460px] py-6">
+            <div id="heroCard" class="tilt-card relative aspect-[1/1.05] rounded-[28px] border border-zinc-200/90 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-2xl shadow-indigo-500/10">
+
+              <div class="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none">
+                <div class="absolute inset-0 grid-pattern opacity-70"></div>
+              </div>
+
+              <!-- Верхня панель картки -->
+              <div class="depth-1 relative flex items-center justify-between px-6 pt-5">
+                <div class="flex gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-400/80"></span><span class="w-3 h-3 rounded-full bg-amber-400/80"></span><span class="w-3 h-3 rounded-full bg-emerald-400/80"></span>
+                </div>
+                <span class="font-tech text-xs text-zinc-400">knowledge.core</span>
+                <span class="font-tech text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">live</span>
+              </div>
+
+              <!-- Орбіта знань -->
+              <div class="depth-2 relative mx-auto mt-5 w-[62%] aspect-square">
+                <div class="orbit absolute inset-0 rounded-full border border-dashed border-zinc-300 dark:border-zinc-700">
+                  <div class="orbit-slot" style="top:0;left:50%"><span class="orbit-badge font-tech text-xs px-2.5 py-1 rounded-lg bg-indigo-500 text-white shadow-md">Python</span></div>
+                  <div class="orbit-slot" style="top:50%;left:100%"><span class="orbit-badge font-tech text-xs px-2.5 py-1 rounded-lg bg-violet-500 text-white shadow-md">LaTeX</span></div>
+                  <div class="orbit-slot" style="top:100%;left:50%"><span class="orbit-badge font-tech text-xs px-2.5 py-1 rounded-lg bg-amber-500 text-zinc-950 shadow-md">%</span></div>
+                  <div class="orbit-slot" style="top:50%;left:0"><span class="orbit-badge font-tech text-xs px-2.5 py-1 rounded-lg bg-emerald-500 text-white shadow-md">f(x)</span></div>
+                </div>
+                <div class="orbit-inner absolute inset-[18%] rounded-full border border-zinc-200 dark:border-zinc-800"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div class="core-pulse w-[38%] aspect-square rounded-[26px] bg-gradient-to-br from-indigo-500 via-violet-500 to-amber-400 p-[2px] shadow-xl">
+                    <div class="w-full h-full rounded-[24px] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center">
+                      <span class="font-tech text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-indigo-500 to-violet-500">∑</span>
+                      <span class="font-tech text-[11px] text-zinc-500">&lt;/&gt;</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Нижня смуга: формула + код -->
+              <div class="depth-1 absolute left-5 right-5 bottom-5 grid grid-cols-2 gap-3">
+                <div class="rounded-xl px-3.5 py-3 bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Алгебра</div>
+                  <div class="font-tech text-sm">D = b² − 4ac</div>
+                </div>
+                <div class="rounded-xl px-3.5 py-3 bg-zinc-900 text-zinc-100 border border-zinc-800">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-indigo-300 mb-1">Python</div>
+                  <div class="font-tech text-sm"><span class="text-violet-300">print</span>(<span class="text-amber-300">2</span>**<span class="text-amber-300">10</span>)</div>
+                </div>
+              </div>
+
+              <!-- Плаваючі бейджі -->
+              <div class="float-badge font-tech text-xs px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-lg" style="top:16%;left:-7%;--d:0s;--r:-4deg">c² = a² + b²</div>
+              <div class="float-badge font-tech text-xs px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-lg" style="top:30%;right:-8%;--d:1.4s;--r:5deg"><span class="text-violet-500">def</span> solve():</div>
+              <div class="float-badge font-tech text-xs px-3 py-1.5 rounded-xl bg-amber-400 text-zinc-950 shadow-lg" style="bottom:28%;left:-9%;--d:2.6s;--r:3deg">S = P(1 + r)ⁿ</div>
+              <div class="float-badge font-tech text-xs px-3 py-1.5 rounded-xl bg-indigo-600 text-white shadow-lg" style="bottom:30%;right:-6%;--d:.8s;--r:-3deg">f′(x) = 0</div>
+
+              <div class="tilt-glare"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ДОСЯГНЕННЯ · ОСВІТА · СТЕК · НАПРАЦЮВАННЯ ---------- -->
+    <section class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 pb-6">
+      <div class="grid lg:grid-cols-3 gap-5">
+        <!-- Освіта, кваліфікація та досягнення -->
+        <div class="rounded-2xl p-6 bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Освіта, кваліфікація й досягнення</h2>
+            <span class="font-tech text-[11px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">M.Ed · IT &amp; Math</span>
+          </div>
+          <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-3 leading-relaxed">
+            Вища педагогічна та ІТ-освіта (магістр інформатики та математики), спеціаліст вищої категорії, звання «вчитель-методист».
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl p-3 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800"><div class="font-tech text-xl font-bold text-indigo-600 dark:text-indigo-400">12+</div><div class="text-xs text-zinc-500">років викладання</div></div>
+            <div class="rounded-xl p-3 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800"><div class="font-tech text-xl font-bold text-amber-500">194</div><div class="text-xs text-zinc-500">середній бал НМТ</div></div>
+            <div class="rounded-xl p-3 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800"><div class="font-tech text-xl font-bold text-emerald-500">35+</div><div class="text-xs text-zinc-500">призерів олімпіад і МАН</div></div>
+            <div class="rounded-xl p-3 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800"><div class="font-tech text-xl font-bold text-violet-500">20+</div><div class="text-xs text-zinc-500">авторських модулів</div></div>
+          </div>
+        </div>
+        <!-- Технологічний стек -->
+        <div class="rounded-2xl p-6 bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4">Технологічний стек</h2>
+          <div class="flex flex-wrap gap-2">
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20">Python 3</span>
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-300 border border-sky-500/20">Web (HTML · CSS · JS)</span>
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">GeoGebra</span>
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-300 border border-violet-500/20">LaTeX / KaTeX</span>
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">FinTech-моделі</span>
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-500/20">3D Model-Viewer</span>
+            <span class="font-tech text-xs px-3 py-1.5 rounded-lg bg-zinc-500/10 text-zinc-600 dark:text-zinc-300 border border-zinc-500/20">SQL · Git</span>
+          </div>
+          <p class="mt-4 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">Кожна тема поєднує теорію, математичні формули, інтерактивні 3D-тренажери та робочий код.</p>
+        </div>
+        <!-- Методичні напрацювання -->
+        <div class="rounded-2xl p-6 bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4">Методичні напрацювання й веб-сервіси</h2>
+          <ul class="space-y-3">
+            <li class="flex gap-3"><span class="mt-1 w-2 h-2 rounded-full bg-amber-500 shrink-0"></span><div><a href="#/hub/cs/cs-3d-hardware" class="font-semibold text-sm hover:text-indigo-500 transition-colors">3D-лабораторія будови ПК →</a><div class="text-sm text-zinc-500 dark:text-zinc-400">Інтерактивний 3D-тренажер системного блока та материнської плати ROG.</div></div></li>
+            <li class="flex gap-3"><span class="mt-1 w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span><div><a href="https://dark1604.github.io/check-list-mark-it/" target="_blank" rel="noopener noreferrer" class="font-semibold text-sm hover:text-indigo-500 transition-colors">Check-List Mark It ↗</a><div class="text-sm text-zinc-500 dark:text-zinc-400">Веб-застосунок для чек-листів, трекінгу завдань і самоконтролю учнів.</div></div></li>
+            <li class="flex gap-3"><span class="mt-1 w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span><div><a href="https://dark1604.github.io/InfoDetox/" target="_blank" rel="noopener noreferrer" class="font-semibold text-sm hover:text-indigo-500 transition-colors">InfoDetox ↗</a><div class="text-sm text-zinc-500 dark:text-zinc-400">Інтерактивна платформа з інформаційної гігієни, медіаграмотності й кібербезпеки.</div></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- НАВЧАЛЬНІ НАПРЯМИ (5 карток — вхід до Рівня 2) ---------- -->
+    <section id="directions" class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-12 scroll-mt-20">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Навчальні напрями</h2>
+          <p class="text-zinc-600 dark:text-zinc-400 mt-1">Оберіть предмет — відкриється навчальний простір з підручниками, темами уроків і проєктами.</p>
+        </div>
+        <a href="#/hub" class="self-start sm:self-auto text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Увесь навчальний хаб →</a>
+      </div>
+      <!-- Картки генеруються з конфігурації SUBJECTS (див. скрипт) -->
+      <div id="subjectCards" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5"></div>
+    </section>
+
+    <!-- ---------- МОЇ ПРОЄКТИ ТА АВТОРСЬКІ ВЕБ-ЗАСТОСУНКИ ---------- -->
+    <section id="myProjects" class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 pb-14 scroll-mt-20">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
+        <div>
+          <div class="inline-flex items-center gap-2 font-tech text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 mb-2">
+            <span>⚡ GitHub Pages · Open Source</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Мої проєкти та веб-застосунки</h2>
+          <p class="text-zinc-600 dark:text-zinc-400 mt-1">Авторські інтерактивні сервіси, тренажери та інструменти, розроблені для навчання й повсякденної роботи.</p>
+        </div>
+        <a href="https://github.com/dark1604?tab=repositories" target="_blank" rel="noopener noreferrer" class="self-start sm:self-auto inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+          <span>Усі репозиторії на GitHub</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <!-- Картки проєктів генеруються з MY_PROJECTS (див. скрипт) -->
+      <div id="myProjectsGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+    </section>
+
+    <!-- ---------- КОНТАКТИ / ПІДВАЛ ---------- -->
+    <footer class="border-t border-zinc-200/80 dark:border-zinc-800/80">
+      <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 grid md:grid-cols-3 gap-6 items-center">
+        <div>
+          <div class="font-bold">Сердюк Богдан Романович</div>
+          <div class="text-sm text-zinc-500 dark:text-zinc-400">Вчитель інформатики, математики та фінансової грамотності</div>
+        </div>
+        <div class="flex flex-wrap md:justify-center gap-2 text-sm">
+          <a href="mailto:serdiukcd@gmail.com" class="font-tech px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50">serdiukcd@gmail.com</a>
+          <a href="https://t.me/serka1604" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50">Telegram ↗</a>
+          <a href="https://github.com/dark1604?tab=repositories" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50">GitHub ↗</a>
+        </div>
+        <div class="md:text-right text-xs text-zinc-500 font-tech">© 2026 · Markdown · KaTeX · Prism.js · GitHub Pages</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ======================================================================
+       РІВЕНЬ 2 — НАВЧАЛЬНИЙ ПРОСТІР (STUDENT WORKSPACE)
+       ====================================================================== -->
+  <div id="hubView" class="hidden flex-1 flex flex-col">
+
+    <!-- Верхня панель простору -->
+    <div id="hubBar" class="sticky top-16 z-30 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-md">
+      <div class="w-full px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <a href="#/" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50 transition-colors">
+          <span aria-hidden="true">←</span> Повернутися до портфоліо
+        </a>
+        <div class="hidden md:block w-px h-6 bg-zinc-200 dark:bg-zinc-800"></div>
+        <!-- Таби предметів -->
+        <nav id="subjectTabs" class="flex items-center gap-1 overflow-x-auto max-w-full" aria-label="Предмети"></nav>
+        <!-- Фільтр класів -->
+        <div id="gradeChips" class="flex items-center gap-1 xl:ml-auto overflow-x-auto max-w-full" aria-label="Клас"></div>
+        <button type="button" id="sidebarToggle" class="lg:hidden ml-auto inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h10"/></svg> Меню розділу
+        </button>
+      </div>
+      <!-- Прогрес читання -->
+      <div class="h-0.5 w-full bg-transparent"><div id="readProgress" class="h-full w-0 bg-gradient-to-r from-indigo-500 via-violet-500 to-amber-400 transition-[width] duration-150"></div></div>
+    </div>
+
+    <div class="flex-1 flex flex-col lg:flex-row w-full">
+      <!-- Ліва панель: Підручники · Теми уроків · Проєкти -->
+      <aside id="hubSidebar" class="hidden lg:block hub-sticky w-full lg:w-72 xl:w-80 shrink-0 overflow-y-auto border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-950/60 px-4 py-6"></aside>
+
+      <!-- Центр: Reader View -->
+      <main id="readerPane" class="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 xl:px-16 py-8"></main>
+
+      <!-- Праворуч: зміст параграфа -->
+      <aside id="tocPane" class="hidden xl:block hub-sticky w-64 shrink-0 overflow-y-auto px-5 py-8"></aside>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       ПОШУК (Ctrl+K) — командна палітра
+       ====================================================================== -->
+  <div id="searchModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Пошук матеріалів">
+    <div data-close-search class="absolute inset-0 bg-zinc-950/50 backdrop-blur-sm"></div>
+    <div class="relative mx-auto mt-[10vh] w-[92%] max-w-2xl rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden view-enter">
+      <div class="flex items-center gap-3 px-4 border-b border-zinc-200 dark:border-zinc-800">
+        <svg class="w-5 h-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/></svg>
+        <input id="searchInput" type="search" autocomplete="off" placeholder="Теми, формули, алгоритми: Вієта, Python, відсотки…" class="flex-1 py-4 bg-transparent outline-none text-base placeholder-zinc-400" />
+        <kbd class="text-[11px] px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500">Esc</kbd>
+      </div>
+      <ul id="searchResults" class="max-h-[60vh] overflow-y-auto p-2"></ul>
+      <div class="px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 flex gap-4">
+        <span><kbd class="font-tech">↑↓</kbd> навігація</span><span><kbd class="font-tech">Enter</kbd> відкрити</span><span><kbd class="font-tech">Esc</kbd> закрити</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Сповіщення -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl text-sm font-medium bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-xl" role="status" aria-live="polite"></div>
+
+  <!-- ======================================================================
+       ДЕМО-КОНТЕНТ УРОКІВ (Markdown)
+       Кожен блок <script type="text/markdown" data-id="..."> — окремий конспект.
+       Текст пишеться «як є»: без екранування \ та `, тому його зручно редагувати.
+       Пріоритет джерел: content з articles.json → цей блок → файл article.file (.md)
+       ====================================================================== -->
+
+  <!-- ============================ ІНФОРМАТИКА ============================ -->
+<script type="text/markdown" data-id="cs-3d-hardware">
+# Інтерактивний 3D-тренажер: Будова комп'ютера
+
+Сучасний персональний комп'ютер — це модульна інженерна система, де кожен вузол виконує свою роль і обмінюється даними на швидкостях десятків гігабайтів за секунду. Досліджуйте будову **системного блока** та **материнської плати ROG** у 3D-тренажері нижче: обертайте модель мишкою, масштабуйте коліщатком і натискайте на пульсуючі маркери!
+
+```widget
+pc3d
+```
+
+## Ключові вузли апаратного забезпечення
+
+| Вузол | Технічна назва | Основне призначення | Типові характеристики |
+| :--- | :--- | :--- | :--- |
+| **Процесор** | `CPU` (Central Processing Unit) | Виконує арифметико-логічні операції та керує всіма пристроями | $6\text{–}16$ ядер, частота $3{,}5\text{–}5{,}5\text{ ГГц}$ |
+| **Оперативна пам'ять** | `RAM` (DDR4 / DDR5) | Тимчасове надшвидке сховище для запущених програм і даних | $16\text{–}32\text{ ГБ}$, пропускна здатність $>50\text{ ГБ/с}$ |
+| **Відеокарта** | `GPU` (Graphics Processing Unit) | Паралельні обчислення для 3D-графіки, ігор, монтажу та ШІ | Тисячі ядер CUDA/Stream, пам'ять `GDDR6` |
+| **Материнська плата** | `Motherboard` (ATX / mATX) | З'єднує процесор, пам'ять, накопичувачі й периферію шинами `PCIe` | Сокет `LGA 1700` / `AM5`, лінії `PCIe 4.0/5.0` |
+| **Твердотілий накопичувач** | `SSD M.2 NVMe` | Довготривале зберігання ОС, програм і файлів без рухомих частин | Швидкість читання $3500\text{–}7000\text{ МБ/с}$ |
+| **Блок живлення** | `PSU` (Power Supply Unit) | Перетворює змінну напругу $220\text{ В}$ на постійну $+12\text{ В}$, $+5\text{ В}$, $+3{,}3\text{ В}$ | Потужність $550\text{–}850\text{ Вт}$, ККД `80 PLUS Gold` |
+
+## Пропускна здатність оперативної пам'яті
+
+Теоретична пропускна здатність шини пам'яті обчислюється за формулою:
+
+$$B = \frac{f_{\text{еф}} \cdot w \cdot c}{8}$$
+
+де $f_{\text{еф}}$ — ефективна частота пам'яті ($\text{МГц}$), $w = 64\text{ біт}$ — ширина одного каналу, $c$ — кількість каналів ($c = 2$ для **Dual Channel**), а ділення на $8$ переводить біти у байти.
+
+> **Приклад.** Для двох планок `DDR4-3200` у двоканальному режимі ($c=2$):
+> $$B = \frac{3200 \cdot 64 \cdot 2}{8} = 51\,200\text{ МБ/с} \approx 51{,}2\text{ ГБ/с}$$
+> Саме тому дві планки по $8\text{ ГБ}$ у слотах `A2 + B2` працюють майже вдвічі швидше за одну планку на $16\text{ ГБ}$!
+
+## Як дізнатися характеристики ПК за допомогою Python
+
+```python
+import platform
+import os
+
+print("Операційна система:", platform.system(), platform.release())
+print("Архітектура процесора:", platform.machine())
+print("Модель процесора:", platform.processor())
+print("Логічних ядер (потоків):", os.cpu_count())
+```
+
+```quiz
+{"q":"У які слоти материнської плати потрібно встановити дві планки ОЗП (RAM), щоб увімкнути двоканальний режим (Dual Channel)?","options":["У два сусідні слоти поспіль (A1 та A2)","Через один слот — зазвичай у другий і четвертий від процесора (A2 та B2)","У будь-який один слот","У слот PCIe x16"],"answer":1,"explain":"Для активації Dual Channel два модулі пам'яті встановлюють у різні канали (зазвичай слоти A2 та B2 — через один від сокета процесора)."}
+```
+</script>
+
+<script type="text/markdown" data-id="cs-algorithms-5">
+# Алгоритми та виконавці
+
+**Алгоритм** — це скінченна послідовність точних команд, виконання яких приводить до потрібного результату. Ми користуємося алгоритмами щодня: рецепт пирога, маршрут до школи, інструкція до конструктора.
+
+## Властивості алгоритму
+
+| Властивість | Що означає | Приклад порушення |
+| :--- | :--- | :--- |
+| Дискретність | Складається з окремих кроків | «Якось приготуй обід» |
+| Зрозумілість | Виконавець знає всі команди | Команда «телепортуйся» для робота |
+| Точність | Кожен крок однозначний | «Додай трохи солі» |
+| Скінченність | Завершується за скінченну кількість кроків | Нескінченний цикл |
+
+## Способи опису алгоритмів
+
+1. **Словесний** — звичайними реченнями.
+2. **Блок-схема** — графічні фігури: овал (початок/кінець), прямокутник (дія), ромб (умова).
+3. **Програма** — мовою програмування, наприклад Python.
+
+## Перша програма з черепашкою
+
+Виконавець **Черепашка** малює на екрані. Ось алгоритм побудови квадрата:
+
+```python
+import turtle
+
+t = turtle.Turtle()
+for _ in range(4):      # повторити 4 рази
+    t.forward(100)      # рух уперед на 100 кроків
+    t.left(90)          # поворот ліворуч на 90°
+turtle.done()
+```
+
+> **Порада:** змініть `4` на `6`, а кут — на `60`. Яка фігура вийде? Сума зовнішніх кутів будь-якого многокутника дорівнює $360^\circ$, тому кут повороту — $360^\circ / n$.
+
+```quiz
+{"q":"Який кут повороту потрібен Черепашці, щоб намалювати правильний п'ятикутник?","options":["60°","72°","90°","108°"],"answer":1,"explain":"Кут повороту = 360° / 5 = 72°."}
+```
+</script>
+
+<script type="text/markdown" data-id="python-algo-sort">
+# Алгоритми пошуку та сортування в Python
+
+Швидкодію алгоритму оцінюють тим, як зростає кількість операцій зі збільшенням розміру даних $n$. Для цього використовують нотацію **Big-O**.
+
+## Порівняння складності
+
+| Алгоритм | Найкращий | Середній | Найгірший |
+| :--- | :--- | :--- | :--- |
+| Лінійний пошук | $O(1)$ | $O(n)$ | $O(n)$ |
+| Бінарний пошук | $O(1)$ | $O(\log_2 n)$ | $O(\log_2 n)$ |
+| Сортування бульбашкою | $O(n)$ | $O(n^2)$ | $O(n^2)$ |
+| Timsort (`sorted`) | $O(n)$ | $O(n \log n)$ | $O(n \log n)$ |
+
+## Бінарний пошук
+
+Працює лише на **відсортованому** списку: щоразу ділимо діапазон навпіл. Максимальна кількість кроків:
+
+$$k = \lfloor \log_2 n \rfloor + 1$$
+
+> Для мільйона елементів — лише **20** перевірок замість мільйона!
+
+```python
+def binary_search(arr: list[int], target: int) -> int:
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        if arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+
+print(binary_search([4, 12, 19, 25, 38, 42, 57], 42))  # 5
+```
+
+## Сортування бульбашкою з оптимізацією
+
+```python
+def bubble_sort(arr: list[int]) -> list[int]:
+    data = arr.copy()
+    for i in range(len(data) - 1):
+        swapped = False
+        for j in range(len(data) - 1 - i):
+            if data[j] > data[j + 1]:
+                data[j], data[j + 1] = data[j + 1], data[j]
+                swapped = True
+        if not swapped:      # список уже впорядкований
+            break
+    return data
+```
+
+```quiz
+{"q":"Скільки максимум порівнянь виконає бінарний пошук у списку з 1024 елементів?","options":["10","11","512","1024"],"answer":1,"explain":"⌊log₂1024⌋ + 1 = 10 + 1 = 11."}
+```
+</script>
+
+<script type="text/markdown" data-id="js-dom-events">
+# DOM-дерево та події в JavaScript
+
+**DOM (Document Object Model)** — це дерево об'єктів, у яке браузер перетворює HTML. JavaScript може змінювати це дерево «на льоту», без перезавантаження сторінки.
+
+## Пошук елементів
+
+| Метод | Повертає |
+| :--- | :--- |
+| `document.getElementById('id')` | один елемент або `null` |
+| `document.querySelector('.card')` | перший збіг за CSS-селектором |
+| `document.querySelectorAll('li')` | `NodeList` усіх збігів |
+
+## Делегування подій
+
+Замість сотні обробників — один на батьківському контейнері:
+
+```javascript
+const list = document.querySelector('#lessons');
+
+list.addEventListener('click', (event) => {
+  const item = event.target.closest('[data-id]');
+  if (!item) return;
+  console.log('Відкриваємо урок:', item.dataset.id);
+});
+```
+
+## Інтерфейс як функція від стану
+
+```javascript
+const state = { grade: 'ALL', query: '' };
+
+function filterLessons(lessons) {
+  const q = state.query.trim().toLowerCase();
+  return lessons.filter((l) =>
+    (state.grade === 'ALL' || l.grade === Number(state.grade)) &&
+    l.title.toLowerCase().includes(q)
+  );
+}
+```
+
+> Саме так побудований цей навчальний простір: фільтри змінюють `state`, а список тем перемальовується автоматично.
+</script>
+
+<script type="text/markdown" data-id="sql-relational-db">
+# Реляційні бази даних і SQL
+
+У реляційній БД дані зберігаються в **таблицях**, пов'язаних ключами: `PRIMARY KEY` однозначно ідентифікує рядок, `FOREIGN KEY` посилається на рядок іншої таблиці.
+
+## Запит із групуванням
+
+```sql
+SELECT s.full_name,
+       ROUND(AVG(g.score), 2) AS avg_score,
+       COUNT(g.id)            AS works
+FROM students AS s
+JOIN grades   AS g ON g.student_id = s.id
+WHERE s.grade_level BETWEEN 9 AND 11
+GROUP BY s.id, s.full_name
+HAVING AVG(g.score) >= 10.5
+ORDER BY avg_score DESC;
+```
+
+## Типи JOIN як операції над множинами
+
+| JOIN | Множина | Результат |
+| :--- | :--- | :--- |
+| `INNER JOIN` | $A \cap B$ | лише рядки зі збігом |
+| `LEFT JOIN` | $A$ | усі рядки $A$, де немає збігу — `NULL` |
+
+## SQLite прямо з Python
+
+```python
+import sqlite3
+
+with sqlite3.connect(":memory:") as db:
+    db.execute("CREATE TABLE students (name TEXT, score INTEGER)")
+    db.executemany("INSERT INTO students VALUES (?, ?)",
+                   [("Ірина", 196), ("Максим", 189)])
+    for row in db.execute("SELECT * FROM students ORDER BY score DESC"):
+        print(row)
+```
+</script>
+
+<script type="text/markdown" data-id="cs-ref-python">
+# Шпаргалка Python
+
+## Типи даних
+
+| Тип | Приклад | Примітка |
+| :--- | :--- | :--- |
+| `int` | `42` | ціле число |
+| `float` | `3.14` | дійсне число |
+| `str` | `"Привіт"` | рядок |
+| `bool` | `True` | логічне значення |
+| `list` | `[1, 2, 3]` | змінюваний список |
+| `dict` | `{"x": 1}` | словник ключ → значення |
+
+## Керування потоком
+
+```python
+n = int(input("Введіть число: "))
+
+if n % 2 == 0:
+    print("парне")
+else:
+    print("непарне")
+
+for i in range(1, 6):        # 1, 2, 3, 4, 5
+    print(i, i ** 2)
+
+while n > 0:
+    n //= 2
+```
+
+## Функції та списки
+
+```python
+def average(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+squares = [x ** 2 for x in range(10) if x % 2 == 0]
+print(average(squares))
+```
+
+> Офіційна документація: [docs.python.org](https://docs.python.org/3/)
+</script>
+
+<script type="text/markdown" data-id="cs-project-guess">
+# Гра «Вгадай число» та бінарний пошук
+
+Комп'ютер загадує число від **1 до 100**. Ви називаєте число, а програма відповідає «більше» чи «менше». Скільки спроб потрібно в найгіршому випадку?
+
+## Зіграйте прямо тут
+
+```widget
+guess
+```
+
+## Чому вистачає 7 спроб
+
+Кожна вдала спроба (називати середину діапазону) зменшує кількість можливих чисел **удвічі**:
+
+$$100 \to 50 \to 25 \to 13 \to 7 \to 4 \to 2 \to 1$$
+
+Отже, потрібно $\lceil \log_2 100 \rceil = 7$ спроб. Це і є **бінарний пошук**.
+
+## Напишіть гру самостійно
+
+```python
+import random
+
+secret = random.randint(1, 100)
+attempts = 0
+
+while True:
+    guess = int(input("Ваше число: "))
+    attempts += 1
+    if guess < secret:
+        print("Більше ↑")
+    elif guess > secret:
+        print("Менше ↓")
+    else:
+        print(f"Вгадали за {attempts} спроб!")
+        break
+```
+
+## Завдання з зірочкою ⭐
+
+Напишіть програму, яка **сама вгадує** ваше число, використовуючи бінарний пошук, і ніколи не робить більше 7 спроб.
+</script>
+
+  <!-- ============================ МАТЕМАТИКА (5–6) ============================ -->
+<script type="text/markdown" data-id="divisibility-gcd">
+# Подільність чисел: НСД і НСК
+
+## Ознаки подільності
+
+- **На 2** — остання цифра парна: $0, 2, 4, 6, 8$.
+- **На 5** — остання цифра $0$ або $5$.
+- **На 10** — остання цифра $0$.
+- **На 3** — сума цифр ділиться на $3$.
+- **На 9** — сума цифр ділиться на $9$.
+
+> **Приклад.** Число $4752$: сума цифр $4+7+5+2 = 18$ — ділиться і на $3$, і на $9$.
+
+## Прості числа
+
+Число $p > 1$ — **просте**, якщо має рівно два дільники: $1$ і $p$. Перші прості: $2, 3, 5, 7, 11, 13, 17, 19, 23, 29$.
+
+## НСД і НСК
+
+Розкладемо на прості множники: $48 = 2^4 \cdot 3$, $\;36 = 2^2 \cdot 3^2$.
+
+- $\text{НСД}(48, 36) = 2^2 \cdot 3 = 12$ — беремо **менші** степені спільних множників.
+- $\text{НСК}(48, 36) = 2^4 \cdot 3^2 = 144$ — беремо **більші** степені всіх множників.
+
+Корисна тотожність:
+
+$$\text{НСД}(a, b) \cdot \text{НСК}(a, b) = a \cdot b$$
+
+## Алгоритм Евкліда
+
+```python
+def gcd(a: int, b: int) -> int:
+    while b:
+        a, b = b, a % b
+    return a
+
+print(gcd(48, 36))             # 12
+print(48 * 36 // gcd(48, 36))  # 144
+```
+
+```quiz
+{"q":"Чому дорівнює НСК(12, 18)?","options":["6","36","72","216"],"answer":1,"explain":"12 = 2²·3, 18 = 2·3². НСК = 2²·3² = 36."}
+```
+</script>
+
+<script type="text/markdown" data-id="fractions-ratios">
+# Дроби, пропорції та відсотки
+
+## Дії зі звичайними дробами
+
+$$\frac{a}{b} + \frac{c}{d} = \frac{ad + bc}{bd}, \qquad \frac{a}{b} \cdot \frac{c}{d} = \frac{ac}{bd}, \qquad \frac{a}{b} : \frac{c}{d} = \frac{ad}{bc}$$
+
+> **Приклад.** $\frac{2}{3} + \frac{1}{4} = \frac{8}{12} + \frac{3}{12} = \frac{11}{12}$
+
+## Пропорція
+
+Рівність двох відношень $\frac{a}{b} = \frac{c}{d}$. **Основна властивість:** добуток крайніх членів дорівнює добутку середніх:
+
+$$a \cdot d = b \cdot c$$
+
+## Три задачі на відсотки
+
+| Задача | Формула | Приклад |
+| :--- | :--- | :--- |
+| $p\%$ від числа $A$ | $B = A \cdot \frac{p}{100}$ | $20\%$ від $150$ = $30$ |
+| Число за його відсотком | $A = \frac{B \cdot 100}{p}$ | $15\%$ — це $45$, тоді $A = 300$ |
+| Відсоткове відношення | $p = \frac{B}{A} \cdot 100\%$ | $18$ із $72$ — це $25\%$ |
+
+```quiz
+{"q":"Ціну підняли на 10%, а потім знизили на 10%. Як змінилася ціна?","options":["Не змінилася","Зросла на 1%","Знизилася на 1%","Знизилася на 10%"],"answer":2,"explain":"1,1 · 0,9 = 0,99 — ціна стала на 1% меншою."}
+```
+</script>
+
+<script type="text/markdown" data-id="math-ref-cheatsheet">
+# Довідник: дроби, відсотки, одиниці
+
+## Перетворення дробів
+
+| Звичайний | Десятковий | Відсоток |
+| :--- | :--- | :--- |
+| $\frac{1}{2}$ | $0{,}5$ | $50\%$ |
+| $\frac{1}{4}$ | $0{,}25$ | $25\%$ |
+| $\frac{3}{4}$ | $0{,}75$ | $75\%$ |
+| $\frac{1}{5}$ | $0{,}2$ | $20\%$ |
+| $\frac{1}{8}$ | $0{,}125$ | $12{,}5\%$ |
+
+## Одиниці вимірювання
+
+- $1\text{ км} = 1000\text{ м}$, $\;1\text{ м} = 100\text{ см}$
+- $1\text{ м}^2 = 10\,000\text{ см}^2$, $\;1\text{ га} = 10\,000\text{ м}^2$
+- $1\text{ т} = 1000\text{ кг}$, $\;1\text{ л} = 1\text{ дм}^3$
+
+## Периметр і площа
+
+- Прямокутник: $P = 2(a + b)$, $\;S = a \cdot b$
+- Квадрат: $P = 4a$, $\;S = a^2$
+- Коло: $C = 2\pi r$, $\;S = \pi r^2$, $\;\pi \approx 3{,}14$
+</script>
+
+<script type="text/markdown" data-id="math-project-shop">
+# Математика в магазині: знижки та акції
+
+Чи вигідна «знижка 20% + ще 10% на касі»? Це **не** 30%! Давайте перевіримо.
+
+## Послідовні знижки
+
+Після першої знижки $p_1\%$ ціна множиться на $(1 - \frac{p_1}{100})$, після другої — ще на $(1 - \frac{p_2}{100})$:
+
+$$P_{\text{кінц}} = P \cdot \left(1 - \frac{p_1}{100}\right) \cdot \left(1 - \frac{p_2}{100}\right)$$
+
+Для $20\%$ і $10\%$: $0{,}8 \cdot 0{,}9 = 0{,}72$ — загальна знижка лише **28%**.
+
+## Інтерактивний калькулятор
+
+```widget
+discount
+```
+
+## Кейс: «3 за ціною 2» чи «−30%»?
+
+Йогурт коштує $24$ грн. Яка акція вигідніша, якщо вам потрібно 3 йогурти?
+
+- «3 за ціною 2»: платимо $2 \cdot 24 = 48$ грн → знижка $\frac{24}{72} \approx 33{,}3\%$.
+- «−30%»: платимо $72 \cdot 0{,}7 = 50{,}4$ грн.
+
+```quiz
+{"q":"Товар за 500 грн мав знижку 50%, а потім ще 50%. Скільки він коштує?","options":["0 грн","125 грн","250 грн","200 грн"],"answer":1,"explain":"500 · 0,5 · 0,5 = 125 грн. Дві знижки по 50% ≠ 100%."}
+```
+</script>
+
+  <!-- ============================ АЛГЕБРА ============================ -->
+<script type="text/markdown" data-id="linear-functions">
+# Лінійна функція та системи рівнянь
+
+**Лінійна функція** задається формулою $y = kx + b$. Її графік — **пряма**.
+
+## Зміст коефіцієнтів
+
+- $k$ — **кутовий коефіцієнт**: якщо $k > 0$ — функція зростає, якщо $k < 0$ — спадає, якщо $k = 0$ — пряма паралельна осі $Ox$.
+- $b$ — точка перетину з віссю $Oy$: $(0;\, b)$.
+
+| Умова | Розміщення прямих $y = k_1x + b_1$ і $y = k_2x + b_2$ |
+| :--- | :--- |
+| $k_1 \neq k_2$ | перетинаються в одній точці |
+| $k_1 = k_2,\ b_1 \neq b_2$ | паралельні |
+| $k_1 = k_2,\ b_1 = b_2$ | збігаються |
+
+## Метод додавання
+
+$$\begin{cases} 2x + 3y = 13 \\ 5x - 3y = 8 \end{cases} \;\Rightarrow\; 7x = 21 \;\Rightarrow\; x = 3,\; y = \frac{7}{3}$$
+
+## Перевірка в Python
+
+```python
+# Розв'язок системи a1x + b1y = c1, a2x + b2y = c2 методом Крамера
+def solve(a1, b1, c1, a2, b2, c2):
+    d = a1 * b2 - a2 * b1
+    if d == 0:
+        return None  # немає єдиного розв'язку
+    return (c1 * b2 - c2 * b1) / d, (a1 * c2 - a2 * c1) / d
+
+print(solve(2, 3, 13, 5, -3, 8))  # (3.0, 2.333...)
+```
+
+```quiz
+{"q":"Яка з функцій спадає?","options":["y = 3x − 1","y = 0,5x","y = −2x + 4","y = 7"],"answer":2,"explain":"Функція спадає, коли k < 0. Тут k = −2."}
+```
+</script>
+
+<script type="text/markdown" data-id="quad-eq">
+# Квадратні рівняння та теорема Вієта
+
+**Квадратне рівняння** має вигляд $ax^2 + bx + c = 0$, де $a \neq 0$.
+
+## Дискримінант
+
+$$D = b^2 - 4ac$$
+
+1. $D > 0$ — два корені: $x_{1,2} = \dfrac{-b \pm \sqrt{D}}{2a}$
+2. $D = 0$ — один корінь: $x = -\dfrac{b}{2a}$
+3. $D < 0$ — дійсних коренів немає.
+
+## Неповні рівняння
+
+| Вигляд | Розв'язок |
+| :--- | :--- |
+| $ax^2 + bx = 0$ | $x(ax + b) = 0 \Rightarrow x_1 = 0,\ x_2 = -\frac{b}{a}$ |
+| $ax^2 + c = 0$ | $x^2 = -\frac{c}{a}$, корені є лише при $-\frac{c}{a} \geq 0$ |
+
+## Теорема Вієта
+
+Для зведеного рівняння $x^2 + px + q = 0$:
+
+$$\begin{cases} x_1 + x_2 = -p \\ x_1 \cdot x_2 = q \end{cases}$$
+
+> **Усний підбір.** $x^2 - 7x + 12 = 0$: сума $7$, добуток $12$ → корені $3$ і $4$.
+
+## Розв'язувач на Python
+
+```python
+import math
+
+def solve_quadratic(a: float, b: float, c: float) -> tuple:
+    d = b * b - 4 * a * c
+    if d < 0:
+        return ()
+    if d == 0:
+        return (-b / (2 * a),)
+    r = math.sqrt(d)
+    return ((-b - r) / (2 * a), (-b + r) / (2 * a))
+
+print(solve_quadratic(1, -7, 12))  # (3.0, 4.0)
+```
+
+```quiz
+{"q":"Сума коренів рівняння x² − 5x + 6 = 0 дорівнює:","options":["−5","5","6","−6"],"answer":1,"explain":"За теоремою Вієта x₁ + x₂ = −p = 5."}
+```
+</script>
+
+<script type="text/markdown" data-id="derivatives-extrema">
+# Похідна та дослідження функції
+
+$$f'(x_0) = \lim_{\Delta x \to 0} \frac{f(x_0 + \Delta x) - f(x_0)}{\Delta x}$$
+
+## Геометричний і фізичний зміст
+
+- $f'(x_0) = k = \tan\alpha$ — кутовий коефіцієнт дотичної.
+- Рівняння дотичної: $y = f(x_0) + f'(x_0)(x - x_0)$.
+- Якщо $s(t)$ — шлях, то $v(t) = s'(t)$, $\;a(t) = v'(t)$.
+
+## Таблиця похідних
+
+| $f(x)$ | $f'(x)$ | Правило | Формула |
+| :--- | :--- | :--- | :--- |
+| $x^n$ | $nx^{n-1}$ | сума | $(u + v)' = u' + v'$ |
+| $\sqrt{x}$ | $\frac{1}{2\sqrt{x}}$ | добуток | $(uv)' = u'v + uv'$ |
+| $\sin x$ | $\cos x$ | частка | $\left(\frac{u}{v}\right)' = \frac{u'v - uv'}{v^2}$ |
+| $e^x$ | $e^x$ | складена | $f(g(x))' = f'(g)\cdot g'$ |
+
+## Приклад: екстремуми
+
+$f(x) = x^3 - 3x^2 - 9x + 5$, $\;f'(x) = 3x^2 - 6x - 9 = 3(x + 1)(x - 3)$.
+
+- На $(-\infty; -1)$ $f' > 0$ — зростає; на $(-1; 3)$ $f' < 0$ — спадає; на $(3; +\infty)$ — зростає.
+- Отже, $x_{\max} = -1$, $\;x_{\min} = 3$.
+
+```python
+import sympy as sp
+
+x = sp.symbols("x")
+f = x**3 - 3*x**2 - 9*x + 5
+print(sp.diff(f, x))                # 3*x**2 - 6*x - 9
+print(sp.solve(sp.diff(f, x), x))   # [-1, 3]
+```
+</script>
+
+<script type="text/markdown" data-id="alg-ref-formulas">
+# Довідник формул алгебри
+
+## Скорочене множення
+
+$$(a \pm b)^2 = a^2 \pm 2ab + b^2$$
+$$a^2 - b^2 = (a - b)(a + b)$$
+$$a^3 \pm b^3 = (a \pm b)(a^2 \mp ab + b^2)$$
+
+## Степені та корені
+
+| Властивість | Формула |
+| :--- | :--- |
+| Добуток степенів | $a^m \cdot a^n = a^{m+n}$ |
+| Степінь степеня | $(a^m)^n = a^{mn}$ |
+| Від'ємний показник | $a^{-n} = \frac{1}{a^n}$ |
+| Дробовий показник | $a^{\frac{m}{n}} = \sqrt[n]{a^m}$ |
+
+## Прогресії
+
+- Арифметична: $a_n = a_1 + (n - 1)d$, $\;S_n = \frac{a_1 + a_n}{2} \cdot n$
+- Геометрична: $b_n = b_1 q^{n-1}$, $\;S_n = \frac{b_1(q^n - 1)}{q - 1}$
+
+## Логарифми
+
+$$\log_a(xy) = \log_a x + \log_a y, \qquad \log_a x^k = k\log_a x, \qquad \log_a b = \frac{\ln b}{\ln a}$$
+</script>
+
+<script type="text/markdown" data-id="alg-project-ball">
+# Проєкт: траєкторія баскетбольного м'яча
+
+Висота м'яча після кидка описується **квадратичною функцією**:
+
+$$h(t) = h_0 + v_0 t - \frac{g t^2}{2}$$
+
+де $h_0 = 2$ м — висота кидка, $v_0 = 8$ м/с — початкова швидкість, $g \approx 9{,}8$ м/с².
+
+## Питання для дослідження
+
+1. Коли м'яч досягне найвищої точки? Вершина параболи: $t_0 = \frac{v_0}{g} \approx 0{,}82$ с.
+2. Яка максимальна висота? $h(t_0) = 2 + \frac{v_0^2}{2g} \approx 5{,}27$ м.
+3. Коли м'яч впаде на підлогу? Розв'яжіть $h(t) = 0$ через дискримінант.
+
+## Моделювання на Python
+
+```python
+g, h0, v0 = 9.8, 2.0, 8.0
+
+for step in range(0, 20):
+    t = step * 0.1
+    h = h0 + v0 * t - g * t ** 2 / 2
+    if h < 0:
+        break
+    bar = "█" * int(h * 6)
+    print(f"t={t:.1f} c  h={h:5.2f} м  {bar}")
+```
+
+> **Ідея для презентації:** побудуйте графік у GeoGebra і порівняйте з відео реального кидка.
+
+```quiz
+{"q":"Як зміниться максимальна висота, якщо початкову швидкість збільшити вдвічі?","options":["Удвічі","Учетверо (без h₀)","Не зміниться","У √2 разів"],"answer":1,"explain":"Приріст висоти v₀²/(2g) пропорційний квадрату швидкості, тож зростає в 4 рази."}
+```
+</script>
+
+  <!-- ============================ ГЕОМЕТРІЯ ============================ -->
+<script type="text/markdown" data-id="pythagoras-trig">
+# Теорема Піфагора та тригонометрія
+
+У прямокутному трикутнику з катетами $a, b$ і гіпотенузою $c$:
+
+$$c^2 = a^2 + b^2$$
+
+> **Піфагорові трійки:** $(3, 4, 5)$, $(5, 12, 13)$, $(8, 15, 17)$, $(7, 24, 25)$.
+
+## Метричні співвідношення
+
+Висота $h_c$ до гіпотенузи ділить її на проєкції $a_c$ і $b_c$:
+
+$$h_c^2 = a_c \cdot b_c, \qquad a^2 = c \cdot a_c, \qquad h_c = \frac{ab}{c}$$
+
+## Синус, косинус, тангенс
+
+$$\sin\alpha = \frac{a}{c}, \qquad \cos\alpha = \frac{b}{c}, \qquad \tan\alpha = \frac{a}{b}, \qquad \sin^2\alpha + \cos^2\alpha = 1$$
+
+| | $30^\circ$ | $45^\circ$ | $60^\circ$ |
+| :--- | :--- | :--- | :--- |
+| $\sin$ | $\frac{1}{2}$ | $\frac{\sqrt{2}}{2}$ | $\frac{\sqrt{3}}{2}$ |
+| $\cos$ | $\frac{\sqrt{3}}{2}$ | $\frac{\sqrt{2}}{2}$ | $\frac{1}{2}$ |
+| $\tan$ | $\frac{\sqrt{3}}{3}$ | $1$ | $\sqrt{3}$ |
+
+```quiz
+{"q":"Катети дорівнюють 6 і 8 см. Знайдіть висоту, проведену до гіпотенузи.","options":["4,8 см","5 см","7 см","10 см"],"answer":0,"explain":"c = 10, h = ab/c = 48/10 = 4,8 см."}
+```
+</script>
+
+<script type="text/markdown" data-id="vectors-coords">
+# Вектори на площині
+
+Вектор $\vec{AB}$ з початком $A(x_1; y_1)$ і кінцем $B(x_2; y_2)$:
+
+$$\vec{AB} = (x_2 - x_1;\; y_2 - y_1), \qquad |\vec{AB}| = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$
+
+## Операції
+
+- Сума: $\vec{a} + \vec{b} = (x_1 + x_2;\; y_1 + y_2)$
+- Множення на число: $k\vec{a} = (kx_1;\; ky_1)$
+- Колінеарність: $\frac{x_1}{x_2} = \frac{y_1}{y_2}$
+
+## Скалярний добуток
+
+$$\vec{a} \cdot \vec{b} = x_1x_2 + y_1y_2 = |\vec{a}|\,|\vec{b}| \cos\varphi$$
+
+> **Перпендикулярність:** $\vec{a} \perp \vec{b} \iff x_1x_2 + y_1y_2 = 0$.
+
+## Обчислення кута в Python
+
+```python
+import math
+
+def angle(a, b):
+    dot = a[0] * b[0] + a[1] * b[1]
+    return math.degrees(math.acos(dot / (math.hypot(*a) * math.hypot(*b))))
+
+print(round(angle((1, 0), (1, 1)), 1))  # 45.0
+```
+
+```quiz
+{"q":"При якому m вектори (m; −4) і (6; 3) перпендикулярні?","options":["m = −2","m = 2","m = 3","m = 0"],"answer":1,"explain":"6m − 12 = 0 ⇒ m = 2."}
+```
+</script>
+
+<script type="text/markdown" data-id="geom-ref-areas">
+# Довідник: площі та об'єми
+
+## Плоскі фігури
+
+| Фігура | Площа |
+| :--- | :--- |
+| Трикутник | $S = \frac{1}{2}ah = \frac{1}{2}ab\sin\gamma$ |
+| Формула Герона | $S = \sqrt{p(p-a)(p-b)(p-c)}$, $\;p = \frac{a+b+c}{2}$ |
+| Паралелограм | $S = ah = ab\sin\alpha$ |
+| Трапеція | $S = \frac{a + b}{2} \cdot h$ |
+| Ромб | $S = \frac{d_1 d_2}{2}$ |
+| Круг | $S = \pi r^2$ |
+
+## Тіла
+
+| Тіло | Об'єм | Площа поверхні |
+| :--- | :--- | :--- |
+| Куб | $V = a^3$ | $S = 6a^2$ |
+| Циліндр | $V = \pi r^2 h$ | $S = 2\pi r(r + h)$ |
+| Конус | $V = \frac{1}{3}\pi r^2 h$ | $S = \pi r(r + l)$ |
+| Куля | $V = \frac{4}{3}\pi r^3$ | $S = 4\pi r^2$ |
+
+> Інтерактивні побудови: [GeoGebra Classic](https://www.geogebra.org/classic)
+</script>
+
+<script type="text/markdown" data-id="geom-project-ladder">
+# Практикум: драбина, телевізор і теорема Піфагора
+
+Теорема Піфагора — найпрактичніша формула шкільної геометрії. Розв'яжемо три життєві задачі.
+
+## 1. Безпечна драбина
+
+Драбину довжиною $L$ ставлять на відстані $d$ від стіни. На яку висоту вона дістане?
+
+$$h = \sqrt{L^2 - d^2}$$
+
+```widget
+ladder
+```
+
+> **Правило безпеки:** відстань від стіни ≈ $\frac{1}{4}$ довжини драбини (кут ≈ $75^\circ$).
+
+## 2. Діагональ телевізора
+
+Телевізор «55 дюймів» — це довжина **діагоналі**. При співвідношенні сторін $16:9$:
+
+$$w = 55 \cdot \frac{16}{\sqrt{16^2 + 9^2}} \approx 47{,}9'', \qquad h = 55 \cdot \frac{9}{\sqrt{337}} \approx 27''$$
+
+## 3. Чи пройде шафа у двері?
+
+Двері $80 \times 200$ см. Найдовший предмет, який можна пронести, нахиливши: $\sqrt{80^2 + 200^2} \approx 215$ см.
+
+```quiz
+{"q":"Драбина 5 м стоїть на відстані 3 м від стіни. На яку висоту вона дістає?","options":["2 м","4 м","√34 м","8 м"],"answer":1,"explain":"h = √(25 − 9) = √16 = 4 м — знайома трійка (3, 4, 5)."}
+```
+</script>
+
+  <!-- ============================ ФІНАНСОВА ГРАМОТНІСТЬ ============================ -->
+<script type="text/markdown" data-id="personal-budget-taxes">
+# Особистий бюджет за правилом 50/30/20
+
+Фінансова свобода починається не з великого доходу, а з уміння ним керувати.
+
+## Модель 50 / 30 / 20
+
+| Категорія | Частка | Що входить |
+| :--- | :--- | :--- |
+| Потреби | $50\%$ | житло, їжа, транспорт, зв'язок |
+| Бажання | $30\%$ | хобі, кафе, ігри, подорожі |
+| Заощадження | $20\%$ | резервний фонд, депозити, навчання |
+
+## Подушка безпеки
+
+Резерв на непередбачувані випадки — від 3 до 6 місяців обов'язкових витрат:
+
+$$F = k \cdot E_{\text{міс}}, \qquad k \in [3;\, 6]$$
+
+## Розрахунок у Python
+
+```python
+def plan_budget(income: float) -> dict:
+    return {
+        "Потреби": round(income * 0.5),
+        "Бажання": round(income * 0.3),
+        "Заощадження": round(income * 0.2),
+    }
+
+for category, amount in plan_budget(24_000).items():
+    print(f"{category:<12} {amount:>7} грн")
+```
+
+> **Податки ФОП 3-ї групи (спрощено):** єдиний податок $5\%$ від доходу + військовий збір + фіксований ЄСВ щомісяця. Точні ставки перевіряйте на сайті ДПС.
+
+```quiz
+{"q":"Дохід родини — 40 000 грн. Скільки за правилом 50/30/20 варто відкладати?","options":["4 000 грн","8 000 грн","12 000 грн","20 000 грн"],"answer":1,"explain":"20% від 40 000 = 8 000 грн."}
+```
+</script>
+
+<script type="text/markdown" data-id="compound-interest">
+# Складний відсоток та інфляція
+
+## Простий і складний відсоток
+
+Нехай $P$ — початкова сума, $r$ — річна ставка (частка), $t$ — роки, $m$ — кількість капіталізацій за рік.
+
+$$S_{\text{прост}} = P(1 + rt), \qquad S_{\text{складн}} = P\left(1 + \frac{r}{m}\right)^{mt}$$
+
+> **Правило 72:** гроші подвоюються приблизно за $\frac{72}{R}$ років, де $R$ — ставка у відсотках. Під $12\%$ — за ~6 років.
+
+## Реальна дохідність (формула Фішера)
+
+Якщо чиста ставка $r$, а інфляція $i$:
+
+$$r_{\text{real}} = \frac{1 + r}{1 + i} - 1$$
+
+При $r = 12\%$ та $i = 8\%$ реальний приріст — лише $\approx 3{,}7\%$.
+
+## Симулятор у Python
+
+```python
+def deposit(initial, monthly, rate, years):
+    balance = initial
+    for _ in range(years * 12):
+        balance = balance * (1 + rate / 12) + monthly
+    return round(balance, 2)
+
+print(deposit(20_000, 2_000, 0.14, 5))
+```
+
+Спробуйте інтерактивний калькулятор у розділі **«Цікаві приклади та проєкти»**.
+</script>
+
+<script type="text/markdown" data-id="fin-ref-glossary">
+# Фінансовий словник
+
+| Термін | Пояснення |
+| :--- | :--- |
+| **Актив** | те, що приносить гроші (депозит, облігація) |
+| **Пасив** | те, що забирає гроші (кредит, підписки) |
+| **Інфляція** | зростання цін, знецінення грошей |
+| **Капіталізація** | додавання відсотків до суми вкладу |
+| **ОВДП** | облігації внутрішньої державної позики |
+| **Диверсифікація** | розподіл коштів між різними інструментами |
+| **Кешбек** | повернення частини витраченої суми |
+| **Реальна ставка** | дохідність з урахуванням інфляції |
+
+## Ключові формули
+
+- Відсоток від суми: $B = A \cdot \frac{p}{100}$
+- Складний відсоток: $S = P(1 + r)^n$
+- Правило 72: $T \approx \frac{72}{R}$
+
+> Корисні джерела: [Національний банк України](https://bank.gov.ua), [Державна податкова служба](https://tax.gov.ua).
+</script>
+
+<script type="text/markdown" data-id="fin-project-deposit">
+# Симулятор: як виростуть мої заощадження?
+
+Порівняйте, як працює **складний відсоток**, якщо щомісяця відкладати невелику суму.
+
+```widget
+compound
+```
+
+## Що спробувати
+
+1. Встановіть щомісячне поповнення $500$ грн і термін $10$ років. Скільки з підсумку — ваші внески, а скільки — відсотки?
+2. Збільште ставку на $2\%$. Як змінився результат?
+3. Порівняйте: $1000$ грн щомісяця протягом 5 років **чи** $500$ грн протягом 10 років?
+
+## Формула з регулярними внесками
+
+$$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
+
+де $M$ — щомісячний внесок, $n$ — кількість місяців.
+
+```quiz
+{"q":"Що сильніше впливає на підсумок складного відсотка на довгому терміні?","options":["Колір банківської картки","Тривалість інвестування","День тижня внеску","Назва банку"],"answer":1,"explain":"Час — головний «двигун» складного відсотка: зростання експоненційне."}
+```
+</script>
+
+  <!-- ============================ БІБЛІОТЕКИ (CDN) ============================ -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script>window.Prism = window.Prism || {}; Prism.manual = true; /* підсвічуємо вручну після рендеру */</script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+
+  <script>
+  /* ==========================================================================
+     1. КОНФІГУРАЦІЯ ПРЕДМЕТІВ
+        books — підручники та довідники (зовнішні посилання). Внутрішні довідники
+        (type: "ref") беруться з масиву уроків і показуються в тому ж розділі.
+     ========================================================================== */
+  const SUBJECTS = {
+    cs: {
+      name: "Інформатика", short: "Інформатика", grades: [5, 6, 7, 8, 9, 10, 11], tone: "indigo",
+      desc: "Алгоритми, Python, веб-розробка, бази даних і цифрова безпека.",
+      icon: "M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+      books: [
+        { title: "Інформатика, 5 клас (Ривкінд та ін.)", grade: 5, meta: "pidruchnik.com", url: "https://pidruchnik.com/1653-informatyka-bios-5-klas.html" },
+        { title: "Інформатика, 6 клас (Ривкінд та ін.)", grade: 6, meta: "pidruchnik.com", url: "https://pidruchnik.com/2683-informatyka-6-klas-bios.html" },
+        { title: "Інформатика, 7 клас (Ривкінд та ін., 2024)", grade: 7, meta: "pidruchnik.com", url: "https://pidruchnik.com/2806-informatyka-bios-7-klas-2024.html" },
+        { title: "Інформатика, 8 клас (Ривкінд та ін., 2025)", grade: 8, meta: "pidruchnik.com", url: "https://pidruchnik.com/3008-informatyka-bios-8-klas-2025.html" },
+        { title: "Інформатика, 9 клас (Ривкінд та ін., 2026)", grade: 9, meta: "pidruchnik.com", url: "https://pidruchnik.com/3187-informatyka-9-klas-bios-2026.html" },
+        { title: "Документація Python 3", grade: null, meta: "docs.python.org", url: "https://docs.python.org/3/" }
+      ]
+    },
+    math: {
+      name: "Математика", short: "Математика 5–6", grades: [5, 6], tone: "sky",
+      desc: "Натуральні числа, подільність, дроби, пропорції, відсотки та логіка.",
+      icon: "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z",
+      books: [
+        { title: "Математика, 5 клас (Істер, 2022)", grade: 5, meta: "pidruchnik.com", url: "https://pidruchnik.com/1632-matematyka-5-klas-ister-2022.html" },
+        { title: "Математика, 6 клас (Істер, 2023)", grade: 6, meta: "pidruchnik.com", url: "https://pidruchnik.com/2590-matematyka-6-klas-ister-2023.html" }
+      ]
+    },
+    alg: {
+      name: "Алгебра", short: "Алгебра", grades: [7, 8, 9, 10, 11], tone: "violet",
+      desc: "Рівняння, функції та графіки, прогресії, похідна й підготовка до НМТ.",
+      icon: "M4 19h16M4 15c4-8 6-8 10 0s6 8 6 0",
+      books: [
+        { title: "Алгебра, 7 клас (Істер, 2024)", grade: 7, meta: "pidruchnik.com", url: "https://pidruchnik.com/2889-algebra-ister-7-klas-2024.html" },
+        { title: "Алгебра, 8 клас (Істер, 2025)", grade: 8, meta: "pidruchnik.com", url: "https://pidruchnik.com/2905-algebra-ister-8-klas-2025.html" },
+        { title: "Алгебра, 9 клас (Істер, 2026)", grade: 9, meta: "pidruchnik.com", url: "https://pidruchnik.com/3142-algebra-9-klas-ister-2026.html" },
+        { title: "Графічний калькулятор GeoGebra", grade: null, meta: "geogebra.org", url: "https://www.geogebra.org/graphing" }
+      ]
+    },
+    geom: {
+      name: "Геометрія", short: "Геометрія", grades: [7, 8, 9, 10, 11], tone: "emerald",
+      desc: "Планіметрія, тригонометрія, вектори, координати та стереометрія.",
+      icon: "M12 3L3 20h18L12 3z",
+      books: [
+        { title: "Геометрія, 7 клас (Істер, 2024)", grade: 7, meta: "pidruchnik.com", url: "https://pidruchnik.com/2883-geometriia-ister-7-klas-2024.html" },
+        { title: "Геометрія, 8 клас (Істер, 2025)", grade: 8, meta: "pidruchnik.com", url: "https://pidruchnik.com/2911-geometriia-ister-8-klas-2025.html" },
+        { title: "Геометрія, 9 клас (Істер, 2026)", grade: 9, meta: "pidruchnik.com", url: "https://pidruchnik.com/3170-geometriia-9-klas-ister-2026.html" },
+        { title: "GeoGebra Classic", grade: null, meta: "geogebra.org", url: "https://www.geogebra.org/classic" }
+      ]
+    },
+    fin: {
+      name: "Фінансова грамотність", short: "Фінграмотність", grades: [8, 9, 10, 11], tone: "amber",
+      desc: "Бюджет, депозити, складний відсоток, податки та фінансова безпека.",
+      icon: "M12 8c-1.66 0-3 .9-3 2s1.34 2 3 2 3 .9 3 2-1.34 2-3 2m0-8c1.11 0 2.08.4 2.6 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.4-2.6-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+      books: [
+        { title: "Підприємництво і фінграмотність, 8 клас", grade: 8, meta: "pidruchnik.com", url: "https://pidruchnik.com/8klas/pidpryiemnyctvo8/" },
+        { title: "Підприємництво і фінграмотність, 9 клас (Пластун, 2026)", grade: 9, meta: "pidruchnik.com", url: "https://pidruchnik.com/3214-pidpryiemnyctvo-9-klas-plastun-2026.html" },
+        { title: "Національний банк України", grade: null, meta: "bank.gov.ua", url: "https://bank.gov.ua" }
+      ]
+    }
+  };
+
+  /* Повні назви класів Tailwind для кожного кольору (CDN-JIT бачить їх у DOM) */
+  const TONES = {
+    indigo:  { text: "text-indigo-600 dark:text-indigo-400",   soft: "bg-indigo-500/10 border-indigo-500/20",   hover: "hover:border-indigo-500/60 hover:shadow-indigo-500/10",   solid: "bg-indigo-600 text-white",   dot: "bg-indigo-500" },
+    sky:     { text: "text-sky-600 dark:text-sky-400",         soft: "bg-sky-500/10 border-sky-500/20",         hover: "hover:border-sky-500/60 hover:shadow-sky-500/10",         solid: "bg-sky-600 text-white",      dot: "bg-sky-500" },
+    violet:  { text: "text-violet-600 dark:text-violet-400",   soft: "bg-violet-500/10 border-violet-500/20",   hover: "hover:border-violet-500/60 hover:shadow-violet-500/10",   solid: "bg-violet-600 text-white",   dot: "bg-violet-500" },
+    emerald: { text: "text-emerald-600 dark:text-emerald-400", soft: "bg-emerald-500/10 border-emerald-500/20", hover: "hover:border-emerald-500/60 hover:shadow-emerald-500/10", solid: "bg-emerald-600 text-white",  dot: "bg-emerald-500" },
+    amber:   { text: "text-amber-600 dark:text-amber-400",     soft: "bg-amber-500/10 border-amber-500/20",     hover: "hover:border-amber-500/60 hover:shadow-amber-500/10",     solid: "bg-amber-500 text-zinc-950", dot: "bg-amber-500" }
+  };
+
+  /* ==========================================================================
+     1Б. АВТОРСЬКІ ВЕБ-ПРОЄКТИ ВЧИТЕЛЯ (GitHub Pages / Web Apps)
+         Щоб додати новий проєкт, просто додайте об'єкт у цей масив.
+     ========================================================================== */
+  const MY_PROJECTS = [
+    {
+      title: "Check-List Mark It",
+      badge: "Web App · Продуктивність",
+      tone: "indigo",
+      url: "https://dark1604.github.io/check-list-mark-it/",
+      repo: "dark1604/check-list-mark-it",
+      desc: "Інтерактивний веб-застосунок для створення чек-листів, трекінгу навчальних завдань, організації проєктної роботи та самоконтролю учнів.",
+      tags: ["JavaScript", "Check-list", "Продуктивність", "Web App"],
+      icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+    },
+    {
+      title: "InfoDetox",
+      badge: "EdTech · Медіаграмотність",
+      tone: "emerald",
+      url: "https://dark1604.github.io/InfoDetox/",
+      repo: "dark1604/InfoDetox",
+      desc: "Освітній веб-проєкт з інформаційної гігієни, медіаграмотності, критичного мислення та захисту від дезінформації й цифрового перевантаження.",
+      tags: ["Інфогігієна", "Кібербезпека", "Медіаграмотність", "EdTech"],
+      icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+    },
+    {
+      title: "3D-лабораторія будови ПК",
+      badge: "3D WebGL · Інформатика",
+      tone: "amber",
+      internalHash: "#/hub/cs/cs-3d-hardware",
+      repo: "Model-Viewer · GLB",
+      desc: "Інтерактивний 3D-тренажер системного блока та материнської плати ASUS ROG із живими маркерами вузлів (CPU, GPU, RAM, M.2 NVMe, VRM, PCH).",
+      tags: ["3D", "WebGL", "Апаратне забезпечення", "Тренажер"],
+      icon: "M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"
+    }
+  ];
+
+  /* ==========================================================================
+     2. МЕТАДАНІ МАТЕРІАЛІВ
+        type: "lesson" — тема уроку, "project" — приклад/проєкт, "ref" — довідник.
+        Текст береться з <script type="text/markdown" data-id="..."> або з файлу file.
+     ========================================================================== */
+  const DEMO_ARTICLES = [
+    // Інформатика
+    { id: "cs-3d-hardware",    subject: "cs", grade: null, type: "project", kind: "3D-тренажер", time: "15 хв", title: "Будова комп'ютера (3D-тренажер)", summary: "Інтерактивні 3D-моделі системного блока та материнської плати ROG із маркерами вузлів.", tags: ["3D", "Апаратне забезпечення", "CPU", "GPU", "RAM", "Материнська плата"] },
+    { id: "cs-algorithms-5",   subject: "cs", grade: 5,  type: "lesson",  time: "8 хв",  title: "Алгоритми та виконавці", summary: "Що таке алгоритм, його властивості та перша програма з Черепашкою.", tags: ["Алгоритми", "Turtle"] },
+    { id: "python-algo-sort",  subject: "cs", grade: 9,  type: "lesson",  time: "15 хв", title: "Пошук і сортування в Python", summary: "Big-O, бінарний пошук та оптимізоване сортування бульбашкою.", tags: ["Python", "Big-O"] },
+    { id: "js-dom-events",     subject: "cs", grade: 10, type: "lesson",  time: "12 хв", title: "DOM-дерево та події в JavaScript", summary: "querySelector, делегування подій і інтерфейс як функція від стану.", tags: ["JavaScript", "DOM"] },
+    { id: "sql-relational-db", subject: "cs", grade: 11, type: "lesson",  time: "14 хв", title: "Реляційні бази даних і SQL", summary: "Ключі, JOIN, GROUP BY та робота з SQLite з Python.", tags: ["SQL", "SQLite"] },
+    { id: "cs-ref-python",     subject: "cs", grade: null, type: "ref",   time: "5 хв",  title: "Шпаргалка Python", summary: "Типи даних, умови, цикли, функції та списки.", tags: ["Python"] },
+    { id: "cs-project-guess",  subject: "cs", grade: 7,  type: "project", kind: "Міні-гра", time: "10 хв", title: "Гра «Вгадай число»", summary: "Інтерактивна гра та її зв'язок із бінарним пошуком.", tags: ["Гра", "Python"] },
+    // Математика 5–6
+    { id: "divisibility-gcd",  subject: "math", grade: 5, type: "lesson",  time: "9 хв",  title: "Подільність чисел: НСД і НСК", summary: "Ознаки подільності, прості числа та алгоритм Евкліда.", tags: ["НСД", "НСК"] },
+    { id: "fractions-ratios",  subject: "math", grade: 6, type: "lesson",  time: "10 хв", title: "Дроби, пропорції та відсотки", summary: "Дії з дробами, основна властивість пропорції, задачі на відсотки.", tags: ["Дроби", "Відсотки"] },
+    { id: "math-ref-cheatsheet", subject: "math", grade: null, type: "ref", time: "4 хв", title: "Довідник: дроби, відсотки, одиниці", summary: "Таблиця перетворень дробів, одиниці вимірювання, площі.", tags: ["Довідник"] },
+    { id: "math-project-shop", subject: "math", grade: 6, type: "project", kind: "Життєвий кейс", time: "8 хв", title: "Математика в магазині: знижки", summary: "Чому 20% + 10% ≠ 30% — калькулятор послідовних знижок.", tags: ["Відсотки", "Кейс"] },
+    // Алгебра
+    { id: "linear-functions",  subject: "alg", grade: 7,  type: "lesson",  time: "11 хв", title: "Лінійна функція та системи рівнянь", summary: "Зміст коефіцієнтів k і b, взаємне розміщення прямих, метод додавання.", tags: ["Функції", "Системи"] },
+    { id: "quad-eq",           subject: "alg", grade: 8,  type: "lesson",  time: "12 хв", title: "Квадратні рівняння та теорема Вієта", summary: "Дискримінант, неповні рівняння, теорема Вієта та розв'язувач на Python.", tags: ["Дискримінант", "Вієта"] },
+    { id: "derivatives-extrema", subject: "alg", grade: 11, type: "lesson", time: "16 хв", title: "Похідна та дослідження функції", summary: "Таблиця похідних, рівняння дотичної, точки екстремуму.", tags: ["Похідна", "НМТ"] },
+    { id: "alg-ref-formulas",  subject: "alg", grade: null, type: "ref",   time: "5 хв",  title: "Довідник формул алгебри", summary: "Скорочене множення, степені, прогресії, логарифми.", tags: ["Формули"] },
+    { id: "alg-project-ball",  subject: "alg", grade: 9,  type: "project", kind: "Моделювання", time: "12 хв", title: "Траєкторія баскетбольного м'яча", summary: "Квадратична функція у фізиці: висота, час польоту, моделювання.", tags: ["Парабола", "Python"] },
+    // Геометрія
+    { id: "pythagoras-trig",   subject: "geom", grade: 8, type: "lesson",  time: "11 хв", title: "Теорема Піфагора та тригонометрія", summary: "Піфагорові трійки, метричні співвідношення, sin, cos, tan.", tags: ["Піфагор", "Тригонометрія"] },
+    { id: "vectors-coords",    subject: "geom", grade: 9, type: "lesson",  time: "12 хв", title: "Вектори на площині", summary: "Координати, модуль, скалярний добуток і кут між векторами.", tags: ["Вектори"] },
+    { id: "geom-ref-areas",    subject: "geom", grade: null, type: "ref",  time: "4 хв",  title: "Довідник: площі та об'єми", summary: "Формули площ фігур, об'ємів і поверхонь тіл.", tags: ["Формули"] },
+    { id: "geom-project-ladder", subject: "geom", grade: 8, type: "project", kind: "Практикум", time: "9 хв", title: "Драбина, телевізор і Піфагор", summary: "Три життєві задачі та інтерактивний калькулятор висоти драбини.", tags: ["Практикум"] },
+    // Фінансова грамотність
+    { id: "personal-budget-taxes", subject: "fin", grade: 9, type: "lesson", time: "11 хв", title: "Особистий бюджет за правилом 50/30/20", summary: "Потреби, бажання, заощадження та подушка безпеки.", tags: ["Бюджет"] },
+    { id: "compound-interest", subject: "fin", grade: 10, type: "lesson", time: "13 хв", title: "Складний відсоток та інфляція", summary: "Капіталізація, правило 72 і реальна дохідність за Фішером.", tags: ["Депозити", "Інфляція"] },
+    { id: "fin-ref-glossary",  subject: "fin", grade: null, type: "ref",  time: "4 хв",  title: "Фінансовий словник", summary: "Ключові терміни та формули фінансової грамотності.", tags: ["Словник"] },
+    { id: "fin-project-deposit", subject: "fin", grade: 10, type: "project", kind: "Симулятор", time: "10 хв", title: "Симулятор заощаджень", summary: "Інтерактивний калькулятор складного відсотка з поповненням.", tags: ["Калькулятор"] }
+  ];
+
+  /* ==========================================================================
+     3. СТАН ЗАСТОСУНКУ ТА ДОПОМІЖНІ ФУНКЦІЇ
+     ========================================================================== */
+  const state = {
+    articles: DEMO_ARTICLES.map((a) => ({ ...a })),
+    view: "portfolio",      // "portfolio" | "hub"
+    subject: "cs",
+    grade: "ALL",
+    articleId: null,
+    portfolioScroll: 0
+  };
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const fmtMoney = (n) => new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 0 }).format(Math.round(n)) + " грн";
+  const icon = (path, cls = "w-5 h-5") => `<svg class="${cls}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg>`;
+  const tone = (key) => TONES[SUBJECTS[key]?.tone || "indigo"];
+  const NAME_TO_KEY = Object.fromEntries(Object.entries(SUBJECTS).map(([k, v]) => [v.name, k]));
+
+  function bySubject(key) {
+    return state.articles.filter((a) => a.subject === key);
+  }
+  function matchesGrade(a) {
+    return state.grade === "ALL" || a.grade == null || Number(a.grade) === Number(state.grade);
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const el = $("#toast");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.add("hidden"), 2200);
+  }
+
+  /* ==========================================================================
+     4. ДЖЕРЕЛА ДАНИХ: зовнішній articles.json + вбудовані Markdown-блоки + .md файли
+     ========================================================================== */
+  async function loadExternalArticles() {
+    try {
+      const res = await fetch("articles.json", { cache: "no-cache" });
+      if (!res.ok) return;
+      const list = await res.json();
+      if (!Array.isArray(list)) return;
+      const map = new Map(state.articles.map((a) => [a.id, a]));
+      list.forEach((raw) => {
+        const subject = SUBJECTS[raw.subject] ? raw.subject : NAME_TO_KEY[raw.subject];
+        if (!subject || !raw.id) return;
+        const prev = map.get(raw.id) || {};
+        map.set(raw.id, {
+          ...prev, ...raw, subject,
+          type: raw.type || prev.type || "lesson",
+          time: raw.time || raw.readingTime || prev.time || "10 хв"
+        });
+      });
+      state.articles = Array.from(map.values());
+    } catch (e) {
+      /* file:// або відсутній файл — працюємо з вбудованими даними */
+    }
+  }
+
+  async function getArticleMarkdown(a) {
+    if (a.file && location.protocol !== "file:") {
+      try {
+        const res = await fetch(a.file, { cache: "no-cache" });
+        if (res.ok) return await res.text();
+      } catch (e) {}
+    }
+    const tag = document.querySelector(`script[type="text/markdown"][data-id="${a.id}"]`);
+    if (tag) return tag.textContent.replace(/^\s*\n/, "");
+    if (a.content) return a.content;
+    if (a.file) {
+      try {
+        const res = await fetch(a.file, { cache: "no-cache" });
+        if (res.ok) return await res.text();
+      } catch (e) {}
+    }
+    return "# Матеріал готується\n\nКонспект цієї теми незабаром з'явиться.";
+  }
+
+  /* ==========================================================================
+     5. РЕНДЕР: Markdown (Marked) + формули (KaTeX) + код (Prism) + віджети
+     ========================================================================== */
+  function katexHTML(formula, display) {
+    if (!window.katex) return `<code>${esc(formula)}</code>`;
+    try {
+      return katex.renderToString(formula.trim(), { displayMode: display, throwOnError: false });
+    } catch (e) {
+      return `<code>${esc(formula)}</code>`;
+    }
+  }
+
+  /** Рядок із формулами $...$ (для тестів і підписів) → безпечний HTML */
+  function inlineMath(text) {
+    return String(text).split(/(\$[^$]+\$)/g).map((part) =>
+      /^\$[^$]+\$$/.test(part) ? katexHTML(part.slice(1, -1), false) : esc(part)
+    ).join("");
+  }
+
+  /**
+   * 1) ховаємо код від обробки формул; 2) $$..$$ та $..$ → KaTeX-плейсхолдери;
+   * 3) повертаємо код і парсимо Markdown; 4) підставляємо готові формули.
+   */
+  function renderMarkdown(md) {
+    const code = [], math = [];
+    let t = md.replace(/```[\s\S]*?```|`[^`\n]+`/g, (m) => { code.push(m); return `@@CODE${code.length - 1}@@`; });
+    t = t.replace(/\$\$([\s\S]+?)\$\$/g, (_, f) => { math.push(katexHTML(f, true)); return `@@MATH${math.length - 1}@@`; });
+    t = t.replace(/\$([^$\n]+?)\$/g, (_, f) => { math.push(katexHTML(f, false)); return `@@MATH${math.length - 1}@@`; });
+    t = t.replace(/@@CODE(\d+)@@/g, (_, i) => code[+i]);
+    let html = window.marked ? marked.parse(t, { gfm: true }) : `<pre>${esc(t)}</pre>`;
+    return html.replace(/@@MATH(\d+)@@/g, (_, i) => math[+i]);
+  }
+
+  /** Після вставки HTML: віджети, тести, підсвітка коду, обгортки таблиць */
+  function enhanceContent(root) {
+    $$("pre > code", root).forEach((codeEl) => {
+      const lang = (codeEl.className.match(/language-([\w-]+)/) || [])[1] || "";
+      const pre = codeEl.parentElement;
+      if (lang === "quiz") return pre.replaceWith(buildQuiz(codeEl.textContent));
+      if (lang === "widget") return pre.replaceWith(buildWidget(codeEl.textContent.trim()));
+
+      const prismLang = window.Prism && Prism.languages && Prism.languages[lang] ? lang : "none";
+      codeEl.className = `language-${prismLang}`;
+      pre.className = `language-${prismLang}`;
+      if (prismLang !== "none") Prism.highlightElement(codeEl);
+
+      const box = document.createElement("div");
+      box.className = "code-box shadow-sm";
+      box.innerHTML = `
+        <div class="flex items-center justify-between px-4 py-2 border-b border-zinc-800 text-xs font-tech text-zinc-400">
+          <span>${esc((lang || "code").toUpperCase())}</span>
+          <button type="button" class="copy-btn px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors">Копіювати</button>
+        </div>`;
+      box.querySelector(".copy-btn").addEventListener("click", (e) => {
+        navigator.clipboard?.writeText(codeEl.textContent || "").then(() => {
+          e.target.textContent = "✓ Скопійовано";
+          toast("Код скопійовано");
+          setTimeout(() => (e.target.textContent = "Копіювати"), 1600);
+        });
+      });
+      pre.replaceWith(box);
+      box.appendChild(pre);
+    });
+
+    $$("table", root).forEach((tbl) => {
+      if (tbl.parentElement.classList.contains("table-wrap")) return;
+      const wrap = document.createElement("div");
+      wrap.className = "table-wrap";
+      tbl.replaceWith(wrap);
+      wrap.appendChild(tbl);
+    });
+
+    $$("a[href^='http']", root).forEach((a) => { a.target = "_blank"; a.rel = "noopener noreferrer"; });
+  }
+  </script>
+
+  <script>
+  /* ==========================================================================
+     6. ІНТЕРАКТИВНІ ВІДЖЕТИ ТА ТЕСТИ САМОПЕРЕВІРКИ ВСЕРЕДИНІ УРОКІВ
+     ========================================================================== */
+  function buildQuiz(rawJson) {
+    let data;
+    try {
+      data = JSON.parse(rawJson.trim());
+    } catch (e) {
+      const fallback = document.createElement("div");
+      fallback.textContent = rawJson;
+      return fallback;
+    }
+
+    const wrap = document.createElement("div");
+    wrap.className = "my-6 rounded-2xl p-5 sm:p-6 bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20";
+    wrap.innerHTML = `
+      <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">
+        <span>⚡ Швидка самоперевірка</span>
+      </div>
+      <div class="font-semibold text-base sm:text-lg mb-4">${inlineMath(data.q || "")}</div>
+      <div class="grid sm:grid-cols-2 gap-2.5 quiz-opts"></div>
+      <div class="quiz-feedback hidden mt-4 text-sm px-4 py-3 rounded-xl"></div>
+    `;
+
+    const optsBox = wrap.querySelector(".quiz-opts");
+    const feedback = wrap.querySelector(".quiz-feedback");
+
+    (data.options || []).forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className =
+        "text-left px-4 py-2.5 rounded-xl text-sm font-medium bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 transition-all";
+      btn.innerHTML = `<span class="font-tech text-xs text-zinc-400 mr-2">${ idx + 1 }.</span>${inlineMath(opt)}`;
+      btn.addEventListener("click", () => {
+        const ok = idx === Number(data.answer);
+        $$("button", optsBox).forEach((b, i) => {
+          b.disabled = true;
+          if (i === Number(data.answer)) {
+            b.className =
+              "text-left px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500/15 border border-emerald-500 text-emerald-700 dark:text-emerald-300";
+          } else if (i === idx) {
+            b.className =
+              "text-left px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-500/15 border border-rose-500 text-rose-700 dark:text-rose-300";
+          } else {
+            b.classList.add("opacity-60");
+          }
+        });
+        feedback.classList.remove("hidden");
+        feedback.className = `quiz-feedback mt-4 text-sm px-4 py-3 rounded-xl ${
+          ok
+            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+            : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30"
+        }`;
+        feedback.innerHTML = `<strong>${ok ? "Правильно! " : "Зверніть увагу: "}</strong>${inlineMath(data.explain || "")}`;
+      });
+      optsBox.appendChild(btn);
+    });
+
+    return wrap;
+  }
+
+  function buildWidget(kind) {
+    const box = document.createElement("div");
+    box.className = "my-6 rounded-2xl p-5 sm:p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm";
+
+    if (kind === "guess") {
+      let secret = Math.floor(Math.random() * 100) + 1;
+      let tries = 0;
+      box.innerHTML = `
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">🎮 Міні-гра: Вгадай число (1–100)</span>
+          <span class="font-tech text-xs text-zinc-500" data-tries>Спроб: 0 / 7</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input type="number" min="1" max="100" placeholder="Введіть число 1..100" class="font-tech flex-1 min-w-[160px] px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 outline-none focus:border-indigo-500" />
+          <button type="button" data-check class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500">Перевірити</button>
+          <button type="button" data-reset class="px-3.5 py-2 rounded-xl text-sm font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700">Нове число</button>
+        </div>
+        <div data-msg class="mt-3 text-sm text-zinc-600 dark:text-zinc-300">Спробуйте знайти число за ≤ 7 кроків (метод половинного ділення).</div>
+      `;
+      const inp = box.querySelector("input");
+      const msg = box.querySelector("[data-msg]");
+      const triesEl = box.querySelector("[data-tries]");
+      const check = () => {
+        const val = Number(inp.value);
+        if (!val || val < 1 || val > 100) {
+          msg.textContent = "Введіть ціле число від 1 до 100.";
+          return;
+        }
+        tries++;
+        triesEl.textContent = `Спроб: ${tries} / 7`;
+        if (val === secret) {
+          msg.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">🎉 Точно! Число ${secret} вгадано за ${tries} спроб.</span>`;
+        } else if (val < secret) {
+          msg.innerHTML = `Загадане число <strong>більше ↑</strong> ніж <span class="font-tech">${val}</span>.`;
+        } else {
+          msg.innerHTML = `Загадане число <strong>менше ↓</strong> ніж <span class="font-tech">${val}</span>.`;
+        }
+      };
+      box.querySelector("[data-check]").addEventListener("click", check);
+      inp.addEventListener("keydown", (e) => e.key === "Enter" && check());
+      box.querySelector("[data-reset]").addEventListener("click", () => {
+        secret = Math.floor(Math.random() * 100) + 1;
+        tries = 0;
+        inp.value = "";
+        triesEl.textContent = "Спроб: 0 / 7";
+        msg.textContent = "Нове число загадано! Починайте з 50.";
+      });
+      return box;
+    }
+
+    if (kind === "discount") {
+      box.innerHTML = `
+        <div class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-3">🧮 Калькулятор послідовних знижок</div>
+        <div class="grid sm:grid-cols-3 gap-3 mb-4">
+          <label class="text-xs text-zinc-500">Початкова ціна (грн)
+            <input type="number" data-price value="1000" min="1" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+          <label class="text-xs text-zinc-500">Перша знижка (%)
+            <input type="number" data-d1 value="20" min="0" max="99" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+          <label class="text-xs text-zinc-500">Друга знижка (%)
+            <input type="number" data-d2 value="10" min="0" max="99" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+        </div>
+        <div data-out class="font-tech text-sm p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800"></div>
+      `;
+      const update = () => {
+        const p = Math.max(0, Number(box.querySelector("[data-price]").value) || 0);
+        const d1 = Math.min(99, Math.max(0, Number(box.querySelector("[data-d1]").value) || 0));
+        const d2 = Math.min(99, Math.max(0, Number(box.querySelector("[data-d2]").value) || 0));
+        const final = p * (1 - d1 / 100) * (1 - d2 / 100);
+        const eff = p > 0 ? (1 - final / p) * 100 : 0;
+        box.querySelector("[data-out]").innerHTML =
+          `Кінцева ціна: <strong class="text-indigo-600 dark:text-indigo-400">${final.toFixed(2)} грн</strong> · Реальна сумарна знижка: <strong>${eff.toFixed(1)}%</strong> (а не ${d1 + d2}%)`;
+      };
+      $$("input", box).forEach((i) => i.addEventListener("input", update));
+      update();
+      return box;
+    }
+
+    if (kind === "ladder") {
+      box.innerHTML = `
+        <div class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-3">📐 Калькулятор висоти драбини за Піфагором</div>
+        <div class="grid sm:grid-cols-2 gap-3 mb-4">
+          <label class="text-xs text-zinc-500">Довжина драбини L (м)
+            <input type="number" step="0.1" data-l value="5" min="1" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+          <label class="text-xs text-zinc-500">Відстань від стіни d (м)
+            <input type="number" step="0.1" data-d value="1.4" min="0.1" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+        </div>
+        <div data-out class="font-tech text-sm p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800"></div>
+      `;
+      const update = () => {
+        const L = Number(box.querySelector("[data-l]").value) || 0;
+        const d = Number(box.querySelector("[data-d]").value) || 0;
+        const out = box.querySelector("[data-out]");
+        if (d >= L || L <= 0) {
+          out.innerHTML = `<span class="text-rose-500">Відстань d має бути меншою за довжину драбини L!</span>`;
+          return;
+        }
+        const h = Math.sqrt(L * L - d * d);
+        const angle = (Math.acos(d / L) * 180) / Math.PI;
+        out.innerHTML = `Висота опори h = <strong class="text-emerald-600 dark:text-emerald-400">${h.toFixed(2)} м</strong> · Кут нахилу ≈ <strong>${angle.toFixed(1)}°</strong>`;
+      };
+      $$("input", box).forEach((i) => i.addEventListener("input", update));
+      update();
+      return box;
+    }
+
+    if (kind === "compound") {
+      box.innerHTML = `
+        <div class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-3">💰 Симулятор складного відсотка (щомісячна капіталізація)</div>
+        <div class="grid sm:grid-cols-4 gap-3 mb-4">
+          <label class="text-xs text-zinc-500">Старт (грн)
+            <input type="number" data-p value="10000" min="0" step="1000" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+          <label class="text-xs text-zinc-500">Щомісяця (грн)
+            <input type="number" data-m value="1500" min="0" step="500" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+          <label class="text-xs text-zinc-500">Ставка (% річних)
+            <input type="number" data-r value="14" min="1" max="50" step="0.5" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+          <label class="text-xs text-zinc-500">Термін (років)
+            <input type="number" data-y value="5" min="1" max="40" class="font-tech mt-1 w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" />
+          </label>
+        </div>
+        <div data-out class="grid sm:grid-cols-3 gap-3 font-tech text-sm"></div>
+      `;
+      const update = () => {
+        const P = Math.max(0, Number(box.querySelector("[data-p]").value) || 0);
+        const M = Math.max(0, Number(box.querySelector("[data-m]").value) || 0);
+        const r = Math.max(0, Number(box.querySelector("[data-r]").value) || 0) / 100;
+        const years = Math.min(50, Math.max(1, Number(box.querySelector("[data-y]").value) || 1));
+        let bal = P;
+        const months = years * 12;
+        for (let i = 0; i < months; i++) bal = bal * (1 + r / 12) + M;
+        const invested = P + M * months;
+        const profit = bal - invested;
+        box.querySelector("[data-out]").innerHTML = `
+          <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div class="text-xs text-zinc-500 font-sans">Власні внески</div>
+            <div class="text-base font-bold mt-0.5">${fmtMoney(invested)}</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div class="text-xs text-zinc-500 font-sans">Нараховані відсотки</div>
+            <div class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">+${fmtMoney(profit)}</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <div class="text-xs text-amber-700 dark:text-amber-300 font-sans">Підсумковий капітал</div>
+            <div class="text-base font-bold text-amber-600 dark:text-amber-400 mt-0.5">${fmtMoney(bal)}</div>
+          </div>
+        `;
+      };
+      $$("input", box).forEach((i) => i.addEventListener("input", update));
+      update();
+      return box;
+    }
+
+    if (kind === "pc3d") {
+      const MODELS = {
+        gaming_pc: {
+          label: "🖥 Системний блок",
+          src: "models/gaming_pc.glb",
+          altSrc: "models/gaming setup1.glb",
+          subtitle: "Системний блок ПК із прозорою скляною панеллю",
+          defaultOrbit: "25deg 78deg 90%",
+          expectedZ: -3.5,
+          hotspots: [
+            {
+              id: "cpu-cooler", num: 1, pos: "-1.61m 2.69m -3.36m", norm: "0m 0m 1m", rel: [-0.14, 0.15, -0.22], x: 43, y: 31, orbit: "18deg 74deg 75%",
+              title: "Процесор (CPU) та кулер охолодження", tag: "CPU + Cooler", spec: "6–16 ядер · 3.5–5.5 ГГц · PWM",
+              desc: "Центральний процесор — головний обчислювальний вузол ПК, який виконує машинний код програм. Кулер із радіатором та вентилятором відводить тепло від кришки процесора."
+            },
+            {
+              id: "ram-ddr4", num: 2, pos: "-1.07m 2.71m -4.20m", norm: "0m 0m 1m", rel: [-0.06, 0.15, -0.39], x: 59, y: 30, orbit: "28deg 74deg 75%",
+              title: "Слоти оперативної пам'яті (RAM DDR4)", tag: "RAM DDR4 / DDR5", spec: "16–32 ГБ · Dual Channel",
+              desc: "Швидкодіюча енергозалежна пам'ять, у якій зберігаються запущені програми та дані поточної сесії. Працює у десятки разів швидше за накопичувачі, але очищується після вимкнення ПК."
+            },
+            {
+              id: "gpu-rtx", num: 3, pos: "-1.27m 1.95m -3.16m", norm: "0m 0m 1m", rel: [-0.09, 0.05, -0.19], x: 47, y: 54, orbit: "20deg 80deg 75%",
+              title: "Дискретна відеокарта (GPU)", tag: "GPU PCIe 4.0 x16", spec: "GDDR6 · Ray Tracing · CUDA",
+              desc: "Окрема плата з графічним процесором, власною відеопам'яттю VRAM і системою охолодження. Виконує побудову 3D-графіки, рендеринг відео та паралельні обчислення для задач штучного інтелекту."
+            },
+            {
+              id: "ssd-m2", num: 4, pos: "-1.16m 1.51m -4.30m", norm: "0m 0m 1m", rel: [-0.07, 0.00, -0.40], x: 46, y: 43, orbit: "24deg 78deg 75%",
+              title: "Твердотілий накопичувач SSD M.2 NVMe", tag: "SSD M.2 NVMe", spec: "PCIe 4.0 · 3500–7000 МБ/с",
+              desc: "Компактний енергонезалежний накопичувач на базі флеш-пам'яті, що встановлюється прямо в роз'єм M.2 на материнській платі. Забезпечує завантаження ОС за лічені секунди."
+            },
+            {
+              id: "psu-atx", num: 5, pos: "-0.93m 0.83m -2.89m", norm: "0m 0m 1m", rel: [-0.04, -0.09, -0.15], x: 37, y: 79, orbit: "15deg 86deg 80%",
+              title: "Блок живлення (PSU)", tag: "PSU ATX 80+ Gold", spec: "650–850 Вт · +12V / +5V / +3.3V",
+              desc: "Перетворює змінну напругу електромережі 220 В на стабілізовану постійну напругу (+12 В для процесора та відеокарти, +5 В і +3.3 В для накопичувачів та USB) і захищає систему від короткого замикання."
+            },
+            {
+              id: "case-airflow", num: 6, pos: "0.78m 2.35m -3.45m", norm: "1m 0m 0m", rel: [0.19, 0.11, -0.25], x: 75, y: 47, orbit: "42deg 76deg 82%",
+              title: "Корпусне охолодження та прозора панель", tag: "Airflow & Glass", spec: "120/140 мм ARGB PWM · Скло",
+              desc: "Корпусні вентилятори нагнітають холодне повітря всередину крізь пилові фільтри та виводять гаряче повітря назовні, підтримуючи оптимальну температуру всіх компонентів."
+            }
+          ]
+        },
+        motherboard: {
+          label: "🔌 Материнська плата ROG",
+          src: "models/rog_strix_motherboard.glb",
+          subtitle: "Материнська плата ASUS ROG Strix Z370-E Gaming (models/rog_strix_motherboard.glb)",
+          defaultOrbit: "-18deg 78deg 105%",
+          expectedZ: -7.24,
+          hotspots: [
+            {
+              id: "socket-lga", num: 1, pos: "0.69m 1.85m -7.75m", norm: "0m 0m 1m", rel: [0.05, 0.20, -0.33], x: 47, y: 33, orbit: "-8deg 74deg 85%",
+              title: "Процесорний сокет LGA", tag: "CPU Socket LGA", spec: "LGA 1151 / 1700 · Притискний механізм",
+              desc: "Спеціальний роз'єм у верхній частині материнської плати з сотнями позолочених пружинних контактів, куди встановлюється центральний процесор і фіксується металевою рамкою."
+            },
+            {
+              id: "dimm-ddr4", num: 2, pos: "2.80m 1.90m -6.55m", norm: "0m 0m 1m", rel: [0.32, 0.21, 0.45], x: 67, y: 33, orbit: "16deg 74deg 88%",
+              title: "Слоти оперативної пам'яті DDR4 DIMM", tag: "4× DDR4 DIMM", spec: "Канали A1/A2 та B1/B2",
+              desc: "Чотири 288-контактні слоти зі встановленими модулями ОЗП праворуч від процесора. Для двоканального режиму (Dual Channel) планки ставлять через один слот (A2 та B2)."
+            },
+            {
+              id: "pcie-slot", num: 3, pos: "0.15m -1.12m -7.55m", norm: "0m 0m 1m", rel: [-0.02, -0.11, -0.20], x: 45, y: 55, orbit: "-12deg 80deg 88%",
+              title: "Армований слот PCIe x16 (для GPU)", tag: "PCI Express x16", spec: "16 ліній PCIe · ASUS SafeSlot",
+              desc: "Головний високошвидкісний роз'єм розширення з металевим армуванням, підключений напряму до процесора. Призначений для встановлення дискретної відеокарти."
+            },
+            {
+              id: "m2-nvme", num: 4, pos: "0.21m -0.38m -7.68m", norm: "0m 0m 1m", rel: [-0.01, -0.04, -0.28], x: 51, y: 66, orbit: "-6deg 78deg 82%",
+              title: "Накопичувач Samsung 970 EVO у слоті M.2", tag: "M.2 Key-M NVMe", spec: "Форм-фактор 2280 · PCIe x4",
+              desc: "Високошвидкісний роз'єм M.2 під процесором, у який встановлено твердотілий накопичувач NVMe SSD без жодних кабелів SATA чи живлення."
+            },
+            {
+              id: "vrm-power", num: 5, pos: "-1.50m 2.36m -7.10m", norm: "0m 0m 1m", rel: [-0.24, 0.26, 0.09], x: 32, y: 26, orbit: "-26deg 72deg 90%",
+              title: "Радіатори живлення VRM та кожух I/O", tag: "VRM + I/O Shield", spec: "Фази DrMOS · Алюмінієвий радіатор",
+              desc: "Модуль регулювання напруги (VRM) ліворуч і зверху від сокета процесора. Знижує +12 В від блока живлення до точних ~1.2 В для ядер CPU; накритий масивними радіаторами ROG."
+            },
+            {
+              id: "chipset-pch", num: 6, pos: "2.56m -2.10m -7.44m", norm: "0m 0m 1m", rel: [0.29, -0.22, -0.13], x: 65, y: 72, orbit: "18deg 82deg 90%",
+              title: "Чіпсет материнської плати ROG (PCH)", tag: "Chipset (PCH)", spec: "Радіатор ROG · USB 3.2 · SATA 6 Гбіт/с",
+              desc: "Мікросхема системної логіки під великим фігурним радіатором із логотипом ROG праворуч унизу. Керує портами USB, роз'ємами SATA, звуковим трактом і мережевою картою."
+            }
+          ]
+        }
+      };
+
+      let curMode = "gaming_pc";
+      let curIdx = 0;
+      let autoRotate = true;
+      let calibrateMode = false;
+      let customBlobUrl = null;
+      let triedAltSrc = false;
+
+      box.className = "my-6 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg";
+      box.innerHTML = `
+        <!-- Верхня панель керування 3D-тренажером -->
+        <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2" data-mode-tabs>
+            <button type="button" data-mode="gaming_pc" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all"></button>
+            <button type="button" data-mode="motherboard" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all"></button>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" data-toggle-rotate class="font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500/50 transition-colors">⟳ Автообертання: УВІМК</button>
+            <button type="button" data-toggle-calibrate class="font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-amber-500/50 transition-colors" title="Увімкніть і клікніть по 3D-моделі, щоб переставити активну точку">📍 Калібрувати точки</button>
+            <button type="button" data-reset-cam class="font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500/50 transition-colors" title="Повернути камеру у вихідне положення">🎯 Камера</button>
+            <label class="font-tech text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500/20 cursor-pointer transition-colors" title="Підвантажити локальний .glb файл із комп'ютера">
+              📂 Свій .glb
+              <input type="file" accept=".glb,.gltf" data-glb-input class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <!-- 3D Viewport: <model-viewer> + інтерактивна fallback-схема -->
+        <div class="relative h-[430px] sm:h-[500px] w-full bg-gradient-to-b from-zinc-900 via-zinc-950 to-zinc-900 overflow-hidden select-none" data-viewport>
+          <div class="absolute inset-0 grid-pattern opacity-40 pointer-events-none"></div>
+
+          <!-- Підпис моделі та статус -->
+          <div class="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+            <span data-model-subtitle class="font-tech text-xs px-3 py-1 rounded-full bg-zinc-900/85 text-zinc-300 border border-zinc-700/80 backdrop-blur-sm"></span>
+            <span data-model-status class="font-tech text-[11px] px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 backdrop-blur-sm"></span>
+          </div>
+
+          <!-- Google <model-viewer> -->
+          <model-viewer
+            data-mv
+            src="models/gaming_pc.glb"
+            alt="3D-модель будови комп'ютера"
+            camera-controls
+            auto-rotate
+            rotation-per-second="18deg"
+            shadow-intensity="1"
+            exposure="1.05"
+            touch-action="pan-y"
+            class="w-full h-full relative z-10"
+          ></model-viewer>
+
+          <!-- Інтерактивний Fallback / Заглушка (показується, доки .glb файл ще не завантажено у папку models/) -->
+          <div data-fallback class="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
+            <div data-fallback-stage class="relative w-full max-w-[540px] aspect-[16/11] rounded-2xl border border-zinc-800/90 bg-zinc-900/75 backdrop-blur-sm shadow-2xl overflow-hidden transition-transform duration-200">
+              <div data-fallback-svg class="w-full h-full"></div>
+              <div data-fallback-hotspots class="absolute inset-0"></div>
+            </div>
+            <div class="mt-2.5 text-center text-xs text-zinc-400 max-w-xl px-2">
+              💡 <span>Інтерактивний прев'ю-стенд активний: натискайте на пульсуючі маркери <strong class="text-white">1–6</strong>! Коли файл <code class="font-tech text-indigo-300" data-expected-path>models/gaming_pc.glb</code> буде додано в репозиторій (або обрано кнопкою «📂 Свій .glb»), автоматично увімкнеться повноцінна 3D-сцена WebGL.</span>
+            </div>
+          </div>
+
+          <!-- Підказка керування камерою знизу сцени -->
+          <div class="absolute bottom-3 left-3 z-20 hidden sm:flex items-center gap-3 font-tech text-[11px] text-zinc-400 bg-zinc-900/80 px-3 py-1 rounded-full border border-zinc-800 pointer-events-none">
+            <span>🖱 ЛКМ — обертання</span>
+            <span>⚙ Коліщатко — масштаб</span>
+            <span>👆 Клік по маркеру — опис вузла</span>
+          </div>
+        </div>
+
+        <!-- Швидкий вибір вузлів (пігулки 1–6) -->
+        <div class="px-4 sm:px-5 py-3 bg-zinc-50 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 overflow-x-auto" data-node-pills></div>
+
+        <!-- Інформаційна картка обраного компонента -->
+        <div data-info-card class="p-5 sm:p-6 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all"></div>
+      `;
+
+      const mv = box.querySelector("[data-mv]");
+      const fallbackEl = box.querySelector("[data-fallback]");
+      const fallbackStage = box.querySelector("[data-fallback-stage]");
+      const fallbackSvg = box.querySelector("[data-fallback-svg]");
+      const fallbackHs = box.querySelector("[data-fallback-hotspots]");
+      const expectedPathEl = box.querySelector("[data-expected-path]");
+      const subtitleEl = box.querySelector("[data-model-subtitle]");
+      const statusEl = box.querySelector("[data-model-status]");
+      const pillsEl = box.querySelector("[data-node-pills]");
+      const infoCardEl = box.querySelector("[data-info-card]");
+      const rotateBtn = box.querySelector("[data-toggle-rotate]");
+      const calibrateBtn = box.querySelector("[data-toggle-calibrate]");
+      const resetCamBtn = box.querySelector("[data-reset-cam]");
+      const glbInput = box.querySelector("[data-glb-input]");
+
+      function buildFallbackBlueprint(mode) {
+        if (mode === "gaming_pc") {
+          return `
+            <svg viewBox="0 0 600 410" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="115" y="28" width="370" height="354" rx="18" fill="#09090b" stroke="#6366f1" stroke-width="2.5"/>
+              <rect x="132" y="44" width="305" height="250" rx="10" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
+              <rect x="152" y="58" width="215" height="215" rx="8" fill="#1e1b4b" fill-opacity="0.55" stroke="#818cf8" stroke-width="1.5"/>
+              <rect x="218" y="88" width="78" height="78" rx="12" fill="#312e81" stroke="#a5b4fc" stroke-width="2"/>
+              <circle cx="257" cy="127" r="28" fill="#1e1b4b" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 4"/>
+              <text x="257" y="131" text-anchor="middle" fill="#e0e7ff" font-family="Consolas, monospace" font-size="11" font-weight="bold">CPU FAN</text>
+              <rect x="338" y="84" width="8" height="82" rx="3" fill="#8b5cf6"/>
+              <rect x="351" y="84" width="8" height="82" rx="3" fill="#f59e0b"/>
+              <rect x="364" y="84" width="8" height="82" rx="3" fill="#8b5cf6"/>
+              <rect x="377" y="84" width="8" height="82" rx="3" fill="#f59e0b"/>
+              <rect x="235" y="172" width="86" height="20" rx="4" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
+              <text x="278" y="185" text-anchor="middle" fill="#a7f3d0" font-family="Consolas, monospace" font-size="9">M.2 NVMe SSD</text>
+              <rect x="165" y="200" width="245" height="54" rx="10" fill="#27272a" stroke="#f59e0b" stroke-width="2"/>
+              <circle cx="225" cy="227" r="18" fill="#18181b" stroke="#fbbf24" stroke-width="1.5"/>
+              <circle cx="345" cy="227" r="18" fill="#18181b" stroke="#fbbf24" stroke-width="1.5"/>
+              <text x="285" y="231" text-anchor="middle" fill="#fde68a" font-family="Consolas, monospace" font-size="11" font-weight="bold">GEFORCE RTX</text>
+              <rect x="132" y="302" width="185" height="64" rx="8" fill="#18181b" stroke="#52525b" stroke-width="2"/>
+              <text x="224" y="338" text-anchor="middle" fill="#a1a1aa" font-family="Consolas, monospace" font-size="12" font-weight="bold">PSU 750W 80+ GOLD</text>
+              <circle cx="456" cy="105" r="30" fill="#18181b" stroke="#38bdf8" stroke-width="2"/>
+              <circle cx="456" cy="185" r="30" fill="#18181b" stroke="#a855f7" stroke-width="2"/>
+              <circle cx="456" cy="265" r="30" fill="#18181b" stroke="#f59e0b" stroke-width="2"/>
+              <path d="M135 48 L245 48 L155 290 L135 290 Z" fill="white" fill-opacity="0.04"/>
+            </svg>
+          `;
+        }
+        return `
+          <svg viewBox="0 0 600 410" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="125" y="24" width="350" height="362" rx="14" fill="#111827" stroke="#8b5cf6" stroke-width="2.5"/>
+            <rect x="150" y="65" width="48" height="125" rx="6" fill="#27272a" stroke="#f43f5e" stroke-width="2"/>
+            <rect x="208" y="42" width="130" height="36" rx="6" fill="#27272a" stroke="#f43f5e" stroke-width="2"/>
+            <text x="273" y="64" text-anchor="middle" fill="#fda4af" font-family="Consolas, monospace" font-size="10" font-weight="bold">ROG VRM HEATSINK</text>
+            <rect x="232" y="96" width="96" height="96" rx="10" fill="#1e293b" stroke="#6366f1" stroke-width="2.5"/>
+            <rect x="248" y="112" width="64" height="64" rx="4" fill="#0f172a" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <text x="280" y="148" text-anchor="middle" fill="#c7d2fe" font-family="Consolas, monospace" font-size="11" font-weight="bold">LGA SOCKET</text>
+            <rect x="378" y="75" width="12" height="132" rx="3" fill="#312e81" stroke="#818cf8"/>
+            <rect x="396" y="75" width="12" height="132" rx="3" fill="#4c1d95" stroke="#c084fc"/>
+            <rect x="414" y="75" width="12" height="132" rx="3" fill="#312e81" stroke="#818cf8"/>
+            <rect x="432" y="75" width="12" height="132" rx="3" fill="#4c1d95" stroke="#c084fc"/>
+            <rect x="175" y="218" width="215" height="18" rx="4" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+            <text x="282" y="230" text-anchor="middle" fill="#fde68a" font-family="Consolas, monospace" font-size="9" font-weight="bold">PCIe 4.0 x16 SAFESLOT</text>
+            <rect x="175" y="305" width="195" height="14" rx="3" fill="#1e293b" stroke="#64748b"/>
+            <rect x="235" y="258" width="145" height="28" rx="6" fill="#064e3b" stroke="#34d399" stroke-width="2"/>
+            <text x="307" y="276" text-anchor="middle" fill="#a7f3d0" font-family="Consolas, monospace" font-size="10" font-weight="bold">M.2 NVMe SHIELD</text>
+            <rect x="352" y="268" width="95" height="75" rx="10" fill="#18181b" stroke="#ec4899" stroke-width="2"/>
+            <text x="399" y="309" text-anchor="middle" fill="#f9a8d4" font-family="Consolas, monospace" font-size="11" font-weight="bold">ROG CHIPSET</text>
+          </svg>
+        `;
+      }
+
+      function selectHotspot(idx) {
+        const cfg = MODELS[curMode];
+        curIdx = Math.max(0, Math.min(cfg.hotspots.length - 1, idx));
+        const h = cfg.hotspots[curIdx];
+
+        $$("[data-hs-idx]", box).forEach((btn) => {
+          btn.classList.toggle("is-selected", Number(btn.dataset.hsIdx) === curIdx);
+        });
+
+        $$("[data-pill-idx]", pillsEl).forEach((btn) => {
+          const active = Number(btn.dataset.pillIdx) === curIdx;
+          btn.className = `px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            active
+              ? "bg-amber-500 text-zinc-950 shadow-sm"
+              : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50"
+          }`;
+        });
+
+        if (mv && h.orbit) {
+          try {
+            mv.cameraOrbit = h.orbit;
+          } catch (e) {}
+        }
+
+        infoCardEl.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-tech text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-zinc-950">Вузол #${h.num}</span>
+                <span class="font-tech text-xs px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20">${esc(h.tag)}</span>
+                <span class="font-tech text-xs px-2.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${esc(h.spec)}</span>
+                <span class="font-tech text-[11px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80 text-zinc-400" title="3D-координати маркера">${esc(h.pos)}</span>
+              </div>
+              <h4 class="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-100">${esc(h.title)}</h4>
+              <p class="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">${esc(h.desc)}</p>
+            </div>
+            <div class="flex sm:flex-col gap-1.5 shrink-0">
+              <button type="button" data-prev-hs class="font-tech text-xs px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700">← Попередній</button>
+              <button type="button" data-next-hs class="font-tech text-xs px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700">Наступний →</button>
+            </div>
+          </div>
+        `;
+
+        infoCardEl.querySelector("[data-prev-hs]")?.addEventListener("click", () => {
+          selectHotspot((curIdx - 1 + cfg.hotspots.length) % cfg.hotspots.length);
+        });
+        infoCardEl.querySelector("[data-next-hs]")?.addEventListener("click", () => {
+          selectHotspot((curIdx + 1) % cfg.hotspots.length);
+        });
+      }
+
+      function renderMode(mode, customSrc = null) {
+        curMode = mode;
+        curIdx = 0;
+        triedAltSrc = false;
+        const cfg = MODELS[mode];
+
+        $$("[data-mode]", box).forEach((btn) => {
+          const m = btn.dataset.mode;
+          btn.textContent = MODELS[m].label;
+          const active = m === mode;
+          btn.className = `px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+            active
+              ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/30"
+              : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50"
+          }`;
+        });
+
+        subtitleEl.textContent = cfg.subtitle;
+        expectedPathEl.textContent = cfg.src;
+
+        // Внутрішній <span class="mv-hotspot-dot"> гарантує, що CSS transform
+        // НЕ перезаписує inline transform: translate3d(...) від <model-viewer>
+        mv.innerHTML = cfg.hotspots
+          .map(
+            (h, i) => `
+          <button
+            type="button"
+            slot="hotspot-${esc(h.id)}"
+            data-position="${esc(h.pos)}"
+            data-normal="${esc(h.norm)}"
+            data-hs-idx="${i}"
+            class="mv-hotspot"
+            title="${esc(h.title)}"
+            aria-label="${esc(h.title)}"
+          ><span class="mv-hotspot-dot">${h.num}</span></button>`
+          )
+          .join("");
+
+        fallbackSvg.innerHTML = buildFallbackBlueprint(mode);
+        fallbackHs.innerHTML = cfg.hotspots
+          .map(
+            (h, i) => `
+          <button
+            type="button"
+            data-hs-idx="${i}"
+            style="left:${h.x}%;top:${h.y}%"
+            class="mv-hotspot !absolute"
+            title="${esc(h.title)}"
+            aria-label="${esc(h.title)}"
+          ><span class="mv-hotspot-dot">${h.num}</span></button>`
+          )
+          .join("");
+
+        pillsEl.innerHTML = cfg.hotspots
+          .map(
+            (h, i) => `
+          <button type="button" data-pill-idx="${i}">
+            <span class="font-tech font-bold">${h.num}.</span>
+            <span>${esc(h.tag)}</span>
+          </button>`
+          )
+          .join("");
+
+        fallbackEl.classList.remove("hidden");
+        statusEl.textContent = "Завантаження 3D-моделі…";
+        statusEl.className = "font-tech text-[11px] px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 backdrop-blur-sm";
+
+        mv.setAttribute("src", customSrc || cfg.src);
+        mv.cameraOrbit = cfg.defaultOrbit;
+
+        selectHotspot(0);
+      }
+
+      mv.addEventListener("load", () => {
+        fallbackEl.classList.add("hidden");
+        statusEl.textContent = "✓ 3D GLB завантажено";
+        statusEl.className = "font-tech text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-sm";
+
+        // Якщо підвантажено іншу 3D-модель з іншим масштабом/центром — автоматично масштабуємо маркери за її габаритами
+        try {
+          const c = mv.getBoundingBoxCenter();
+          const s = mv.getDimensions();
+          const cfg = MODELS[curMode];
+          if (c && s && Math.abs(c.z - (cfg.expectedZ || 0)) > 2.5 && curMode !== "gaming_pc") {
+            cfg.hotspots.forEach((h) => {
+              if (!h.rel) return;
+              const nx = (c.x + h.rel[0] * s.x).toFixed(2);
+              const ny = (c.y + h.rel[1] * s.y).toFixed(2);
+              const nz = (c.z + h.rel[2] * s.z).toFixed(2);
+              h.pos = `${nx}m ${ny}m ${nz}m`;
+              mv.updateHotspot({ name: `hotspot-${h.id}`, position: h.pos });
+            });
+          }
+        } catch (e) {}
+      });
+
+      mv.addEventListener("error", () => {
+        const cfg = MODELS[curMode];
+        if (!triedAltSrc && cfg.altSrc && !customBlobUrl) {
+          triedAltSrc = true;
+          mv.setAttribute("src", cfg.altSrc);
+          return;
+        }
+        fallbackEl.classList.remove("hidden");
+        statusEl.textContent = "Інтерактивний стенд (GLB-заглушка)";
+      });
+
+      // Клік по 3D-поверхні в режимі калібрування (або з клавішею Shift) переставляє активну точку прямо під курсор
+      mv.addEventListener("click", (e) => {
+        if (e.target.closest("[data-hs-idx]")) return;
+        if (!calibrateMode && !e.shiftKey) return;
+        if (typeof mv.positionAndNormalFromPoint !== "function") return;
+        const hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY);
+        if (!hit) return;
+        const cfg = MODELS[curMode];
+        const h = cfg.hotspots[curIdx];
+        const p = hit.position;
+        const n = hit.normal;
+        h.pos = `${p.x.toFixed(2)}m ${p.y.toFixed(2)}m ${p.z.toFixed(2)}m`;
+        h.norm = `${n.x.toFixed(2)}m ${n.y.toFixed(2)}m ${n.z.toFixed(2)}m`;
+        mv.updateHotspot({ name: `hotspot-${h.id}`, position: h.pos, normal: h.norm });
+        selectHotspot(curIdx);
+        navigator.clipboard?.writeText(h.pos).catch(() => {});
+        toast(`Точку #${h.num} переміщено: ${h.pos} (скопійовано)`);
+      });
+
+      // Легкий 3D-нахил для fallback-стенду за курсором миші
+      const viewport = box.querySelector("[data-viewport]");
+      viewport.addEventListener("mousemove", (e) => {
+        if (fallbackEl.classList.contains("hidden")) return;
+        const r = viewport.getBoundingClientRect();
+        const rx = (((0.5 - (e.clientY - r.top) / r.height) * 10)).toFixed(2);
+        const ry = ((((e.clientX - r.left) / r.width - 0.5) * 14)).toFixed(2);
+        fallbackStage.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+      viewport.addEventListener("mouseleave", () => {
+        fallbackStage.style.transform = "none";
+      });
+
+      box.addEventListener("click", (e) => {
+        const modeBtn = e.target.closest("[data-mode]");
+        if (modeBtn) {
+          renderMode(modeBtn.dataset.mode);
+          return;
+        }
+        const hsBtn = e.target.closest("[data-hs-idx]");
+        if (hsBtn) {
+          e.stopPropagation();
+          selectHotspot(Number(hsBtn.dataset.hsIdx));
+          return;
+        }
+        const pillBtn = e.target.closest("[data-pill-idx]");
+        if (pillBtn) {
+          selectHotspot(Number(pillBtn.dataset.pillIdx));
+        }
+      });
+
+      rotateBtn.addEventListener("click", () => {
+        autoRotate = !autoRotate;
+        if (autoRotate) mv.setAttribute("auto-rotate", "");
+        else mv.removeAttribute("auto-rotate");
+        rotateBtn.textContent = `⟳ Автообертання: ${autoRotate ? "УВІМК" : "ВИМК"}`;
+      });
+
+      calibrateBtn.addEventListener("click", () => {
+        calibrateMode = !calibrateMode;
+        if (calibrateMode) {
+          autoRotate = false;
+          mv.removeAttribute("auto-rotate");
+          rotateBtn.textContent = "⟳ Автообертання: ВИМК";
+          calibrateBtn.className = "font-tech text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-zinc-950 font-bold shadow-sm transition-colors";
+          calibrateBtn.textContent = "📍 Режим калібрування: АКТИВНИЙ";
+          toast("Клікніть по 3D-моделі, щоб поставити обрану точку в потрібне місце");
+        } else {
+          calibrateBtn.className = "font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-amber-500/50 transition-colors";
+          calibrateBtn.textContent = "📍 Калібрувати точки";
+        }
+      });
+
+      resetCamBtn.addEventListener("click", () => {
+        mv.cameraOrbit = MODELS[curMode].defaultOrbit;
+        toast("Камеру скинуто у вихідне положення");
+      });
+
+      glbInput.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (customBlobUrl) URL.revokeObjectURL(customBlobUrl);
+        customBlobUrl = URL.createObjectURL(file);
+        renderMode(curMode, customBlobUrl);
+        subtitleEl.textContent = `Локальна 3D-модель: ${file.name}`;
+        toast(`Завантажено 3D-файл: ${file.name}`);
+      });
+
+      renderMode("gaming_pc");
+      return box;
+    }
+
+    return box;
+  }
+
+  /* ==========================================================================
+     7. РІВЕНЬ 1 (ПОРТФОЛІО): КАРТКИ 5 НАПРЯМІВ + 3D TILT HERO CARD
+     ========================================================================== */
+  function renderPortfolioCards() {
+    const container = $("#subjectCards");
+    if (!container) return;
+
+    container.innerHTML = Object.entries(SUBJECTS)
+      .map(([key, subj]) => {
+        const t = tone(key);
+        const count = bySubject(key).length;
+        const gradeBadges = subj.grades
+          .map(
+            (g) =>
+              `<button type="button" data-goto-subject="${key}" data-goto-grade="${g}" class="font-tech text-xs px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800/90 hover:bg-indigo-600 hover:text-white transition-colors" title="Відкрити ${esc(subj.name)} (${g} клас)">${g} кл</button>`
+          )
+          .join("");
+
+        return `
+          <div class="group rounded-2xl bg-white dark:bg-zinc-900/85 border border-zinc-200/80 dark:border-zinc-800 ${t.hover} p-6 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-4">
+                <div class="w-12 h-12 rounded-xl border ${t.soft} ${t.text} flex items-center justify-center group-hover:scale-105 transition-transform">
+                  ${icon(subj.icon, "w-6 h-6")}
+                </div>
+                <span class="font-tech text-xs px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${count} матеріалів</span>
+              </div>
+
+              <h3 class="text-lg font-bold mb-2">
+                <a href="#/hub/${key}" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">${esc(subj.name)}</a>
+              </h3>
+              <p class="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-5">${esc(subj.desc)}</p>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+              <div class="flex flex-wrap gap-1.5">${gradeBadges}</div>
+              <a href="#/hub/${key}" class="inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl text-xs font-semibold ${t.soft} ${t.text} hover:opacity-90 transition-opacity">
+                <span>Відкрити навчальний простір</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    const projGrid = $("#myProjectsGrid");
+    if (projGrid) {
+      projGrid.innerHTML = MY_PROJECTS.map((p) => {
+        const t = TONES[p.tone] || TONES.indigo;
+        const href = p.internalHash || p.url;
+        const extAttrs = p.internalHash ? "" : `target="_blank" rel="noopener noreferrer"`;
+        const actionLabel = p.internalHash ? "Відкрити 3D-лабораторію →" : "Відкрити застосунок ↗";
+        const tagsHtml = (p.tags || [])
+          .map((tag) => `<span class="font-tech text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300">${esc(tag)}</span>`)
+          .join("");
+
+        return `
+          <a href="${esc(href)}" ${extAttrs} class="group rounded-2xl bg-white dark:bg-zinc-900/85 border border-zinc-200/80 dark:border-zinc-800 ${t.hover} p-6 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-4">
+                <div class="w-12 h-12 rounded-xl border ${t.soft} ${t.text} flex items-center justify-center group-hover:scale-105 transition-transform">
+                  ${icon(p.icon, "w-6 h-6")}
+                </div>
+                <span class="font-tech text-xs px-2.5 py-1 rounded-full border ${t.soft} ${t.text}">${esc(p.badge)}</span>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <h3 class="text-lg font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">${esc(p.title)}</h3>
+                <span class="font-tech text-[11px] text-zinc-400">${esc(p.repo || "")}</span>
+              </div>
+              <p class="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-5">${esc(p.desc)}</p>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+              <div class="flex flex-wrap gap-1.5">${tagsHtml}</div>
+              <div class="inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl text-xs font-semibold ${t.soft} ${t.text} group-hover:opacity-90 transition-opacity">
+                <span>${actionLabel}</span>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+  }
+
+  function initTiltCard() {
+    const scene = $("#tiltScene");
+    const card = $("#heroCard");
+    if (!scene || !card) return;
+
+    scene.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const rx = ((0.5 - y) * 18).toFixed(2);
+      const ry = ((x - 0.5) * 20).toFixed(2);
+      const rz = ((x - 0.5) * 2.5).toFixed(2);
+
+      card.classList.add("is-active");
+      card.style.setProperty("--rx", `${rx}deg`);
+      card.style.setProperty("--ry", `${ry}deg`);
+      card.style.setProperty("--rz", `${rz}deg`);
+      card.style.setProperty("--gx", `${(x * 100).toFixed(1)}%`);
+      card.style.setProperty("--gy", `${(y * 100).toFixed(1)}%`);
+    });
+
+    scene.addEventListener("mouseleave", () => {
+      card.classList.remove("is-active");
+      card.style.setProperty("--rx", "6deg");
+      card.style.setProperty("--ry", "-10deg");
+      card.style.setProperty("--rz", "0deg");
+    });
+  }
+
+  /* ==========================================================================
+     8. РІВЕНЬ 2 (НАВЧАЛЬНИЙ ПРОСТІР): САЙДБАР НА 3 РОЗДІЛИ + READER VIEW + TOC
+     ========================================================================== */
+  function renderHubHeader() {
+    const subjTabs = $("#subjectTabs");
+    const gradeChips = $("#gradeChips");
+    const subj = SUBJECTS[state.subject] || SUBJECTS.cs;
+
+    subjTabs.innerHTML = Object.entries(SUBJECTS)
+      .map(([key, s]) => {
+        const active = key === state.subject;
+        const t = tone(key);
+        return `
+          <button type="button" data-hub-subject="${key}" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+            active
+              ? `${t.solid} shadow-sm`
+              : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+          }">${esc(s.short)}</button>
+        `;
+      })
+      .join("");
+
+    const grades = ["ALL", ...subj.grades];
+    gradeChips.innerHTML = grades
+      .map((g) => {
+        const active = String(g) === String(state.grade);
+        return `
+          <button type="button" data-hub-grade="${g}" class="font-tech px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            active
+              ? "bg-amber-500 text-zinc-950"
+              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          }">${g === "ALL" ? "Усі класи" : `${g} кл`}</button>
+        `;
+      })
+      .join("");
+  }
+
+  function renderHubSidebar() {
+    const sidebar = $("#hubSidebar");
+    const subj = SUBJECTS[state.subject] || SUBJECTS.cs;
+    const items = bySubject(state.subject);
+
+    const refs = items.filter((a) => a.type === "ref");
+    const books = (subj.books || []).filter((b) => matchesGrade(b));
+    const lessons = items.filter((a) => a.type === "lesson" && matchesGrade(a));
+    const projects = items.filter((a) => a.type === "project" && matchesGrade(a));
+
+    const itemBtn = (a, badgeText) => {
+      const active = a.id === state.articleId;
+      return `
+        <button type="button" data-open-id="${esc(a.id)}" class="w-full text-left px-3 py-2 rounded-xl text-sm flex items-center justify-between gap-2 transition-colors ${
+          active
+            ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-semibold border border-indigo-500/30"
+            : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+        }">
+          <span class="truncate">${esc(a.title)}</span>
+          ${
+            badgeText
+              ? `<span class="font-tech text-[11px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">${esc(badgeText)}</span>`
+              : ""
+          }
+        </button>
+      `;
+    };
+
+    sidebar.innerHTML = `
+      <div class="space-y-6">
+        ${
+          state.subject === "cs"
+            ? `<div>
+                <div class="flex items-center gap-2 px-2 mb-2 text-xs font-bold uppercase tracking-wider text-amber-500">
+                  <span>🖥 Спеціальний 3D-розділ</span>
+                </div>
+                <button type="button" data-open-id="cs-3d-hardware" class="w-full text-left p-3 rounded-xl text-sm flex items-center justify-between gap-2 transition-all ${
+                  state.articleId === "cs-3d-hardware"
+                    ? "bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/20"
+                    : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 font-semibold"
+                }">
+                  <span class="truncate">Будова комп'ютера</span>
+                  <span class="font-tech text-[11px] px-1.5 py-0.5 rounded ${
+                    state.articleId === "cs-3d-hardware" ? "bg-zinc-950/20 text-zinc-950" : "bg-amber-500/20 text-amber-600 dark:text-amber-300"
+                  } shrink-0">3D Lab</span>
+                </button>
+              </div>`
+            : ""
+        }
+        <!-- а) Підручники та довідники -->
+        <div>
+          <div class="flex items-center gap-2 px-2 mb-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <span>📚 Підручники та довідники</span>
+          </div>
+          <div class="space-y-1">
+            ${refs.map((r) => itemBtn(r, "довідник")).join("")}
+            ${books
+              .map(
+                (b) => `
+              <a href="${esc(b.url)}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl text-sm flex items-center justify-between gap-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                <span class="truncate">${esc(b.title)}</span>
+                <span class="font-tech text-[11px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">${b.grade ? `${b.grade} кл ↗` : "↗"}</span>
+              </a>`
+              )
+              .join("")}
+          </div>
+        </div>
+
+        <!-- б) Теми уроків -->
+        <div>
+          <div class="flex items-center justify-between px-2 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">📖 Теми уроків</span>
+            <span class="font-tech text-[11px] text-zinc-400">${lessons.length}</span>
+          </div>
+          <div class="space-y-1">
+            ${
+              lessons.length
+                ? lessons.map((l) => itemBtn(l, l.grade ? `${l.grade} кл` : "")).join("")
+                : `<div class="px-3 py-2 text-xs text-zinc-400">Немає тем для обраного класу. <button type="button" data-hub-grade="ALL" class="text-indigo-500 underline">Показати всі</button></div>`
+            }
+          </div>
+        </div>
+
+        <!-- в) Цікаві приклади та проєкти -->
+        <div>
+          <div class="flex items-center justify-between px-2 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">🚀 Цікаві приклади та проєкти</span>
+            <span class="font-tech text-[11px] text-zinc-400">${projects.length + (state.subject === "cs" ? MY_PROJECTS.filter((p) => p.url).length : 0)}</span>
+          </div>
+          <div class="space-y-1">
+            ${
+              projects.length
+                ? projects.map((p) => itemBtn(p, p.kind || `${p.grade} кл`)).join("")
+                : `<div class="px-3 py-2 text-xs text-zinc-400">Для цього класу прикладів ще немає.</div>`
+            }
+            ${
+              state.subject === "cs"
+                ? MY_PROJECTS.filter((p) => p.url)
+                    .map(
+                      (p) => `
+                  <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl text-sm flex items-center justify-between gap-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <span class="truncate">${esc(p.title)}</span>
+                    <span class="font-tech text-[11px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">Web App ↗</span>
+                  </a>`
+                    )
+                    .join("")
+                : ""
+            }
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function renderReader() {
+    const pane = $("#readerPane");
+    const tocPane = $("#tocPane");
+    const subjItems = bySubject(state.subject);
+
+    let article = state.articles.find((a) => a.id === state.articleId);
+    if (!article || article.subject !== state.subject) {
+      article =
+        subjItems.find((a) => a.type === "lesson" && matchesGrade(a)) ||
+        subjItems[0] ||
+        state.articles[0];
+      if (article) state.articleId = article.id;
+    }
+
+    if (!article) {
+      pane.innerHTML = `<p class="text-zinc-500">Матеріалів не знайдено.</p>`;
+      tocPane.innerHTML = "";
+      return;
+    }
+
+    const subj = SUBJECTS[article.subject] || SUBJECTS.cs;
+    const t = tone(article.subject);
+    const rawMd = await getArticleMarkdown(article);
+    const cleanedMd = rawMd.replace(/^#\s+.+\n+/, "");
+
+    const idx = subjItems.findIndex((a) => a.id === article.id);
+    const prev = idx > 0 ? subjItems[idx - 1] : null;
+    const next = idx >= 0 && idx < subjItems.length - 1 ? subjItems[idx + 1] : null;
+
+    pane.innerHTML = `
+      <article class="max-w-3xl mx-auto view-enter">
+        <header class="pb-6 mb-8 border-b border-zinc-200/80 dark:border-zinc-800">
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold border ${t.soft} ${t.text}">${esc(subj.name)}</span>
+            ${
+              article.grade
+                ? `<span class="font-tech px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-900">${esc(article.grade)} клас</span>`
+                : `<span class="font-tech px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-900">Довідник</span>`
+            }
+            <span class="font-tech text-xs text-zinc-400">⏱ ${esc(article.time || "10 хв")}</span>
+            <button type="button" id="copyLinkBtn" class="ml-auto font-tech text-xs px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 hover:border-indigo-500 border border-transparent transition-colors">🔗 Посилання</button>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">${esc(article.title)}</h1>
+          ${article.summary ? `<p class="mt-3 text-base sm:text-lg text-zinc-600 dark:text-zinc-400">${esc(article.summary)}</p>` : ""}
+        </header>
+
+        <div id="articleBody" class="docs-prose text-zinc-800 dark:text-zinc-200">
+          ${renderMarkdown(cleanedMd)}
+        </div>
+
+        <nav id="readerNav" class="mt-12 pt-8 border-t border-zinc-200/80 dark:border-zinc-800 grid sm:grid-cols-2 gap-4">
+          <div>
+            ${
+              prev
+                ? `<button type="button" data-open-id="${esc(prev.id)}" class="w-full text-left p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 transition-colors">
+                    <div class="text-xs text-zinc-400 mb-1">← Попередній матеріал</div>
+                    <div class="font-bold text-sm">${esc(prev.title)}</div>
+                  </button>`
+                : ""
+            }
+          </div>
+          <div>
+            ${
+              next
+                ? `<button type="button" data-open-id="${esc(next.id)}" class="w-full text-right p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 transition-colors">
+                    <div class="text-xs text-zinc-400 mb-1">Наступний матеріал →</div>
+                    <div class="font-bold text-sm">${esc(next.title)}</div>
+                  </button>`
+                : ""
+            }
+          </div>
+        </nav>
+      </article>
+    `;
+
+    const bodyEl = $("#articleBody", pane);
+    enhanceContent(bodyEl);
+
+    $("#copyLinkBtn", pane)?.addEventListener("click", () => {
+      const url = `${location.origin}${location.pathname}#/hub/${article.subject}/${article.id}`;
+      navigator.clipboard?.writeText(url).then(() => toast("Посилання на урок скопійовано"));
+    });
+
+    // Зміст параграфа (TOC)
+    const headings = $$("h2, h3", bodyEl);
+    if (!headings.length) {
+      tocPane.innerHTML = `<div class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">На цій сторінці</div><p class="text-xs text-zinc-400">Короткий матеріал</p>`;
+    } else {
+      tocPane.innerHTML = `
+        <div class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">На цій сторінці</div>
+        <nav class="space-y-1 text-sm">
+          ${headings
+            .map((h, i) => {
+              const id = `sec-${i + 1}`;
+              h.id = id;
+              const sub = h.tagName === "H3";
+              return `<a href="#${id}" data-toc="${id}" class="toc-link block py-1 ${
+                sub ? "pl-5 text-xs" : "pl-3 text-sm"
+              } border-l-2 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">${esc(h.textContent)}</a>`;
+            })
+            .join("")}
+        </nav>
+      `;
+    }
+  }
+
+  async function renderHub() {
+    renderHubHeader();
+    renderHubSidebar();
+    await renderReader();
+    renderHubSidebar(); // оновлюємо активне підсвічування в сайдбарі
+  }
+
+  /* ==========================================================================
+     9. РОУТИНГ МІЖ РІВНЕМ 1 (ПОРТФОЛІО) ТА РІВНЕМ 2 (НАВЧАЛЬНИЙ ПРОСТІР)
+     ========================================================================== */
+  async function syncRoute() {
+    const hash = decodeURIComponent(location.hash || "#/");
+    const navLabel = $("#navHubLabel");
+    const navBtn = $("#navHubBtn");
+
+    if (hash.startsWith("#/hub")) {
+      const parts = hash.replace(/^#\/hub\/?/, "").split("/").filter(Boolean);
+      if (parts[0] && SUBJECTS[parts[0]]) state.subject = parts[0];
+      if (parts[1]) {
+        const found = state.articles.find((a) => a.id === parts[1]);
+        if (found) {
+          state.subject = found.subject;
+          state.articleId = found.id;
+        }
+      }
+
+      if (state.view !== "hub") {
+        state.portfolioScroll = window.scrollY;
+        state.view = "hub";
+        $("#portfolioView").classList.add("hidden");
+        $("#hubView").classList.remove("hidden");
+        window.scrollTo({ top: 0 });
+      }
+      if (navLabel) navLabel.textContent = "← До портфоліо";
+      if (navBtn) navBtn.setAttribute("href", "#/");
+      await renderHub();
+    } else {
+      const wasHub = state.view === "hub";
+      state.view = "portfolio";
+      $("#hubView").classList.add("hidden");
+      $("#portfolioView").classList.remove("hidden");
+      if (navLabel) navLabel.textContent = "Навчальний хаб";
+      if (navBtn) navBtn.setAttribute("href", "#/hub");
+      if (wasHub) window.scrollTo({ top: state.portfolioScroll || 0 });
+    }
+  }
+
+  /* ==========================================================================
+     10. МОДАЛЬНЕ ВІКНО ШВИДКОГО ПОШУКУ (Ctrl+K)
+     ========================================================================== */
+  let searchIdx = 0;
+  function openSearch() {
+    const modal = $("#searchModal");
+    const inp = $("#searchInput");
+    modal.classList.remove("hidden");
+    inp.value = "";
+    searchIdx = 0;
+    renderSearchResults("");
+    setTimeout(() => inp.focus(), 20);
+  }
+
+  function closeSearch() {
+    $("#searchModal").classList.add("hidden");
+  }
+
+  function renderSearchResults(q) {
+    const norm = q.trim().toLowerCase();
+    const bookItems = Object.entries(SUBJECTS).flatMap(([subjKey, s]) =>
+      (s.books || []).map((b) => ({
+        title: b.title,
+        summary: `Електронний підручник / ресурс · ${b.meta || "pidruchnik.com"}`,
+        subject: subjKey,
+        grade: b.grade,
+        url: b.url,
+        iconPrefix: "📚",
+        tags: ["підручник", "книга", b.grade ? `${b.grade} клас` : ""]
+      }))
+    );
+    const projectItems = MY_PROJECTS.filter((p) => p.url).map((p) => ({
+      title: p.title,
+      summary: p.desc,
+      subject: "cs",
+      grade: null,
+      url: p.url,
+      iconPrefix: "🚀",
+      tags: ["проєкт", "мої проєкти", ...(p.tags || [])]
+    }));
+    const allItems = [...state.articles, ...projectItems, ...bookItems];
+    const list = allItems.filter((a) => {
+      if (!norm) return true;
+      return (
+        a.title.toLowerCase().includes(norm) ||
+        (a.summary || "").toLowerCase().includes(norm) ||
+        (SUBJECTS[a.subject]?.name || "").toLowerCase().includes(norm) ||
+        (a.tags || []).some((t) => t.toLowerCase().includes(norm))
+      );
+    });
+
+    const ul = $("#searchResults");
+    if (!list.length) {
+      ul.innerHTML = `<li class="px-4 py-8 text-center text-sm text-zinc-500">Нічого не знайдено за запитом «${esc(q)}»</li>`;
+      return;
+    }
+    searchIdx = Math.min(searchIdx, list.length - 1);
+    ul.innerHTML = list
+      .map((a, i) => {
+        const s = SUBJECTS[a.subject] || SUBJECTS.cs;
+        const active = i === searchIdx;
+        if (a.url) {
+          return `
+            <li>
+              <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" data-search-pick-url class="w-full text-left px-4 py-3 rounded-xl flex items-center justify-between gap-3 transition-colors ${
+                active ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/70"
+              }">
+                <div class="min-w-0">
+                  <div class="font-semibold text-sm truncate">${a.iconPrefix || "📚"} ${esc(a.title)}</div>
+                  <div class="text-xs text-zinc-500 truncate">${esc(a.summary || "")}</div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0 font-tech text-xs">
+                  <span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">${esc(s.short)}</span>
+                  ${a.grade ? `<span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${a.grade} кл ↗</span>` : `<span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">↗</span>`}
+                </div>
+              </a>
+            </li>
+          `;
+        }
+        return `
+          <li>
+            <button type="button" data-search-pick="${esc(a.id)}" class="w-full text-left px-4 py-3 rounded-xl flex items-center justify-between gap-3 transition-colors ${
+              active ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/70"
+            }">
+              <div class="min-w-0">
+                <div class="font-semibold text-sm truncate">${esc(a.title)}</div>
+                <div class="text-xs text-zinc-500 truncate">${esc(a.summary || "")}</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 font-tech text-xs">
+                <span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">${esc(s.short)}</span>
+                ${a.grade ? `<span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${a.grade} кл</span>` : ""}
+              </div>
+            </button>
+          </li>
+        `;
+      })
+      .join("");
+  }
+
+  /* ==========================================================================
+     11. ІНІЦІАЛІЗАЦІЯ ТА ОБРОБНИКИ ПОДІЙ
+     ========================================================================== */
+  async function init() {
+    await loadExternalArticles();
+    renderPortfolioCards();
+    initTiltCard();
+    await syncRoute();
+
+    // Тема
+    $("#themeToggleBtn").addEventListener("click", () => {
+      const dark = document.documentElement.classList.toggle("dark");
+      try {
+        localStorage.setItem("edu_theme", dark ? "dark" : "light");
+      } catch (e) {}
+    });
+
+    // Скрол до секції на лендінгу
+    document.addEventListener("click", (e) => {
+      const scrollBtn = e.target.closest("[data-scroll-to]");
+      if (scrollBtn) {
+        const target = document.getElementById(scrollBtn.dataset.scrollTo);
+        target?.scrollIntoView({ behavior: "smooth" });
+      }
+
+      const projNavBtn = e.target.closest("[data-goto-projects]");
+      if (projNavBtn) {
+        if (state.view === "hub") {
+          location.hash = "#/";
+          setTimeout(() => document.getElementById("myProjects")?.scrollIntoView({ behavior: "smooth" }), 60);
+        } else {
+          document.getElementById("myProjects")?.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      // Клік по класу на картці предмета (Рівень 1 -> Рівень 2 з фільтром класу)
+      const gotoBtn = e.target.closest("[data-goto-subject]");
+      if (gotoBtn) {
+        state.subject = gotoBtn.dataset.gotoSubject;
+        state.grade = gotoBtn.dataset.gotoGrade || "ALL";
+        const first = bySubject(state.subject).find((a) => matchesGrade(a));
+        state.articleId = first ? first.id : null;
+        location.hash = `#/hub/${state.subject}${state.articleId ? "/" + state.articleId : ""}`;
+      }
+
+      // Перемикання предмета у верхній панелі Хабу
+      const subjBtn = e.target.closest("[data-hub-subject]");
+      if (subjBtn) {
+        state.subject = subjBtn.dataset.hubSubject;
+        state.grade = "ALL";
+        const first = bySubject(state.subject)[0];
+        state.articleId = first ? first.id : null;
+        location.hash = `#/hub/${state.subject}${state.articleId ? "/" + state.articleId : ""}`;
+      }
+
+      // Перемикання класу в Хабі
+      const gradeBtn = e.target.closest("[data-hub-grade]");
+      if (gradeBtn) {
+        state.grade = gradeBtn.dataset.hubGrade;
+        renderHubHeader();
+        renderHubSidebar();
+      }
+
+      // Відкриття теми у сайдбарі або кнопках Попередня/Наступна
+      const openBtn = e.target.closest("[data-open-id]");
+      if (openBtn) {
+        const id = openBtn.dataset.openId;
+        const found = state.articles.find((a) => a.id === id);
+        if (found) {
+          state.subject = found.subject;
+          state.articleId = found.id;
+          if (window.innerWidth < 1024) $("#hubSidebar").classList.add("hidden");
+          location.hash = `#/hub/${found.subject}/${found.id}`;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }
+
+      // TOC скрол
+      const tocLink = e.target.closest("[data-toc]");
+      if (tocLink) {
+        e.preventDefault();
+        document.getElementById(tocLink.dataset.toc)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // Пошук
+      if (e.target.closest("#openSearchBtn, #openSearchBtnMobile, [data-open-search]")) openSearch();
+      if (e.target.closest("[data-close-search], [data-search-pick-url]")) closeSearch();
+
+      const pick = e.target.closest("[data-search-pick]");
+      if (pick) {
+        const found = state.articles.find((a) => a.id === pick.dataset.searchPick);
+        closeSearch();
+        if (found) {
+          state.subject = found.subject;
+          state.grade = "ALL";
+          state.articleId = found.id;
+          location.hash = `#/hub/${found.subject}/${found.id}`;
+        }
+      }
+    });
+
+    // Мобільне меню сайдбару в Хабі
+    $("#sidebarToggle")?.addEventListener("click", () => {
+      $("#hubSidebar").classList.toggle("hidden");
+    });
+
+    // Пошуковий ввід та клавіатура
+    $("#searchInput").addEventListener("input", (e) => {
+      searchIdx = 0;
+      renderSearchResults(e.target.value);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openSearch();
+        return;
+      }
+      const modalOpen = !$("#searchModal").classList.contains("hidden");
+      if (modalOpen) {
+        const picks = $$("[data-search-pick], [data-search-pick-url]", $("#searchResults"));
+        if (e.key === "Escape") {
+          closeSearch();
+        } else if (e.key === "ArrowDown" && picks.length) {
+          e.preventDefault();
+          searchIdx = (searchIdx + 1) % picks.length;
+          renderSearchResults($("#searchInput").value);
+        } else if (e.key === "ArrowUp" && picks.length) {
+          e.preventDefault();
+          searchIdx = (searchIdx - 1 + picks.length) % picks.length;
+          renderSearchResults($("#searchInput").value);
+        } else if (e.key === "Enter" && picks[searchIdx]) {
+          e.preventDefault();
+          picks[searchIdx].click();
+        }
+      }
+    });
+
+    // Прогрес читання
+    window.addEventListener("scroll", () => {
+      if (state.view !== "hub") return;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docH > 0 ? Math.min(100, Math.max(0, (window.scrollY / docH) * 100)) : 0;
+      $("#readProgress").style.width = `${pct}%`;
+    });
+
+    window.addEventListener("hashchange", syncRoute);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
