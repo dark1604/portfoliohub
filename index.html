@@ -310,7 +310,10 @@
           <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           <span>Симулятори</span>
         </a>
-        $1
+        <a href="#/projects" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-tech">
+          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+          <span>Мої проєкти</span>
+        </a>
         <a href="https://www.classtime.com/uk/" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-colors">
           <span class="w-2 h-2 rounded-full bg-sky-500"></span>ClassTime<span class="text-zinc-400 text-[10px]">↗</span>
         </a>
@@ -563,7 +566,24 @@
   <!-- ======================================================================
        ОКРЕМИЙ ПРОСТІР: МОЇ АВТОРСЬКІ ПРОЄКТИ
        ====================================================================== -->
-  $1
+  <div id="projectsView" class="hidden flex-1 flex flex-col view-enter">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <a href="#/" class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline mb-2 font-tech">← На головну</a>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Авторські проєкти та цифрові сервіси</h1>
+          <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">Інтерактивні застосунки, навчальні інструменти та розробки з відкритим кодом.</p>
+        </div>
+        <a href="https://github.com/dark1604?tab=repositories" target="_blank" rel="noopener noreferrer" class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-tech hover:opacity-90 transition-opacity">
+          <span>GitHub репозиторії</span>
+          <span>↗</span>
+        </a>
+      </div>
+    </div>
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
+      <div id="projectsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+  </div>
 
   <!-- ======================================================================
        ОКРЕМИЙ ПРОСТІР: ІНТЕРАКТИВНІ СИМУЛЯТОРИ
