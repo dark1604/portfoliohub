@@ -1,0 +1,2882 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Шлях одного кліку — Симулятор локальної та глобальної мережі (LAN → WAN)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c1e21'/%3E%3Ccircle cx='9' cy='16' r='3.5' fill='%234d9a6a'/%3E%3Ccircle cx='23' cy='10' r='3.5' fill='%23e59838'/%3E%3Ccircle cx='23' cy='22' r='3.5' fill='%23c87d4b'/%3E%3Cpath d='M12 14.5 L20 11 M12 17.5 L20 21' stroke='%23a8adb5' stroke-width='2'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg-stage: #1c1e21;
+      --hud-alabaster: rgba(33, 36, 41, 0.90);
+      --hud-warm-gray: #292d34;
+      --hud-border: #3a3f47;
+      --hud-border-strong: #4a505a;
+      --text-primary: #e2e4e8;
+      --text-secondary: #9fa5af;
+      --text-muted: #767c86;
+      --accent-amber: #e59838;
+      --accent-amber-dark: #c97f22;
+      --accent-sage: #4d9a6a;
+      --accent-sage-dark: #3b7d53;
+      --accent-terracotta: #d9534f;
+      --accent-terracotta-dark: #b53a36;
+      --accent-copper: #c87d4b;
+      --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-stage);
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    /* Projected 3D Node Labels */
+    #labels-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    .node-label {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      background: rgba(28, 30, 33, 0.38);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      border: 1px solid rgba(244, 244, 241, 0.16);
+      border-radius: 4px;
+      padding: 2px 6px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+      white-space: nowrap;
+      display: flex;
+      flex-direction: column;
+      gap: 0px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.75);
+    }
+
+    .node-label:hover {
+      background: rgba(28, 30, 33, 0.78);
+      border-color: var(--accent-amber);
+    }
+
+    .node-label.selected {
+      background: rgba(28, 30, 33, 0.85);
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 0 1px rgba(229, 152, 56, 0.45);
+    }
+
+    .node-label.security-badge {
+      background: rgba(28, 30, 33, 0.42);
+      border-color: rgba(200, 125, 75, 0.35);
+    }
+
+    .node-label-title {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #f4f4f1;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .node-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-sage);
+      flex-shrink: 0;
+    }
+
+    .node-dot.offline {
+      background: var(--accent-terracotta);
+    }
+
+    .node-label-ip {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #c2c6cc;
+    }
+
+    .sniffer-readout {
+      margin-top: 2px;
+      padding: 2px 5px;
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(28, 30, 33, 0.65);
+      color: #f4f4f1;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      max-width: 210px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sniffer-readout.exposed {
+      border-color: var(--accent-amber);
+      color: #ffd9a0;
+    }
+
+    .sniffer-readout.encrypted {
+      border-color: var(--accent-sage);
+      color: #b7e8c9;
+    }
+
+    /* Floating Packet Labels */
+    .packet-label {
+      position: absolute;
+      transform: translate(-50%, -140%);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #1c1e21;
+      color: var(--hud-alabaster);
+      border: 1px solid var(--accent-amber);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .packet-label.dns, .packet-label.lan {
+      border-color: var(--accent-sage);
+      color: #d7f3e0;
+    }
+
+    .packet-label.ack {
+      border-color: var(--accent-sage);
+      background: #1d2d23;
+      color: #d7f3e0;
+    }
+
+    .packet-label.enc {
+      border-color: var(--accent-copper);
+      background: #232724;
+      color: #cfe8d5;
+    }
+
+    .packet-label.malware, .packet-label.drop {
+      border-color: var(--accent-terracotta);
+      background: #3b1717;
+      color: #ffd7d5;
+    }
+
+    /* Cable Hover Tooltip */
+    #cable-tooltip {
+      position: fixed;
+      z-index: 30;
+      pointer-events: none;
+      background: var(--hud-alabaster);
+      border: 1px solid var(--hud-border-strong);
+      border-radius: 4px;
+      padding: 6px 9px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      font-size: 11px;
+      display: none;
+      max-width: 240px;
+    }
+
+    #cable-tooltip .tt-title { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    #cable-tooltip .tt-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); margin-bottom: 3px; }
+    #cable-tooltip .tt-action { font-size: 10px; font-weight: 600; color: var(--accent-terracotta); }
+    #cable-tooltip.severed .tt-action { color: var(--accent-sage-dark); }
+
+    /* HUD Panels */
+    .hud-panel {
+      position: fixed;
+      z-index: 15;
+      background: var(--hud-alabaster);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--hud-border-strong);
+      border-radius: 6px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+      color: var(--text-primary);
+    }
+
+    /* Top-Center View Mode Switcher */
+    #view-switcher {
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .view-btn {
+      padding: 6px 11px;
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .view-btn:hover {
+      background: var(--hud-warm-gray);
+      color: var(--text-primary);
+    }
+
+    .view-btn.active {
+      background: #26292e;
+      color: #f4f4f1;
+      border-color: #15171a;
+    }
+
+    /* Top-Left Control Panel */
+    #control-panel {
+      top: 16px;
+      left: 16px;
+      width: 392px;
+      max-width: calc(100vw - 32px);
+    }
+
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--hud-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand-title { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
+    .brand-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+    .status-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 7px;
+      border-radius: 3px;
+      background: var(--hud-warm-gray);
+      border: 1px solid var(--hud-border);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .status-pill.running { background: rgba(229, 152, 56, 0.16); border-color: var(--accent-amber); color: #f0b364; }
+    .status-pill.paused { background: rgba(77, 154, 106, 0.18); border-color: var(--accent-sage); color: #7fd49c; }
+    .status-pill.error { background: rgba(217, 83, 79, 0.18); border-color: var(--accent-terracotta); color: #f28b88; }
+
+    /* Mode Tabs inside Control Panel */
+    .panel-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--hud-warm-gray);
+      border-bottom: 1px solid var(--hud-border);
+    }
+
+    .panel-tab {
+      padding: 7px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--hud-border);
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+
+    .panel-tab:last-child { border-right: none; }
+    .panel-tab.active {
+      background: var(--hud-alabaster);
+      color: var(--text-primary);
+      box-shadow: inset 0 -2px 0 var(--accent-amber-dark);
+    }
+
+    .panel-body {
+      padding: 11px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 3px; }
+    .field-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
+
+    .text-input {
+      width: 100%;
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-primary);
+      background: #1a1d21;
+      border: 1px solid var(--hud-border-strong);
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .text-input:focus { border-color: var(--accent-amber); }
+
+    .presets-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+
+    .preset-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 3px;
+      background: var(--hud-warm-gray);
+      border: 1px solid var(--hud-border);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .preset-chip:hover { background: #343942; color: var(--text-primary); border-color: var(--hud-border-strong); }
+
+    .task-chips {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .task-chip {
+      text-align: left;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--hud-warm-gray);
+      border: 1px solid var(--hud-border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .task-chip:hover { border-color: var(--accent-amber); background: #343942; }
+    .task-chip span.hint-ip { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-secondary); font-weight: 400; }
+
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 7px;
+    }
+
+    .btn-primary {
+      padding: 8px 12px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #ffffff;
+      background: #26292e;
+      border: 1px solid #15171a;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn-primary:hover { background: #353940; }
+    .btn-primary .btn-accent-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-amber); }
+
+    .btn-threat {
+      padding: 8px 10px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+      background: var(--accent-terracotta);
+      border: 1px solid var(--accent-terracotta-dark);
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-threat:hover { background: var(--accent-terracotta-dark); }
+
+    /* Security Modules Section */
+    .security-grid {
+      border-top: 1px solid var(--hud-border);
+      padding-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 5px 8px;
+      background: var(--hud-warm-gray);
+      border: 1px solid var(--hud-border);
+      border-radius: 4px;
+    }
+
+    .toggle-info { display: flex; flex-direction: column; gap: 1px; }
+    .toggle-title { font-size: 11.5px; font-weight: 700; color: var(--text-primary); }
+    .toggle-sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
+
+    .switch-btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 3px;
+      border: 1px solid var(--hud-border-strong);
+      background: #1b1e23;
+      color: var(--text-secondary);
+      cursor: pointer;
+      min-width: 105px;
+      text-align: center;
+    }
+
+    .switch-btn.on { background: var(--accent-sage-dark); border-color: var(--accent-sage); color: #e8f5ec; }
+    .switch-btn.off-warn { background: rgba(217, 83, 79, 0.2); border-color: var(--accent-terracotta); color: #f59c99; }
+
+    /* Stage Narration Banner */
+    #stage-banner {
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 450px;
+      max-width: calc(100vw - 440px);
+      padding: 10px 14px;
+      display: none;
+    }
+
+    #stage-banner.visible { display: block; }
+
+    .stage-kicker {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #efb05c;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stage-kicker.sage { color: #6fc28e; }
+    .stage-kicker.error { color: #e87672; }
+    .stage-text { font-size: 12px; line-height: 1.45; color: var(--text-primary); }
+
+    /* Bottom-Left Simulation Controls */
+    #sim-controls {
+      bottom: 16px;
+      left: 16px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: calc(100vw - 32px);
+    }
+
+    .controls-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+    .segmented-control {
+      display: inline-flex;
+      background: var(--hud-warm-gray);
+      border: 1px solid var(--hud-border-strong);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .seg-btn {
+      padding: 6px 10px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--hud-border);
+      cursor: pointer;
+    }
+
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn.active { background: #26292e; color: #f4f4f1; }
+
+    .btn-secondary {
+      padding: 6px 10px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: var(--hud-warm-gray);
+      border: 1px solid var(--hud-border-strong);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover:not(:disabled) { background: #343942; }
+
+    .btn-step {
+      padding: 6px 12px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--accent-sage);
+      border: 1px solid var(--accent-sage-dark);
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .btn-step.visible { display: inline-flex; align-items: center; gap: 5px; }
+    .btn-step:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .hint-bar {
+      font-size: 11px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--hud-border);
+      padding-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .legend-inline { display: flex; align-items: center; gap: 10px; font-size: 10px; font-family: var(--font-mono); }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .swatch { width: 8px; height: 8px; border-radius: 2px; }
+
+    /* Right Inspector Card */
+    #inspector-card {
+      top: 16px;
+      right: 16px;
+      width: 325px;
+      max-width: calc(100vw - 32px);
+      background: var(--hud-warm-gray);
+      display: none;
+    }
+
+    #inspector-card.visible { display: block; }
+
+    .inspector-header {
+      background: var(--hud-alabaster);
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--hud-border);
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .inspector-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .inspector-role { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    .close-btn {
+      background: transparent;
+      border: 1px solid var(--hud-border);
+      border-radius: 3px;
+      width: 22px;
+      height: 22px;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--text-secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .inspector-section {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--hud-border);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .inspector-section:last-child { border-bottom: none; }
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin-bottom: 5px; }
+
+    .mono-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      background: var(--hud-alabaster);
+      border: 1px solid var(--hud-border);
+    }
+
+    .mono-table th, .mono-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--hud-border); }
+    .mono-table th { font-size: 9.5px; color: var(--text-secondary); background: #202328; }
+    .mono-table tr:last-child td { border-bottom: none; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .stat-box { background: var(--hud-alabaster); border: 1px solid var(--hud-border); padding: 5px 8px; border-radius: 3px; }
+    .stat-box-label { font-size: 10px; color: var(--text-secondary); }
+    .stat-box-val { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+
+    /* Bottom-Right Telemetry Log */
+    #telemetry-panel {
+      bottom: 16px;
+      right: 16px;
+      width: 375px;
+      max-width: calc(100vw - 32px);
+    }
+
+    .telemetry-header { padding: 8px 12px; border-bottom: 1px solid var(--hud-border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .telemetry-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
+
+    .telemetry-body {
+      height: 145px;
+      overflow-y: auto;
+      padding: 8px 10px;
+      background: #181a1e;
+      border-radius: 0 0 6px 6px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      line-height: 1.5;
+      user-select: text;
+    }
+
+    #telemetry-panel.collapsed .telemetry-body { display: none; }
+    .log-entry { padding: 2px 0; border-bottom: 1px dashed #2d3138; display: flex; gap: 6px; }
+    .log-time { color: var(--text-muted); flex-shrink: 0; }
+    .log-tag { font-weight: 700; flex-shrink: 0; }
+    .log-tag.dns { color: #6fc28e; }
+    .log-tag.pkt { color: #efb05c; }
+    .log-tag.ack { color: #6fc28e; }
+    .log-tag.vpn { color: #7cd49c; }
+    .log-tag.err { color: #e87672; }
+    .log-tag.sys { color: var(--text-secondary); }
+
+    @media (max-width: 1220px) {
+      #view-switcher { top: auto; bottom: 112px; left: 16px; transform: none; }
+      #stage-banner { top: auto; bottom: 158px; left: 16px; transform: none; width: 392px; max-width: calc(100vw - 32px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="labels-layer"></div>
+
+  <div id="cable-tooltip">
+    <div class="tt-title" id="tt-title">Кабель</div>
+    <div class="tt-meta" id="tt-meta">0 ms</div>
+    <div class="tt-action" id="tt-action">Клікніть, щоб перерізати кабель</div>
+  </div>
+
+  <!-- Top-Center View Mode Switcher -->
+  <nav id="view-switcher" class="hud-panel" aria-label="Перемикач масштабу">
+    <button class="view-btn" data-view="lan">1. Локальна мережа (LAN)</button>
+    <button class="view-btn" data-view="wan">2. Глобальна мережа (WAN)</button>
+    <button class="view-btn active" data-view="full">3. Повний шлях (LAN → WAN)</button>
+  </nav>
+
+  <!-- Top-Left Control Panel -->
+  <section id="control-panel" class="hud-panel">
+    <div class="panel-header">
+      <div>
+        <div class="brand-title">Шлях одного кліку</div>
+        <div class="brand-sub">Симулятор LAN → WAN, VPN та Брандмауера</div>
+      </div>
+      <div id="sim-status-pill" class="status-pill">Готово</div>
+    </div>
+
+    <div class="panel-tabs">
+      <button class="panel-tab active" data-tab="wan-tab">Веб-запит (WAN)</button>
+      <button class="panel-tab" data-tab="dispatch-tab">Диспетчер маршрутизації</button>
+    </div>
+
+    <div class="panel-body">
+      <!-- TAB 1: Standard Web Request -->
+      <div id="wan-tab" class="tab-pane active">
+        <div class="input-row">
+          <div class="field-group">
+            <label class="field-label" for="domain-input">Домен або адреса</label>
+            <input id="domain-input" class="text-input" type="text" value="school.edu.ua" placeholder="school.edu.ua" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="payload-input">Вміст запиту</label>
+            <input id="payload-input" class="text-input" type="text" value="GET /index.html" placeholder="Текст або файл..." />
+          </div>
+        </div>
+        <div class="presets-row">
+          <span class="field-label" style="margin-right: 2px;">Приклади:</span>
+          <button class="preset-chip" data-domain="school.edu.ua" data-payload="GET /lessons.html">school.edu.ua</button>
+          <button class="preset-chip" data-domain="wikipedia.org" data-payload="Фото: Київ (4.2 MB)">Фото (4.2 MB)</button>
+          <button class="preset-chip" data-domain="mon.gov.ua" data-payload="POST /hw-submit">mon.gov.ua</button>
+        </div>
+        <div class="actions-row">
+          <button id="send-btn" class="btn-primary">
+            <span class="btn-accent-dot"></span>
+            <span>Надіслати запит</span>
+          </button>
+          <button id="malware-btn" class="btn-threat" title="Симулювати фішингову атаку або завантаження вірусу">
+            Симулювати фішинг / шкідливий пакет
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: Routing Dispatcher Mini-Game -->
+      <div id="dispatch-tab" class="tab-pane">
+        <div class="field-label">Завдання (Оберіть або введіть IP вручну):</div>
+        <div class="task-chips">
+          <button class="task-chip" data-ip="192.168.1.20" data-task="Друк документа на принтері">
+            <span>Надрукувати документ</span>
+            <span class="hint-ip">Принтер: 192.168.1.20</span>
+          </button>
+          <button class="task-chip" data-ip="192.168.1.11" data-task="Передача фото на ноутбук">
+            <span>Скинути фото на ноутбук</span>
+            <span class="hint-ip">Wi-Fi: 192.168.1.11</span>
+          </button>
+          <button class="task-chip" data-ip="192.168.1.30" data-task="Стрім фільму на Smart TV">
+            <span>Запустити фільм на TV</span>
+            <span class="hint-ip">Smart TV: 192.168.1.30</span>
+          </button>
+          <button class="task-chip" data-ip="142.250.185.78" data-task="Вихід у глобальний Інтернет">
+            <span>Зовнішній веб-сервер</span>
+            <span class="hint-ip">WAN: 142.250.185.78</span>
+          </button>
+        </div>
+        <div class="input-row">
+          <div class="field-group">
+            <label class="field-label" for="dispatch-ip-input">Цільова IP-адреса</label>
+            <input id="dispatch-ip-input" class="text-input" type="text" value="192.168.1.20" placeholder="192.168.1.x або WAN IP" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="dispatch-msg-input">Дані пакета</label>
+            <input id="dispatch-msg-input" class="text-input" type="text" value="DOCX / Друк" placeholder="Вміст..." />
+          </div>
+        </div>
+        <div class="actions-row">
+          <button id="dispatch-send-btn" class="btn-primary">
+            <span class="btn-accent-dot" style="background: var(--accent-sage)"></span>
+            <span>Маршрутизувати за IP</span>
+          </button>
+          <button class="btn-secondary" id="test-bad-ip-btn" title="Перевірити поведінку роутера для неіснуючої адреси">
+            Тест 192.168.1.99
+          </button>
+        </div>
+      </div>
+
+      <!-- Cybersecurity Modules -->
+      <div class="security-grid">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">VPN-тунель (Шифрування)</span>
+            <span class="toggle-sub" id="vpn-sub">IP клієнта видима (91.204.12.44)</span>
+          </div>
+          <button id="vpn-toggle" class="switch-btn">VPN: ВИМК</button>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">Брандмауер Windows Defender</span>
+            <span class="toggle-sub" id="defender-sub">DPI-інспекція та SmartScreen увімкнено</span>
+          </div>
+          <button id="defender-toggle" class="switch-btn on">АКТИВНИЙ</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stage Narration Banner -->
+  <section id="stage-banner" class="hud-panel">
+    <div class="stage-kicker" id="stage-kicker">
+      <span id="stage-kicker-label">ЕТАП 1 • DNS-ЗАПИТ</span>
+      <span id="stage-hop-counter">КРОК 1</span>
+    </div>
+    <div class="stage-text" id="stage-text">Очікування запиту...</div>
+  </section>
+
+  <!-- Right Node Inspector Card -->
+  <aside id="inspector-card" class="hud-panel">
+    <div class="inspector-header">
+      <div>
+        <div class="inspector-title" id="insp-title">Вузол</div>
+        <div class="inspector-role" id="insp-role">Роль</div>
+      </div>
+      <button id="insp-close" class="close-btn" title="Закрити">×</button>
+    </div>
+    <div class="inspector-section" id="insp-desc"></div>
+    <div class="inspector-section">
+      <div class="section-label">Параметри вузла</div>
+      <div class="stat-grid" id="insp-stats"></div>
+    </div>
+    <div class="inspector-section">
+      <div class="section-label" id="insp-table-title">Таблиця маршрутизації / IP</div>
+      <table class="mono-table" id="insp-table"></table>
+    </div>
+  </aside>
+
+  <!-- Bottom-Left Simulation Controls -->
+  <section id="sim-controls" class="hud-panel">
+    <div class="controls-row">
+      <div class="segmented-control" role="group" aria-label="Швидкість симуляції">
+        <button class="seg-btn" data-speed="slow">Повільно</button>
+        <button class="seg-btn active" data-speed="normal">Норма</button>
+        <button class="seg-btn" data-speed="step">Покроковий режим</button>
+      </div>
+      <button id="next-step-btn" class="btn-step">Наступний крок →</button>
+      <button id="restore-cables-btn" class="btn-secondary">Відновити всі кабелі</button>
+    </div>
+    <div class="hint-bar">
+      <span>Клік по пристрою/щиту — інспектор • Клік по кабелю — перерізати</span>
+      <div class="legend-inline">
+        <span class="legend-item"><span class="swatch" style="background: var(--accent-sage)"></span>LAN/DNS/ACK</span>
+        <span class="legend-item"><span class="swatch" style="background: var(--accent-amber)"></span>WAN TCP</span>
+        <span class="legend-item"><span class="swatch" style="background: var(--accent-copper)"></span>VPN</span>
+        <span class="legend-item"><span class="swatch" style="background: var(--accent-terracotta)"></span>Помилка/Загроза</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom-Right Telemetry Log -->
+  <section id="telemetry-panel" class="hud-panel">
+    <div class="telemetry-header" id="telemetry-toggle">
+      <span class="telemetry-title">Телеметрія мережі (Consolas Log)</span>
+      <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary);" id="telemetry-chevron">▼ Згорнути</span>
+    </div>
+    <div class="telemetry-body" id="telemetry-log"></div>
+  </section>
+
+  <!-- Three.js Import Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // =========================================================================
+    // 1. NETWORK TOPOLOGY (LAN HOUSE + WAN INTERNET + SECURITY)
+    // =========================================================================
+    const NODES_DATA = [
+      // --- LAN ZONE (Будинок, 192.168.1.0/24) ---
+      {
+        id: 'pc',
+        name: 'Кімната 1: ПК Учня',
+        shortName: 'ПК Учня',
+        type: 'pc',
+        ip: '192.168.1.10',
+        subnet: '255.255.255.0',
+        connType: 'Ethernet (1 Gbps)',
+        mac: '00:1A:2B:3C:4D:10',
+        latencyMs: 1,
+        pos: new THREE.Vector3(-13.6, 0, 1.5),
+        role: 'Робоча станція учня в локальній мережі (LAN)',
+        desc: 'Знаходиться у Кімнатi 1. Надсилає запити як до локальних пристроїв (Принтер, Ноутбук, Smart TV), так і в глобальний Інтернет через Домашній роутер.',
+        tableTitle: 'Стек TCP/IP (LAN)',
+        tableHeaders: ['Параметр', 'Значення'],
+        tableRows: [
+          ['Локальний IP', '192.168.1.10'],
+          ['Маска підмережі', '255.255.255.0'],
+          ['Підключення', 'Ethernet (Кабель)'],
+          ['Шлюз (Gateway)', '192.168.1.1']
+        ]
+      },
+      {
+        id: 'laptop',
+        name: 'Кімната 2: Ноутбук / Планшет',
+        shortName: 'Ноутбук (Wi-Fi)',
+        type: 'laptop',
+        ip: '192.168.1.11',
+        subnet: '255.255.255.0',
+        connType: 'Wi-Fi 6 (5 GHz)',
+        mac: 'B8:27:EB:44:12:11',
+        latencyMs: 2,
+        pos: new THREE.Vector3(-13.8, 0, -3.8),
+        role: 'Бездротовий клієнт у локальній мережі (Wi-Fi)',
+        desc: 'Підключений до Домашнього роутера по бездротовому каналу Wi-Fi. Отримує фото та файли від ПК Учня напряму всередині локальної мережі без виходу в Інтернет.',
+        tableTitle: 'Параметри Wi-Fi клієнта',
+        tableHeaders: ['Параметр', 'Значення'],
+        tableRows: [
+          ['Локальний IP', '192.168.1.11'],
+          ['Маска підмережі', '255.255.255.0'],
+          ['Інтерфейс', 'Wi-Fi 6 (WLAN)'],
+          ['MAC-адреса', 'B8:27:EB:44:12:11']
+        ]
+      },
+      {
+        id: 'printer',
+        name: 'Робочий кабінет: Мережевий принтер',
+        shortName: 'Принтер',
+        type: 'printer',
+        ip: '192.168.1.20',
+        subnet: '255.255.255.0',
+        connType: 'Ethernet (100 Mbps)',
+        mac: '3C:52:82:19:00:20',
+        latencyMs: 1,
+        pos: new THREE.Vector3(-17.8, 0, -2.5),
+        role: 'Спільний мережевий принтер будинку',
+        desc: 'Має статичну локальну IP-адресу 192.168.1.20. Будь-який пристрій у мережі 192.168.1.0/24 може надіслати на нього документ для друку через роутер.',
+        tableTitle: 'Мережеві параметри принтера',
+        tableHeaders: ['Параметр', 'Значення'],
+        tableRows: [
+          ['Локальний IP', '192.168.1.20'],
+          ['Маска підмережі', '255.255.255.0'],
+          ['Підключення', 'Ethernet (LAN)'],
+          ['Порт друку', 'TCP 9100 (RAW)']
+        ]
+      },
+      {
+        id: 'smarttv',
+        name: 'Медіа-зона: Smart TV / NAS',
+        shortName: 'Smart TV / NAS',
+        type: 'smarttv',
+        ip: '192.168.1.30',
+        subnet: '255.255.255.0',
+        connType: 'Ethernet (1 Gbps)',
+        mac: '74:DA:38:88:11:30',
+        latencyMs: 1,
+        pos: new THREE.Vector3(-17.6, 0, 3.8),
+        role: 'Медіа-пристрій та домашнє сховище',
+        desc: 'Відтворює відеопотік із домашньої мережі та зберігає резервні копії файлів. Доступний за локальною адресою 192.168.1.30 без витрати зовнішнього трафіку.',
+        tableTitle: 'Параметри Smart TV / NAS',
+        tableHeaders: ['Параметр', 'Значення'],
+        tableRows: [
+          ['Локальний IP', '192.168.1.30'],
+          ['Маска підмережі', '255.255.255.0'],
+          ['Підключення', 'Ethernet (LAN)'],
+          ['Протокол', 'DLNA / SMB']
+        ]
+      },
+      {
+        id: 'defender',
+        name: 'Брандмауер Windows Defender',
+        shortName: 'Windows Defender',
+        type: 'defender',
+        ip: 'L3/L7 DPI Filter',
+        subnet: 'Host Interface',
+        connType: 'Inline Shield',
+        mac: 'HOST-NIC-GUARD',
+        latencyMs: 1,
+        pos: new THREE.Vector3(-10.9, 0, 1.35),
+        role: 'Мережевий екран та SmartScreen (Глибока інспекція пакетів)',
+        desc: 'Фізично контролює вхідний та вихідний трафік на інтерфейсі ПК Учня. Безпечні пакети пропускає, а підозрілі (Trojan/Phishing) миттєво блокує та ізолює в карантині.',
+        tableTitle: 'Правила фільтрації (DPI)',
+        tableHeaders: ['Протокол / Файл', 'Дія', 'Статус'],
+        tableRows: [
+          ['LAN 192.168.1.0/24', 'ALLOW (Trusted)', 'SAFE'],
+          ['HTTPS / TCP 443', 'ALLOW (DPI)', 'SAFE'],
+          ['MALWARE.EXE / Trojan', 'BLOCK & QUARANTINE', 'ACTIVE']
+        ]
+      },
+      {
+        id: 'router',
+        name: 'Домашній роутер',
+        shortName: 'Домашній роутер',
+        type: 'router',
+        ip: '192.168.1.1 / 91.204.12.44',
+        subnet: '255.255.255.0',
+        connType: 'LAN Switch + Wi-Fi + WAN',
+        mac: 'A4:5E:60:11:22:01',
+        latencyMs: 3,
+        pos: new THREE.Vector3(-8.2, 0, 1.2),
+        role: 'Межа між LAN і WAN (DHCP, Комутація та NAT)',
+        desc: 'Розподіляє локальні адреси (DHCP), перемикає локальний трафік (192.168.1.x) усередині будинку, а зовнішні запити перетворює через NAT на публічну IP-адресу 91.204.12.44.',
+        tableTitle: 'Таблиця NAT та DHCP (Кімнати будинку)',
+        tableHeaders: ['Пристрій', 'Локальна IP', 'Зовнішня IP (NAT)'],
+        tableRows: [
+          ['ПК Учня (Eth)', '192.168.1.10', '91.204.12.44'],
+          ['Ноутбук (Wi-Fi)', '192.168.1.11', '91.204.12.44'],
+          ['Принтер (Eth)', '192.168.1.20', 'Тільки LAN'],
+          ['Smart TV (Eth)', '192.168.1.30', 'Тільки LAN']
+        ]
+      },
+
+      // --- WAN ZONE (Глобальна мережа) ---
+      {
+        id: 'sniffer',
+        name: 'Перехоплювач / Провайдер (ISP Sniffer)',
+        shortName: 'ISP Перехоплювач',
+        type: 'sniffer',
+        ip: 'TAP-01 (Passive)',
+        subnet: 'WAN Backbone',
+        connType: 'Optical Tap',
+        mac: 'PROMISC-MODE',
+        latencyMs: 0,
+        pos: new THREE.Vector3(-5.9, 0, 2.35),
+        role: 'Пасивний аналізатор трафіку на каналі провайдера',
+        desc: 'Бачить увесь незашифрований трафік, що виходить за межі будинку в Інтернет. При увімкненому VPN бачить лише нечитабельний потік даних.',
+        tableTitle: 'Перехоплені дані',
+        tableHeaders: ['Режим VPN', 'Видимість заголовків'],
+        tableRows: [
+          ['VPN ВИМК', 'Читабельно (HTTP/SNI + IP)'],
+          ['VPN УВІМК', 'Шифр AES-256 (Нечитабельно)']
+        ]
+      },
+      {
+        id: 'dns',
+        name: 'DNS-сервер',
+        shortName: 'DNS-сервер',
+        type: 'dns',
+        ip: '8.8.8.8',
+        subnet: 'Public Anycast',
+        connType: 'Fiber WAN',
+        mac: '08:08:08:08:AA:01',
+        latencyMs: 8,
+        pos: new THREE.Vector3(-7.5, 0, -5.2),
+        role: 'Телефонна книга Інтернету (Domain Name System)',
+        desc: 'Перетворює доменні імена (school.edu.ua) на числові IP-адреси (142.250.185.78).',
+        tableTitle: 'DNS-записи (A-Records)',
+        tableHeaders: ['Домен', 'Тип', 'IP-адреса'],
+        tableRows: [
+          ['school.edu.ua', 'A', '142.250.185.78'],
+          ['wikipedia.org', 'A', '142.250.185.78'],
+          ['mon.gov.ua', 'A', '142.250.185.78']
+        ]
+      },
+      {
+        id: 'isp',
+        name: 'Провайдер (ISP)',
+        shortName: 'Шлюз провайдера',
+        type: 'core',
+        ip: '91.204.0.1',
+        subnet: '/16 ISP Edge',
+        connType: 'Fiber Uplinks',
+        mac: 'C0:FF:EE:01:00:01',
+        latencyMs: 6,
+        pos: new THREE.Vector3(-3.6, 0, 0.8),
+        role: 'Граничний маршрутизатор інтернет-провайдера',
+        desc: 'Приймає зовнішній трафік від домашнього роутера і спрямовує його в магістральну мережу або до VPN-сервера.',
+        tableTitle: 'Таблиця BGP-маршрутизації',
+        tableHeaders: ['Підмережа', 'Наступний хоп', 'Вартість'],
+        tableRows: [
+          ['185.220.101.0/24', 'VPN-SRV', '5 ms'],
+          ['142.250.0.0/16', 'CORE-A / B', '10 ms'],
+          ['142.250.0.0/16', 'CORE-C', '15 ms']
+        ]
+      },
+      {
+        id: 'vpn',
+        name: 'VPN-сервер',
+        shortName: 'VPN-сервер',
+        type: 'vpn',
+        ip: '185.220.101.55',
+        subnet: '/24 VPN Exit',
+        connType: 'Encrypted Tunnel',
+        mac: 'AE:52:56:00:99:55',
+        latencyMs: 7,
+        pos: new THREE.Vector3(-0.6, 0, -5.6),
+        role: 'Сервер віртуальної приватної мережі',
+        desc: 'Розшифровує тунель і відправляє запит далі від власної IP-адреси 185.220.101.55, приховуючи реальну IP клієнта.',
+        tableTitle: 'Параметри тунелю',
+        tableHeaders: ['Параметр', 'Значення'],
+        tableRows: [
+          ['Публічна IP VPN', '185.220.101.55'],
+          ['Шифрування', 'AES-256-GCM'],
+          ['Маскування', 'NAT → 185.220.101.55']
+        ]
+      },
+      {
+        id: 'coreA',
+        name: 'Магістраль A (Північ)',
+        shortName: 'Вузол CORE-A',
+        type: 'core',
+        ip: '10.10.1.1',
+        subnet: 'Backbone',
+        connType: '100G Optical',
+        mac: 'CA:01:01:01:01:01',
+        latencyMs: 9,
+        pos: new THREE.Vector3(1.5, 0, -3.2),
+        role: 'Високошвидкісний магістральний маршрутизатор',
+        desc: 'Оптичний хаб північного напрямку для відмовостійкої маршрутизації.',
+        tableTitle: 'Сусідні лінки (OSPF)',
+        tableHeaders: ['Сусід', 'Інтерфейс', 'Затримка'],
+        tableRows: [
+          ['ISP (91.204.0.1)', 'eth0/1', '9 ms'],
+          ['VPN (185.220.101.55)', 'eth0/2', '6 ms'],
+          ['IXP (185.1.50.1)', 'eth0/3', '10 ms']
+        ]
+      },
+      {
+        id: 'coreB',
+        name: 'Магістраль B (Центр)',
+        shortName: 'Вузол CORE-B',
+        type: 'core',
+        ip: '10.10.2.1',
+        subnet: 'Backbone',
+        connType: '100G Optical',
+        mac: 'CB:02:02:02:02:02',
+        latencyMs: 11,
+        pos: new THREE.Vector3(1.5, 0, 0.8),
+        role: 'Центральний транзитний вузол мережі',
+        desc: 'Ключовий балансувальник навантаження в центрі мережевої решітки.',
+        tableTitle: 'Сусідні лінки (OSPF)',
+        tableHeaders: ['Сусід', 'Інтерфейс', 'Затримка'],
+        tableRows: [
+          ['ISP (91.204.0.1)', 'eth0/1', '11 ms'],
+          ['CORE-A / CORE-C', 'eth0/2-3', '7 / 8 ms'],
+          ['IXP (185.1.50.1)', 'eth0/4', '11 ms']
+        ]
+      },
+      {
+        id: 'coreC',
+        name: 'Магістраль C (Підводна)',
+        shortName: 'Вузол CORE-C',
+        type: 'core',
+        ip: '10.10.3.1',
+        subnet: 'Subsea Trunk',
+        connType: 'Submarine Fiber',
+        mac: 'CC:03:03:03:03:03',
+        latencyMs: 14,
+        pos: new THREE.Vector3(1.6, 0, 5.2),
+        role: 'Шлюз підводної оптичної магістралі',
+        desc: 'Забезпечує резервний шлях через підводний броньований кабель.',
+        tableTitle: 'Сусідні лінки (OSPF)',
+        tableHeaders: ['Сусід', 'Інтерфейс', 'Затримка'],
+        tableRows: [
+          ['ISP (91.204.0.1)', 'eth0/1', '15 ms'],
+          ['CORE-B (10.10.2.1)', 'eth0/2', '8 ms'],
+          ['IXP (Підводна)', 'subsea0', '16 ms']
+        ]
+      },
+      {
+        id: 'ixp',
+        name: 'Точка обміну (IXP)',
+        shortName: 'Точка обміну IXP',
+        type: 'core',
+        ip: '185.1.50.1',
+        subnet: 'IXP Peering',
+        connType: '400G Peering',
+        mac: 'EE:10:50:01:00:FF',
+        latencyMs: 5,
+        pos: new THREE.Vector3(6.8, 0, 0.5),
+        role: 'Міжмережева точка обміну трафіком',
+        desc: 'Приймає пакети з усіх магістральних маршрутів і передає їх у дата-центр.',
+        tableTitle: 'Маршрути до дата-центру',
+        tableHeaders: ['Мережа', 'Шлюз', 'Статус'],
+        tableRows: [
+          ['142.250.185.0/24', '142.250.185.78', 'ACTIVE'],
+          ['Підводний канал', '10.10.3.1', 'TRUNK'],
+          ['VPN-магістраль', '185.220.101.55', 'UP']
+        ]
+      },
+      {
+        id: 'server',
+        name: 'Веб-сервер / Дата-центр',
+        shortName: 'Веб-сервер',
+        type: 'server',
+        ip: '142.250.185.78',
+        subnet: '/24 Datacenter',
+        connType: '10G Server Uplink',
+        mac: 'FA:CE:B0:0C:14:25',
+        latencyMs: 4,
+        pos: new THREE.Vector3(11.8, 0, 0.5),
+        role: 'Цільовий сервер (Дата-центр)',
+        desc: 'Збирає TCP-пакети (1/4 – 4/4) і надсилає підтвердження ACK.',
+        tableTitle: 'Стан буфера TCP',
+        tableHeaders: ['Порт', 'Протокол', 'Статус'],
+        tableRows: [
+          ['443', 'HTTPS / TCP', 'LISTEN'],
+          ['80', 'HTTP / TCP', 'LISTEN'],
+          ['IPv4', '142.250.185.78', 'ONLINE']
+        ]
+      }
+    ];
+
+    const LINKS_DATA = [
+      // LAN Links
+      { id: 'pc-router', a: 'pc', b: 'router', latency: 2, label: 'LAN Ethernet (ПК Учня ↔ Роутер)', submarine: false, wifi: false },
+      { id: 'laptop-router', a: 'laptop', b: 'router', latency: 3, label: 'Wi-Fi 6 (Ноутбук ↔ Роутер)', submarine: false, wifi: true },
+      { id: 'printer-router', a: 'printer', b: 'router', latency: 2, label: 'LAN Ethernet (Принтер ↔ Роутер)', submarine: false, wifi: false },
+      { id: 'smarttv-router', a: 'smarttv', b: 'router', latency: 2, label: 'LAN Ethernet (Smart TV ↔ Роутер)', submarine: false, wifi: false },
+      // WAN Links
+      { id: 'router-dns', a: 'router', b: 'dns', latency: 8, label: 'Канал DNS-запитів', submarine: false, wifi: false },
+      { id: 'router-isp', a: 'router', b: 'isp', latency: 6, label: 'Абонентська лінія ISP', submarine: false, wifi: false },
+      { id: 'isp-vpn', a: 'isp', b: 'vpn', latency: 5, label: 'Канал до VPN-сервера', submarine: false, wifi: false },
+      { id: 'vpn-coreA', a: 'vpn', b: 'coreA', latency: 6, label: 'Вихід VPN ↔ CORE-A', submarine: false, wifi: false },
+      { id: 'vpn-ixp', a: 'vpn', b: 'ixp', latency: 11, label: 'Вихід VPN ↔ IXP', submarine: false, wifi: false },
+      { id: 'isp-coreA', a: 'isp', b: 'coreA', latency: 9, label: 'Оптика ISP ↔ CORE-A', submarine: false, wifi: false },
+      { id: 'isp-coreB', a: 'isp', b: 'coreB', latency: 11, label: 'Оптика ISP ↔ CORE-B', submarine: false, wifi: false },
+      { id: 'isp-coreC', a: 'isp', b: 'coreC', latency: 15, label: 'Оптика ISP ↔ CORE-C', submarine: false, wifi: false },
+      { id: 'coreA-coreB', a: 'coreA', b: 'coreB', latency: 7, label: 'Міжвузловий лінк A ↔ B', submarine: false, wifi: false },
+      { id: 'coreB-coreC', a: 'coreB', b: 'coreC', latency: 8, label: 'Міжвузловий лінк B ↔ C', submarine: false, wifi: false },
+      { id: 'coreA-ixp', a: 'coreA', b: 'ixp', latency: 10, label: 'Магістраль A ↔ IXP', submarine: false, wifi: false },
+      { id: 'coreB-ixp', a: 'coreB', b: 'ixp', latency: 11, label: 'Магістраль B ↔ IXP', submarine: false, wifi: false },
+      { id: 'coreC-ixp', a: 'coreC', b: 'ixp', latency: 16, label: 'Підводна магістраль C ↔ IXP', submarine: true, wifi: false },
+      { id: 'ixp-server', a: 'ixp', b: 'server', latency: 4, label: 'Аплінк дата-центру', submarine: false, wifi: false }
+    ];
+
+    // =========================================================================
+    // 2. THREE.JS SCENE SETUP & ARCHITECTURAL HOUSE FLOOR-PLAN
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#1c1e21');
+    scene.fog = new THREE.Fog('#1c1e21', 42, 85);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 160);
+    camera.position.set(-2.5, 17.5, 24.0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI / 2 - 0.08;
+    controls.minDistance = 7;
+    controls.maxDistance = 46;
+    controls.target.set(-2.5, 0.3, 0.2);
+
+    // Studio Lighting
+    scene.add(new THREE.HemisphereLight('#eef0f3', '#22252a', 0.88));
+    const keyLight = new THREE.DirectionalLight('#fff8ee', 1.65);
+    keyLight.position.set(4, 20, 12);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 2;
+    keyLight.shadow.camera.far = 52;
+    const d = 24;
+    keyLight.shadow.camera.left = -d;
+    keyLight.shadow.camera.right = d;
+    keyLight.shadow.camera.top = d;
+    keyLight.shadow.camera.bottom = -d;
+    keyLight.shadow.bias = -0.0005;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight('#cdd6e0', 0.55);
+    rimLight.position.set(-16, 10, -10);
+    scene.add(rimLight);
+
+    // Subtle Studio Dust Particles (Floating Micro-Motes in Ambient Light)
+    const DUST_COUNT = 260;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(DUST_COUNT * 3);
+    const dustSpeeds = new Float32Array(DUST_COUNT * 3);
+    for (let i = 0; i < DUST_COUNT; i++) {
+      dustPositions[i * 3] = (Math.random() - 0.5) * 42 - 2;
+      dustPositions[i * 3 + 1] = Math.random() * 11 + 0.3;
+      dustPositions[i * 3 + 2] = (Math.random() - 0.5) * 24;
+      dustSpeeds[i * 3] = (Math.random() - 0.5) * 0.14;
+      dustSpeeds[i * 3 + 1] = (Math.random() - 0.35) * 0.08;
+      dustSpeeds[i * 3 + 2] = (Math.random() - 0.5) * 0.14;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+
+    const dustCanvas = document.createElement('canvas');
+    dustCanvas.width = 32;
+    dustCanvas.height = 32;
+    const dustCtx = dustCanvas.getContext('2d');
+    const dustGrad = dustCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    dustGrad.addColorStop(0, 'rgba(244, 244, 241, 1)');
+    dustGrad.addColorStop(0.5, 'rgba(232, 232, 227, 0.45)');
+    dustGrad.addColorStop(1, 'rgba(232, 232, 227, 0)');
+    dustCtx.fillStyle = dustGrad;
+    dustCtx.fillRect(0, 0, 32, 32);
+
+    const dustMat = new THREE.PointsMaterial({
+      size: 0.14,
+      map: new THREE.CanvasTexture(dustCanvas),
+      transparent: true,
+      opacity: 0.3,
+      depthWrite: false,
+      blending: THREE.NormalBlending
+    });
+    const dustParticles = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustParticles);
+
+    const MAT = {
+      workbench: new THREE.MeshStandardMaterial({ color: '#1c1e21', roughness: 0.92, metalness: 0.05 }),
+      plinth: new THREE.MeshStandardMaterial({ color: '#23262b', roughness: 0.78, metalness: 0.22 }),
+      houseFloor: new THREE.MeshStandardMaterial({ color: '#282c32', roughness: 0.85, metalness: 0.15 }),
+      houseWall: new THREE.MeshStandardMaterial({ color: '#333840', roughness: 0.7, metalness: 0.25 }),
+      aluminum: new THREE.MeshStandardMaterial({ color: '#a8adb5', roughness: 0.34, metalness: 0.76 }),
+      graphite: new THREE.MeshStandardMaterial({ color: '#26292e', roughness: 0.62, metalness: 0.28 }),
+      darkTrim: new THREE.MeshStandardMaterial({ color: '#17191c', roughness: 0.7, metalness: 0.2 }),
+      copper: new THREE.MeshStandardMaterial({ color: '#c87d4b', roughness: 0.38, metalness: 0.72 }),
+      submarineSheath: new THREE.MeshStandardMaterial({ color: '#3b424c', roughness: 0.55, metalness: 0.45 }),
+      severed: new THREE.MeshStandardMaterial({ color: '#d9534f', roughness: 0.5, metalness: 0.25 }),
+      amber: new THREE.MeshStandardMaterial({ color: '#e59838', roughness: 0.3, metalness: 0.35, emissive: '#e59838', emissiveIntensity: 0.32 }),
+      amberTranslucent: new THREE.MeshStandardMaterial({ color: '#e59838', roughness: 0.25, metalness: 0.2, transparent: true, opacity: 0.76, emissive: '#e59838', emissiveIntensity: 0.24 }),
+      armoredCapsule: new THREE.MeshStandardMaterial({ color: '#2b3a32', roughness: 0.35, metalness: 0.75 }),
+      sage: new THREE.MeshStandardMaterial({ color: '#4d9a6a', roughness: 0.35, metalness: 0.25, emissive: '#4d9a6a', emissiveIntensity: 0.3 }),
+      terracotta: new THREE.MeshStandardMaterial({ color: '#d9534f', roughness: 0.4, metalness: 0.2, emissive: '#d9534f', emissiveIntensity: 0.38 }),
+      vpnTunnel: new THREE.MeshStandardMaterial({
+        color: '#4d9a6a',
+        roughness: 0.28,
+        metalness: 0.5,
+        transparent: true,
+        opacity: 0.28,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      })
+    };
+
+    // Workbench & Extended Testbed
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), MAT.workbench);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.32;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(36.5, 0.32, 17.5), MAT.plinth);
+    plinth.position.set(-2.6, -0.16, 0.0);
+    plinth.receiveShadow = true;
+    scene.add(plinth);
+
+    const gridHelper = new THREE.GridHelper(36, 36, '#363b42', '#2b2f35');
+    gridHelper.position.set(-2.6, 0.004, 0.0);
+    gridHelper.scale.set(1, 1, 17 / 36);
+    scene.add(gridHelper);
+
+    // --- CUTAWAY ARCHITECTURAL HOUSE FLOOR-PLAN (LAN ZONE) ---
+    function buildHouseFloorPlan() {
+      const houseGroup = new THREE.Group();
+      // Floor slab for House (x: -20.0 to -9.4, z: -6.2 to +6.2)
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(10.6, 0.05, 12.4), MAT.houseFloor);
+      floor.position.set(-14.7, 0.025, 0.0);
+      floor.receiveShadow = true;
+      houseGroup.add(floor);
+
+      // Warm-gray 1px-style architectural room outlines on floor
+      const outlineMat = new THREE.LineBasicMaterial({ color: '#8b8d87' });
+      const rectPts = (x1, z1, x2, z2) => [
+        new THREE.Vector3(x1, 0.06, z1), new THREE.Vector3(x2, 0.06, z1),
+        new THREE.Vector3(x2, 0.06, z1), new THREE.Vector3(x2, 0.06, z2),
+        new THREE.Vector3(x2, 0.06, z2), new THREE.Vector3(x1, 0.06, z2),
+        new THREE.Vector3(x1, 0.06, z2), new THREE.Vector3(x1, 0.06, z1)
+      ];
+      const outlineGeo = new THREE.BufferGeometry().setFromPoints([
+        ...rectPts(-19.95, -6.15, -9.45, 6.15),
+        new THREE.Vector3(-15.7, 0.06, -6.15), new THREE.Vector3(-15.7, 0.06, 6.15), // Vertical room divider
+        new THREE.Vector3(-19.95, 0.06, 0.4), new THREE.Vector3(-15.7, 0.06, 0.4),  // Left rooms divider
+        new THREE.Vector3(-15.7, 0.06, -1.2), new THREE.Vector3(-9.45, 0.06, -1.2)  // Right rooms divider
+      ]);
+      houseGroup.add(new THREE.LineSegments(outlineGeo, outlineMat));
+
+      // Cutaway Matte-Graphite Walls (low architectural height 0.48)
+      const addWall = (x, z, w, d) => {
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 0.48, d), MAT.houseWall);
+        wall.position.set(x, 0.26, z);
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        houseGroup.add(wall);
+      };
+      addWall(-14.7, -6.15, 10.6, 0.12); // North
+      addWall(-14.7, 6.15, 10.6, 0.12);  // South
+      addWall(-19.95, 0.0, 0.12, 12.4);  // West
+      addWall(-9.45, -3.7, 0.12, 4.9);   // East-North (with doorway gap near router)
+      addWall(-9.45, 4.3, 0.12, 3.7);    // East-South
+      addWall(-15.7, -3.5, 0.1, 5.2);    // Interior divider N
+      addWall(-15.7, 3.5, 0.1, 5.2);     // Interior divider S
+      addWall(-17.8, 0.4, 4.2, 0.1);     // Printer / SmartTV divider
+      addWall(-12.6, -1.2, 6.2, 0.1);    // PC / Laptop divider
+
+      scene.add(houseGroup);
+    }
+    buildHouseFloorPlan();
+
+    // Submarine Trench Marker on Testbed
+    const trenchPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(6.8, 0.03, 1.5),
+      new THREE.MeshStandardMaterial({ color: '#1b2329', roughness: 0.85, metalness: 0.2 })
+    );
+    trenchPlate.position.set(4.2, 0.015, 3.0);
+    trenchPlate.rotation.y = Math.atan2(5.2 - 0.5, 6.8 - 1.6);
+    trenchPlate.receiveShadow = true;
+    scene.add(trenchPlate);
+
+    // =========================================================================
+    // 3. PROCEDURAL 3D HARDWARE BUILDERS (LAN ROOMS + WAN + SECURITY)
+    // =========================================================================
+    const nodeObjects = new Map();
+    const clickableNodeMeshes = [];
+    let defenderGateBar = null;
+    let defenderShieldMesh = null;
+    let snifferLed = null;
+
+    function createScreenCanvas() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 160;
+      const ctx = c.getContext('2d');
+      const tex = new THREE.CanvasTexture(c);
+      tex.anisotropy = 4;
+      return { canvas: c, ctx, tex };
+    }
+
+    function updatePCScreen(ctx, tex, title, line1, line2, accent = '#4d9a6a') {
+      ctx.fillStyle = '#181a1d';
+      ctx.fillRect(0, 0, 256, 160);
+      ctx.fillStyle = '#252930';
+      ctx.fillRect(0, 0, 256, 26);
+      ctx.fillStyle = accent;
+      ctx.fillRect(10, 9, 8, 8);
+      ctx.fillStyle = '#e8e8e3';
+      ctx.font = 'bold 12px Consolas, monospace';
+      ctx.fillText(title, 26, 17);
+      ctx.fillStyle = '#a8adb5';
+      ctx.font = '11px Consolas, monospace';
+      ctx.fillText('IP: 192.168.1.10', 12, 50);
+      ctx.fillStyle = '#f4f4f1';
+      ctx.font = 'bold 13px Consolas, monospace';
+      ctx.fillText(line1.slice(0, 28), 12, 82);
+      ctx.fillStyle = accent;
+      ctx.font = '12px Consolas, monospace';
+      ctx.fillText(line2.slice(0, 30), 12, 114);
+      ctx.strokeStyle = '#383d45';
+      ctx.strokeRect(8, 34, 240, 114);
+      tex.needsUpdate = true;
+    }
+
+    function tagClickable(obj, nodeId) {
+      obj.traverse(child => {
+        if (child.isMesh) {
+          child.userData.nodeId = nodeId;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          clickableNodeMeshes.push(child);
+        }
+      });
+    }
+
+    function buildNodeMesh(node) {
+      const group = new THREE.Group();
+      group.position.copy(node.pos);
+
+      let statusLed = null;
+      let screenCtx = null;
+      let screenTex = null;
+      const rackBars = [];
+
+      if (node.type === 'defender') {
+        const baseL = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.14, 0.28), MAT.graphite);
+        baseL.position.set(0, 0.07, -0.55);
+        const baseR = baseL.clone();
+        baseR.position.set(0, 0.07, 0.55);
+        group.add(baseL, baseR);
+
+        const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.05, 0.16), MAT.aluminum);
+        pillarL.position.set(0, 0.62, -0.55);
+        const pillarR = pillarL.clone();
+        pillarR.position.set(0, 0.62, 0.55);
+        group.add(pillarL, pillarR);
+
+        const archTop = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 1.32), MAT.graphite);
+        archTop.position.set(0, 1.18, 0);
+        group.add(archTop);
+
+        defenderGateBar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.07, 1.1), MAT.sage.clone());
+        defenderGateBar.position.set(0, 1.29, 0);
+        group.add(defenderGateBar);
+
+        defenderShieldMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.95, 0.85),
+          new THREE.MeshStandardMaterial({ color: '#4d9a6a', transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false })
+        );
+        defenderShieldMesh.rotation.y = Math.PI / 2;
+        defenderShieldMesh.position.set(0, 0.62, 0);
+        group.add(defenderShieldMesh);
+
+        tagClickable(group, node.id);
+        scene.add(group);
+        nodeObjects.set(node.id, { data: node, group, statusLed: defenderGateBar, screenCtx, screenTex, rackBars });
+        return;
+      }
+
+      if (node.type === 'sniffer') {
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.1, 0.95), MAT.darkTrim);
+        base.position.y = 0.05;
+        group.add(base);
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.42, 0.75), MAT.graphite);
+        body.position.y = 0.31;
+        group.add(body);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.04, 0.65), MAT.aluminum);
+        top.position.y = 0.54;
+        group.add(top);
+        snifferLed = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.06, 0.06), MAT.amber.clone());
+        snifferLed.position.set(0, 0.35, 0.38);
+        group.add(snifferLed);
+        const tapWire = new THREE.Mesh(
+          new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(0, 0.25, -0.38), new THREE.Vector3(0, 0.28, -1.35)), 4, 0.035, 8, false),
+          MAT.copper
+        );
+        group.add(tapWire);
+
+        tagClickable(group, node.id);
+        scene.add(group);
+        nodeObjects.set(node.id, { data: node, group, statusLed: snifferLed, screenCtx, screenTex, rackBars });
+        return;
+      }
+
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 1.7), MAT.darkTrim);
+      pad.position.y = 0.04;
+      group.add(pad);
+
+      if (node.type === 'pc') {
+        const tower = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.15, 1.3), MAT.graphite);
+        tower.position.set(-0.55, 0.65, 0);
+        group.add(tower);
+        const towerFront = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.05, 0.06), MAT.aluminum);
+        towerFront.position.set(-0.55, 0.65, 0.65);
+        group.add(towerFront);
+        const stand = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.45, 0.2), MAT.aluminum);
+        stand.position.set(0.35, 0.3, -0.15);
+        group.add(stand);
+        const bezel = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.95, 0.1), MAT.graphite);
+        bezel.position.set(0.35, 0.88, -0.05);
+        bezel.rotation.x = -0.1;
+        group.add(bezel);
+
+        const scr = createScreenCanvas();
+        screenCtx = scr.ctx;
+        screenTex = scr.tex;
+        updatePCScreen(screenCtx, screenTex, 'CLIENT WORKSTATION', 'school.edu.ua', 'READY FOR REQUEST');
+        const screenPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.8), new THREE.MeshBasicMaterial({ map: screenTex }));
+        screenPlane.position.set(0.35, 0.88, 0.005);
+        screenPlane.rotation.x = -0.1;
+        group.add(screenPlane);
+        const keyboard = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 0.42), MAT.aluminum);
+        keyboard.position.set(0.35, 0.11, 0.52);
+        group.add(keyboard);
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 0.05), MAT.sage.clone());
+        statusLed.position.set(-0.55, 1.05, 0.69);
+        group.add(statusLed);
+
+      } else if (node.type === 'laptop') {
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.08, 0.9), MAT.aluminum);
+        base.position.set(0, 0.12, 0.1);
+        group.add(base);
+        const lid = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.85, 0.06), MAT.graphite);
+        lid.position.set(0, 0.52, -0.36);
+        lid.rotation.x = -0.18;
+        group.add(lid);
+        const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.12, 0.72), new THREE.MeshBasicMaterial({ color: '#263238' }));
+        screen.position.set(0, 0.52, -0.32);
+        screen.rotation.x = -0.18;
+        group.add(screen);
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 0.04), MAT.sage.clone());
+        statusLed.position.set(0, 0.17, 0.54);
+        group.add(statusLed);
+
+      } else if (node.type === 'printer') {
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.65, 1.15), MAT.graphite);
+        body.position.set(0, 0.4, 0);
+        group.add(body);
+        const topTray = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.85), MAT.aluminum);
+        topTray.position.set(0, 0.76, -0.05);
+        group.add(topTray);
+        const paper = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.04, 0.55), new THREE.MeshStandardMaterial({ color: '#f4f4f1', roughness: 0.9 }));
+        paper.position.set(0, 0.25, 0.58);
+        group.add(paper);
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.05), MAT.sage.clone());
+        statusLed.position.set(0.45, 0.6, 0.58);
+        group.add(statusLed);
+
+      } else if (node.type === 'smarttv') {
+        const nas = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.85), MAT.graphite);
+        nas.position.set(-0.55, 0.35, 0.1);
+        group.add(nas);
+        const stand = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.3, 0.2), MAT.aluminum);
+        stand.position.set(0.25, 0.22, -0.1);
+        group.add(stand);
+        const tv = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.92, 0.08), MAT.graphite);
+        tv.position.set(0.25, 0.8, -0.1);
+        group.add(tv);
+        const tvPanel = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 0.8), new THREE.MeshBasicMaterial({ color: '#1b2228' }));
+        tvPanel.position.set(0.25, 0.8, -0.05);
+        group.add(tvPanel);
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.05, 0.05), MAT.sage.clone());
+        statusLed.position.set(-0.55, 0.55, 0.53);
+        group.add(statusLed);
+
+      } else if (node.type === 'router') {
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.34, 1.15), MAT.graphite);
+        body.position.y = 0.25;
+        group.add(body);
+        const topPlate = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.04, 1.02), MAT.aluminum);
+        topPlate.position.y = 0.43;
+        group.add(topPlate);
+        [-0.55, 0.55].forEach(x => {
+          const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.9, 10), MAT.darkTrim);
+          ant.position.set(x, 0.72, -0.42);
+          ant.rotation.x = -0.15;
+          group.add(ant);
+        });
+        for (let i = -2; i <= 2; i++) {
+          const port = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.06), MAT.copper);
+          port.position.set(i * 0.24, 0.24, 0.57);
+          group.add(port);
+        }
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 0.05), MAT.sage.clone());
+        statusLed.position.set(0, 0.45, 0.48);
+        group.add(statusLed);
+
+      } else if (node.type === 'dns') {
+        const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.45, 1.25), MAT.graphite);
+        chassis.position.y = 0.8;
+        group.add(chassis);
+        const face = new THREE.Mesh(new THREE.BoxGeometry(1.16, 1.3, 0.06), MAT.aluminum);
+        face.position.set(0, 0.8, 0.62);
+        group.add(face);
+        for (let i = 0; i < 4; i++) {
+          const slot = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.14, 0.08), MAT.darkTrim);
+          slot.position.set(0, 0.38 + i * 0.26, 0.64);
+          group.add(slot);
+        }
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.06, 0.06), MAT.sage.clone());
+        statusLed.position.set(0, 1.36, 0.65);
+        group.add(statusLed);
+
+      } else if (node.type === 'vpn') {
+        const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.25, 1.3), MAT.graphite);
+        chassis.position.y = 0.7;
+        group.add(chassis);
+        const armorBand = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.22, 1.36), MAT.copper);
+        armorBand.position.y = 0.7;
+        group.add(armorBand);
+        const topCap = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.08, 1.18), MAT.aluminum);
+        topCap.position.y = 1.36;
+        group.add(topCap);
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.07, 0.07), MAT.sage.clone());
+        statusLed.position.set(0, 1.15, 0.66);
+        group.add(statusLed);
+
+      } else if (node.type === 'core') {
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.55, 1.35), MAT.graphite);
+        body.position.y = 0.35;
+        group.add(body);
+        for (let i = -3; i <= 3; i++) {
+          const fin = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 1.1), MAT.aluminum);
+          fin.position.set(i * 0.18, 0.68, 0);
+          group.add(fin);
+        }
+        const collar = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.12, 0.25), MAT.copper);
+        collar.position.set(0, 0.35, 0);
+        group.add(collar);
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.06), MAT.sage.clone());
+        statusLed.position.set(0, 0.52, 0.68);
+        group.add(statusLed);
+
+      } else if (node.type === 'server') {
+        const rack = new THREE.Mesh(new THREE.BoxGeometry(1.75, 2.05, 1.55), MAT.graphite);
+        rack.position.y = 1.1;
+        group.add(rack);
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.12, 1.62), MAT.aluminum);
+        frame.position.y = 2.12;
+        group.add(frame);
+        for (let i = 0; i < 4; i++) {
+          const blade = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.28, 0.08), MAT.darkTrim);
+          blade.position.set(0, 0.52 + i * 0.38, 0.77);
+          group.add(blade);
+          const bar = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 0.06), MAT.aluminum.clone());
+          bar.position.set(0.45, 0.52 + i * 0.38, 0.81);
+          group.add(bar);
+          rackBars.push(bar);
+        }
+        statusLed = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 0.06), MAT.sage.clone());
+        statusLed.position.set(0, 1.98, 0.78);
+        group.add(statusLed);
+      }
+
+      tagClickable(group, node.id);
+      scene.add(group);
+      nodeObjects.set(node.id, { data: node, group, statusLed, screenCtx, screenTex, rackBars });
+    }
+
+    NODES_DATA.forEach(buildNodeMesh);
+
+    // =========================================================================
+    // 4. FIBER-OPTIC CABLES, WI-FI DASHED ARCS & VPN CONDUIT
+    // =========================================================================
+    const linkObjects = new Map();
+    const clickableCableMeshes = [];
+
+    function createLinkGeometry(link) {
+      const nodeA = nodeObjects.get(link.a).data;
+      const nodeB = nodeObjects.get(link.b).data;
+
+      const pA = nodeA.pos.clone().setY(0.28);
+      const pB = nodeB.pos.clone().setY(0.28);
+      const mid = pA.clone().lerp(pB, 0.5);
+      mid.y = link.submarine ? 0.12 : link.wifi ? 1.15 : 0.28;
+
+      const curve = new THREE.CatmullRomCurve3([pA, mid, pB]);
+      const radius = link.submarine ? 0.095 : 0.06;
+
+      const group = new THREE.Group();
+      let intactMesh;
+      const intactMat = (link.submarine ? MAT.submarineSheath : link.wifi ? MAT.sage : MAT.copper).clone();
+
+      if (link.wifi) {
+        // Subtle dashed Wi-Fi arc
+        const pts = curve.getPoints(36);
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        const lineMat = new THREE.LineDashedMaterial({ color: '#4d9a6a', dashSize: 0.35, gapSize: 0.22 });
+        intactMesh = new THREE.Line(lineGeo, lineMat);
+        intactMesh.computeLineDistances();
+        group.add(intactMesh);
+      } else {
+        const intactGeo = new THREE.TubeGeometry(curve, 28, radius, 10, false);
+        intactMesh = new THREE.Mesh(intactGeo, intactMat);
+        intactMesh.castShadow = true;
+        intactMesh.receiveShadow = true;
+        group.add(intactMesh);
+
+        if (link.submarine) {
+          [0.25, 0.5, 0.75].forEach(t => {
+            const pt = curve.getPoint(t);
+            const tan = curve.getTangent(t);
+            const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.18, 12), MAT.copper);
+            collar.position.copy(pt);
+            collar.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tan);
+            intactMesh.add(collar);
+          });
+        }
+      }
+
+      const severedGroup = new THREE.Group();
+      severedGroup.visible = false;
+      const ptA1 = curve.getPoint(0);
+      const ptA2 = curve.getPoint(0.39);
+      const ptB1 = curve.getPoint(0.61);
+      const ptB2 = curve.getPoint(1);
+      const segAMesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(ptA1, ptA2.clone().setY(0.22)), 8, radius, 10, false), MAT.severed);
+      const segBMesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(ptB1.clone().setY(0.22), ptB2), 8, radius, 10, false), MAT.severed);
+      severedGroup.add(segAMesh, segBMesh);
+
+      const capGeo = new THREE.SphereGeometry(radius * 1.35, 10, 10);
+      const capA = new THREE.Mesh(capGeo, MAT.terracotta);
+      capA.position.copy(ptA2).setY(0.22);
+      const capB = new THREE.Mesh(capGeo, MAT.terracotta);
+      capB.position.copy(ptB1).setY(0.22);
+      severedGroup.add(capA, capB);
+      group.add(severedGroup);
+
+      const hitGeo = new THREE.TubeGeometry(curve, 16, 0.34, 8, false);
+      const hitMesh = new THREE.Mesh(hitGeo, new THREE.MeshBasicMaterial({ visible: false }));
+      hitMesh.userData.linkId = link.id;
+      group.add(hitMesh);
+      clickableCableMeshes.push(hitMesh);
+
+      scene.add(group);
+      linkObjects.set(link.id, {
+        data: link,
+        group,
+        intactMesh,
+        intactMat,
+        severedGroup,
+        hitMesh,
+        curve,
+        severed: false
+      });
+    }
+
+    LINKS_DATA.forEach(createLinkGeometry);
+
+    // Semi-transparent protective VPN Conduit Tube wrapping PC -> Router -> ISP -> VPN Server
+    const vpnTunnelGroup = new THREE.Group();
+    vpnTunnelGroup.visible = false;
+    const vpnPathPoints = [
+      nodeObjects.get('pc').data.pos.clone().setY(0.32),
+      nodeObjects.get('router').data.pos.clone().setY(0.32),
+      nodeObjects.get('isp').data.pos.clone().setY(0.32),
+      nodeObjects.get('vpn').data.pos.clone().setY(0.32)
+    ];
+    const vpnCurve = new THREE.CatmullRomCurve3(vpnPathPoints, false, 'catmullrom', 0.25);
+    const vpnTubeMesh = new THREE.Mesh(new THREE.TubeGeometry(vpnCurve, 64, 0.25, 16, false), MAT.vpnTunnel);
+    vpnTunnelGroup.add(vpnTubeMesh);
+
+    for (let i = 1; i < 10; i++) {
+      const t = i / 10;
+      const pt = vpnCurve.getPoint(t);
+      const tan = vpnCurve.getTangent(t);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.02, 8, 18), MAT.copper);
+      ring.position.copy(pt);
+      ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan);
+      vpnTunnelGroup.add(ring);
+    }
+    scene.add(vpnTunnelGroup);
+
+    // =========================================================================
+    // 5. UI ELEMENTS, VIEW MODE CAMERA SWITCHER & TELEMETRY
+    // =========================================================================
+    let vpnEnabled = false;
+    let defenderEnabled = true;
+
+    const VIEW_PRESETS = {
+      lan: { pos: new THREE.Vector3(-13.2, 11.2, 12.2), target: new THREE.Vector3(-13.2, 0.3, 0.2) },
+      wan: { pos: new THREE.Vector3(2.2, 13.5, 16.5), target: new THREE.Vector3(2.2, 0.3, -0.3) },
+      full: { pos: new THREE.Vector3(-2.5, 17.5, 24.0), target: new THREE.Vector3(-2.5, 0.3, 0.2) }
+    };
+
+    let cameraAnim = { active: false, pos: new THREE.Vector3(), target: new THREE.Vector3() };
+
+    controls.addEventListener('start', () => {
+      cameraAnim.active = false;
+    });
+
+    function switchView(viewKey) {
+      const p = VIEW_PRESETS[viewKey];
+      if (!p) return;
+      cameraAnim.pos.copy(p.pos);
+      cameraAnim.target.copy(p.target);
+      cameraAnim.active = true;
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewKey));
+    }
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchView(btn.dataset.view));
+    });
+
+    // Control panel tabs
+    document.querySelectorAll('.panel-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    const labelsLayer = document.getElementById('labels-layer');
+    const nodeLabelEls = new Map();
+    let snifferReadoutEl = null;
+
+    NODES_DATA.forEach(node => {
+      const el = document.createElement('div');
+      const isSecurity = ['defender', 'sniffer', 'vpn'].includes(node.type);
+      el.className = 'node-label' + (isSecurity ? ' security-badge' : '');
+      el.innerHTML = `
+        <div class="node-label-title"><span class="node-dot"></span><span>${node.shortName}</span></div>
+        <div class="node-label-ip">${node.ip}</div>
+      `;
+      if (node.id === 'sniffer') {
+        snifferReadoutEl = document.createElement('div');
+        snifferReadoutEl.className = 'sniffer-readout';
+        snifferReadoutEl.textContent = 'Очікування трафіку...';
+        el.appendChild(snifferReadoutEl);
+      }
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openInspector(node.id);
+      });
+      labelsLayer.appendChild(el);
+      nodeLabelEls.set(node.id, el);
+    });
+
+    const telemetryLogEl = document.getElementById('telemetry-log');
+    function logEvent(tag, tagClass, message) {
+      const now = new Date();
+      const ts = now.toTimeString().slice(0, 8);
+      const row = document.createElement('div');
+      row.className = 'log-entry';
+      row.innerHTML = `<span class="log-time">[${ts}]</span><span class="log-tag ${tagClass}">${tag}</span><span>${message}</span>`;
+      telemetryLogEl.appendChild(row);
+      telemetryLogEl.scrollTop = telemetryLogEl.scrollHeight;
+    }
+
+    logEvent('SYS', 'sys', 'Єдиний стенд LAN → WAN готовий. Підмережа будинку: 192.168.1.0/24.');
+
+    const telemetryPanel = document.getElementById('telemetry-panel');
+    const telemetryChevron = document.getElementById('telemetry-chevron');
+    document.getElementById('telemetry-toggle').addEventListener('click', () => {
+      telemetryPanel.classList.toggle('collapsed');
+      telemetryChevron.textContent = telemetryPanel.classList.contains('collapsed') ? '▲ Розгорнути' : '▼ Згорнути';
+    });
+
+    // Security Toggles
+    const vpnToggleBtn = document.getElementById('vpn-toggle');
+    const vpnSubEl = document.getElementById('vpn-sub');
+    vpnToggleBtn.addEventListener('click', () => {
+      vpnEnabled = !vpnEnabled;
+      vpnTunnelGroup.visible = vpnEnabled;
+      vpnToggleBtn.textContent = vpnEnabled ? 'VPN: УВІМК' : 'VPN: ВИМК';
+      vpnToggleBtn.classList.toggle('on', vpnEnabled);
+      vpnSubEl.textContent = vpnEnabled ? 'Тунель активний → IP 185.220.101.55' : 'IP клієнта видима (91.204.12.44)';
+
+      if (vpnEnabled) {
+        snifferReadoutEl.className = 'sniffer-readout encrypted';
+        snifferReadoutEl.textContent = 'Зашифрований трафік (Нечитабельно)';
+        logEvent('VPN', 'vpn', 'VPN-тунель активовано. Канал до 185.220.101.55 зашифровано (AES-256).');
+      } else {
+        snifferReadoutEl.className = 'sniffer-readout';
+        snifferReadoutEl.textContent = 'Очікування трафіку...';
+        logEvent('VPN', 'sys', 'VPN-тунель вимкнено.');
+      }
+    });
+
+    const defenderToggleBtn = document.getElementById('defender-toggle');
+    const defenderSubEl = document.getElementById('defender-sub');
+    defenderToggleBtn.addEventListener('click', () => {
+      defenderEnabled = !defenderEnabled;
+      defenderToggleBtn.textContent = defenderEnabled ? 'АКТИВНИЙ' : 'ВИМКНЕНИЙ';
+      defenderToggleBtn.classList.toggle('on', defenderEnabled);
+      defenderToggleBtn.classList.toggle('off-warn', !defenderEnabled);
+      defenderSubEl.textContent = defenderEnabled ? 'DPI-інспекція та SmartScreen увімкнено' : 'УВАГА: Мережевий екран вимкнено!';
+      defenderGateBar.material.color.set(defenderEnabled ? '#4d9a6a' : '#767b82');
+      defenderGateBar.material.emissive.set(defenderEnabled ? '#4d9a6a' : '#000000');
+      defenderShieldMesh.visible = defenderEnabled;
+      nodeLabelEls.get('defender').querySelector('.node-dot').className = 'node-dot' + (defenderEnabled ? '' : ' offline');
+      logEvent('DEF', defenderEnabled ? 'ack' : 'err', defenderEnabled ? 'Windows Defender активовано.' : 'УВАГА: Windows Defender вимкнено!');
+    });
+
+    // Inspector Card
+    const inspectorCard = document.getElementById('inspector-card');
+    let selectedNodeId = null;
+
+    function openInspector(nodeId) {
+      selectedNodeId = nodeId;
+      const node = nodeObjects.get(nodeId).data;
+      document.getElementById('insp-title').textContent = node.name;
+      document.getElementById('insp-role').textContent = node.role;
+      document.getElementById('insp-desc').textContent = node.desc;
+      document.getElementById('insp-table-title').textContent = node.tableTitle;
+
+      const nodeLinks = LINKS_DATA.filter(l => l.a === nodeId || l.b === nodeId);
+      const activeLinks = nodeLinks.filter(l => !linkObjects.get(l.id).severed).length;
+      const portText = nodeLinks.length > 0 ? `${activeLinks} / ${nodeLinks.length} UP` : node.connType;
+
+      document.getElementById('insp-stats').innerHTML = `
+        <div class="stat-box">
+          <div class="stat-box-label">IP-адреса</div>
+          <div class="stat-box-val">${node.ip.split(' / ')[0]}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Маска / Підмережа</div>
+          <div class="stat-box-val">${node.subnet}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Тип підключення</div>
+          <div class="stat-box-val" style="font-size:10.5px">${node.connType}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Стан / MAC</div>
+          <div class="stat-box-val" style="font-size:10px">${portText}</div>
+        </div>
+      `;
+
+      const tableEl = document.getElementById('insp-table');
+      const headHtml = `<thead><tr>${node.tableHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
+      const bodyHtml = `<tbody>${node.tableRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      tableEl.innerHTML = headHtml + bodyHtml;
+
+      inspectorCard.classList.add('visible');
+      nodeLabelEls.forEach((el, id) => el.classList.toggle('selected', id === nodeId));
+    }
+
+    document.getElementById('insp-close').addEventListener('click', () => {
+      inspectorCard.classList.remove('visible');
+      selectedNodeId = null;
+      nodeLabelEls.forEach(el => el.classList.remove('selected'));
+    });
+
+    // =========================================================================
+    // 6. ROUTING ENGINE
+    // =========================================================================
+    function getLinkBetween(u, v) {
+      for (const link of linkObjects.values()) {
+        if ((link.data.a === u && link.data.b === v) || (link.data.a === v && link.data.b === u)) return link;
+      }
+      return null;
+    }
+
+    function findShortestPath(startId, endId, extraPenalties = new Map(), excludedNodes = new Set()) {
+      const dist = new Map();
+      const prev = new Map();
+      const visited = new Set(excludedNodes);
+      NODES_DATA.forEach(n => dist.set(n.id, Infinity));
+      dist.set(startId, 0);
+
+      while (true) {
+        let u = null;
+        let best = Infinity;
+        for (const [id, d] of dist.entries()) {
+          if (!visited.has(id) && d < best) { best = d; u = id; }
+        }
+        if (u === null || u === endId) break;
+        visited.add(u);
+
+        for (const link of linkObjects.values()) {
+          if (link.severed) continue;
+          let neighbor = null;
+          if (link.data.a === u) neighbor = link.data.b;
+          else if (link.data.b === u) neighbor = link.data.a;
+          if (!neighbor || visited.has(neighbor)) continue;
+
+          const penalty = extraPenalties.get(link.data.id) || 0;
+          const alt = dist.get(u) + link.data.latency + penalty;
+          if (alt < dist.get(neighbor)) { dist.set(neighbor, alt); prev.set(neighbor, u); }
+        }
+      }
+
+      if (!prev.has(endId) && startId !== endId) return null;
+      const path = [];
+      let curr = endId;
+      while (curr !== undefined) {
+        path.unshift(curr);
+        if (curr === startId) break;
+        curr = prev.get(curr);
+      }
+      return path;
+    }
+
+    function computeMeshRoutes(startId, endId, count = 4, excludedNodes = new Set()) {
+      const routes = [];
+      const edgeUsagePenalty = new Map();
+      for (let i = 0; i < count; i++) {
+        const path = findShortestPath(startId, endId, edgeUsagePenalty, excludedNodes);
+        if (!path) return null;
+        routes.push(path);
+        for (let j = 0; j < path.length - 1; j++) {
+          const link = getLinkBetween(path[j], path[j + 1]);
+          if (link && !['pc-router', 'router-isp', 'ixp-server', 'isp-vpn'].includes(link.data.id)) {
+            edgeUsagePenalty.set(link.data.id, (edgeUsagePenalty.get(link.data.id) || 0) + 18);
+          }
+        }
+      }
+      return routes;
+    }
+
+    // =========================================================================
+    // 7. SIMULATION ENGINE (WAN, LAN DISPATCHER, VPN, DEFENDER)
+    // =========================================================================
+    let simSpeed = 'normal';
+    let activePackets = [];
+    let stepQueue = [];
+    let currentSimulationToken = 0;
+
+    const statusPill = document.getElementById('sim-status-pill');
+    const stageBanner = document.getElementById('stage-banner');
+    const stageKicker = document.getElementById('stage-kicker');
+    const stageKickerLabel = document.getElementById('stage-kicker-label');
+    const stageHopCounter = document.getElementById('stage-hop-counter');
+    const stageText = document.getElementById('stage-text');
+    const nextStepBtn = document.getElementById('next-step-btn');
+
+    function setSimStatus(state, label) {
+      statusPill.className = 'status-pill ' + (state === 'running' ? 'running' : state === 'paused' ? 'paused' : state === 'error' ? 'error' : '');
+      statusPill.textContent = label;
+    }
+
+    function showBanner(kicker, hopText, text, style = 'amber') {
+      stageBanner.classList.add('visible');
+      stageKicker.className = 'stage-kicker ' + (style === 'sage' ? 'sage' : style === 'error' ? 'error' : '');
+      stageKickerLabel.textContent = kicker;
+      stageHopCounter.textContent = hopText;
+      stageText.textContent = text;
+    }
+
+    function clearActivePackets() {
+      for (const p of activePackets) {
+        scene.remove(p.mesh);
+        if (p.labelEl && p.labelEl.parentNode) p.labelEl.parentNode.removeChild(p.labelEl);
+      }
+      activePackets = [];
+    }
+
+    function resetServerRackBars() {
+      nodeObjects.get('server').rackBars.forEach(bar => {
+        bar.material.color.set('#a8adb5');
+        bar.material.emissive.set('#000000');
+      });
+    }
+
+    function flashDefender(colorHex) {
+      if (!defenderEnabled && colorHex !== '#d9534f') return;
+      defenderGateBar.material.color.set(colorHex);
+      defenderGateBar.material.emissive.set(colorHex);
+      defenderShieldMesh.material.color.set(colorHex);
+      defenderShieldMesh.material.opacity = 0.45;
+      setTimeout(() => {
+        defenderGateBar.material.color.set(defenderEnabled ? '#4d9a6a' : '#767b82');
+        defenderGateBar.material.emissive.set(defenderEnabled ? '#4d9a6a' : '#000000');
+        defenderShieldMesh.material.color.set('#4d9a6a');
+        defenderShieldMesh.material.opacity = 0.18;
+      }, 420);
+    }
+
+    function createPacketMesh(kind, labelText) {
+      const group = new THREE.Group();
+      if (kind === 'dns' || kind === 'ack' || kind === 'lan') {
+        group.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 1), MAT.sage));
+      } else if (kind === 'enc') {
+        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.42, 8), MAT.armoredCapsule);
+        cyl.rotation.z = Math.PI / 2;
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.205, 0.205, 0.1, 8), MAT.copper);
+        ring.rotation.z = Math.PI / 2;
+        group.add(cyl, ring);
+      } else if (kind === 'malware' || kind === 'drop') {
+        const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.24, 0), MAT.terracotta);
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.55, 6), MAT.terracotta);
+        spike.rotation.z = Math.PI / 2;
+        group.add(core, spike);
+      } else {
+        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.36, 12), MAT.amberTranslucent);
+        cyl.rotation.z = Math.PI / 2;
+        const cap1 = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.06, 12), MAT.aluminum);
+        cap1.rotation.z = Math.PI / 2;
+        cap1.position.x = 0.18;
+        const cap2 = cap1.clone();
+        cap2.position.x = -0.18;
+        group.add(cyl, cap1, cap2);
+      }
+      scene.add(group);
+
+      const labelEl = document.createElement('div');
+      labelEl.className = `packet-label ${kind}`;
+      labelEl.textContent = labelText;
+      labelsLayer.appendChild(labelEl);
+
+      return { mesh: group, labelEl, kind };
+    }
+
+    function getSpeedMultiplier() {
+      if (simSpeed === 'slow') return 0.45;
+      if (simSpeed === 'step') return 1.15;
+      return 1.0;
+    }
+
+    function pauseForStep(token, resumeFn) {
+      setSimStatus('paused', 'Пауза (Крок)');
+      nextStepBtn.disabled = false;
+      stepQueue.push(() => {
+        if (token !== currentSimulationToken) return;
+        setSimStatus('running', 'Виконується');
+        resumeFn();
+      });
+    }
+
+    function travelPath(token, packetObj, path, options = {}) {
+      const { onHop, onCheckpoint, onComplete, stopAtDefenderIfBlocked = false } = options;
+      let segIndex = 0;
+
+      function stepSegment() {
+        if (token !== currentSimulationToken) return;
+        if (segIndex >= path.length - 1) {
+          if (onComplete) onComplete();
+          return;
+        }
+
+        const fromId = path[segIndex];
+        const toId = path[segIndex + 1];
+        const link = getLinkBetween(fromId, toId);
+
+        if (!link || link.severed) {
+          packetObj.labelEl.className = 'packet-label drop';
+          packetObj.labelEl.textContent = 'DROP!';
+          logEvent('ERR', 'err', `Кабель ${fromId.toUpperCase()} ↔ ${toId.toUpperCase()} перерізано! Пакет втрачено.`);
+          showBanner('ВТРАТА ПАКЕТА (LINK DOWN)', `ВУЗОЛ ${fromId.toUpperCase()}`, `Кабель до ${nodeObjects.get(toId).data.shortName} перерізано. Надішліть запит повторно для перемаршрутизації!`, 'error');
+          setSimStatus('error', 'Обрив');
+          setTimeout(() => {
+            if (token === currentSimulationToken) {
+              scene.remove(packetObj.mesh);
+              if (packetObj.labelEl.parentNode) packetObj.labelEl.parentNode.removeChild(packetObj.labelEl);
+            }
+          }, 1600);
+          return;
+        }
+
+        const startPos = nodeObjects.get(fromId).data.pos.clone().setY(0.45);
+        const endPos = nodeObjects.get(toId).data.pos.clone().setY(0.45);
+        const midPos = startPos.clone().lerp(endPos, 0.5).setY(link.data.submarine ? 0.25 : link.data.wifi ? 1.15 : 0.6);
+        const segCurve = new THREE.CatmullRomCurve3([startPos, midPos, endPos]);
+
+        let midTriggered = false;
+        const isDefenderLink = link.data.id === 'pc-router';
+        const isSnifferLink = link.data.id === 'router-isp';
+
+        packetObj.activeSegment = {
+          curve: segCurve,
+          progress: 0,
+          duration: Math.max(0.48, (link.data.latency / 14) * 0.85),
+          onUpdate: (prog) => {
+            if (!midTriggered && prog >= 0.5 && (isDefenderLink || isSnifferLink)) {
+              midTriggered = true;
+              if (isDefenderLink) {
+                if (stopAtDefenderIfBlocked && defenderEnabled) {
+                  packetObj.activeSegment = null;
+                  flashDefender('#d9534f');
+                  packetObj.mesh.add(new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.045, 8, 20), MAT.terracotta));
+                  packetObj.labelEl.textContent = 'ЗАБЛОКОВАНО';
+                  showBanner('ЗАГРОЗУ ПЕРЕХОПЛЕНО', 'WINDOWS DEFENDER', 'Загрозу заблоковано: SmartScreen / Брандмауер виявив MALWARE.EXE і помістив у карантин!', 'sage');
+                  logEvent('DEF', 'err', 'Загрозу заблоковано: SmartScreen / Брандмауер (MALWARE.EXE → Карантин)');
+                  setSimStatus('idle', 'Захищено');
+                  setTimeout(() => {
+                    if (token === currentSimulationToken) {
+                      scene.remove(packetObj.mesh);
+                      if (packetObj.labelEl.parentNode) packetObj.labelEl.parentNode.removeChild(packetObj.labelEl);
+                    }
+                  }, 2400);
+                  return false;
+                }
+                if (defenderEnabled) flashDefender('#4d9a6a');
+                if (onCheckpoint && onCheckpoint('defender', fromId, toId) && simSpeed === 'step') {
+                  const savedSeg = packetObj.activeSegment;
+                  packetObj.activeSegment = null;
+                  pauseForStep(token, () => { packetObj.activeSegment = savedSeg; });
+                }
+              } else if (isSnifferLink) {
+                if (onCheckpoint && onCheckpoint('sniffer', fromId, toId) && simSpeed === 'step') {
+                  const savedSeg = packetObj.activeSegment;
+                  packetObj.activeSegment = null;
+                  pauseForStep(token, () => { packetObj.activeSegment = savedSeg; });
+                }
+              }
+            }
+            return true;
+          },
+          onArrive: () => {
+            segIndex++;
+            const arrivedId = path[segIndex];
+            if (onHop) onHop(arrivedId, segIndex, path.length - 1);
+            if (simSpeed === 'step' && segIndex < path.length - 1) pauseForStep(token, stepSegment);
+            else stepSegment();
+          }
+        };
+      }
+
+      stepSegment();
+    }
+
+    // --- WAN Web Request Simulation ---
+    function runSimulation(overrideDomain, overridePayload) {
+      const domain = (overrideDomain || document.getElementById('domain-input').value || 'school.edu.ua').trim();
+      const payload = (overridePayload || document.getElementById('payload-input').value || 'GET /index.html').trim();
+
+      currentSimulationToken++;
+      const token = currentSimulationToken;
+      clearActivePackets();
+      resetServerRackBars();
+      stepQueue = [];
+      nextStepBtn.disabled = true;
+
+      const pcInfo = nodeObjects.get('pc');
+      updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'DNS LOOKUP...', domain, 'Resolving IP...', '#4d9a6a');
+      setSimStatus('running', 'DNS-пошук');
+      logEvent('SYS', 'sys', `Новий запит → ${domain} (${payload}) | VPN: ${vpnEnabled ? 'УВІМК' : 'ВИМК'}`);
+
+      const dnsOutPath = findShortestPath('pc', 'dns');
+      if (!dnsOutPath) {
+        showBanner('ПОМИЛКА DNS', 'ЕТАП 1 • ОБРИВ', 'Неможливо дістатися до DNS-сервера (8.8.8.8): кабель перерізано!', 'error');
+        logEvent('ERR', 'err', 'DNS-сервер 8.8.8.8 недосяжний через обрив кабелю.');
+        updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'DNS TIMEOUT', domain, 'ERR_NAME_NOT_RESOLVED', '#d9534f');
+        setSimStatus('error', 'Помилка DNS');
+        return;
+      }
+
+      showBanner('ЕТАП 1 • DNS-ЗАПИТ', 'КРОК 1 / 2', `ПК Учня запитує у DNS-сервера (8.8.8.8) IP-адресу для домену «${domain}».`, 'sage');
+      logEvent('DNS', 'dns', `QUERY ${domain} → 8.8.8.8`);
+
+      const dnsPkt = createPacketMesh('dns', `DNS? ${domain}`);
+      activePackets.push(dnsPkt);
+
+      travelPath(token, dnsPkt, dnsOutPath, {
+        onHop: (nodeId) => {
+          if (nodeId === 'router') showBanner('ЕТАП 1 • DNS-ЗАПИТ', 'РОУТЕР → DNS', 'Домашній роутер перенаправляє DNS-запит у WAN до сервера імен (8.8.8.8).', 'sage');
+          else if (nodeId === 'dns') {
+            showBanner('ЕТАП 1 • DNS-ВІДПОВІДЬ', '8.8.8.8', `DNS-сервер знайшов запис: ${domain} = 142.250.185.78.`, 'sage');
+            logEvent('DNS', 'dns', `RESOLVED ${domain} → 142.250.185.78 (8 ms)`);
+            dnsPkt.labelEl.textContent = '142.250.185.78';
+          }
+        },
+        onComplete: () => {
+          if (token !== currentSimulationToken) return;
+          const dnsBackPath = [...dnsOutPath].reverse();
+          const proceedReturn = () => {
+            travelPath(token, dnsPkt, dnsBackPath, {
+              onComplete: () => {
+                if (token !== currentSimulationToken) return;
+                scene.remove(dnsPkt.mesh);
+                if (dnsPkt.labelEl.parentNode) dnsPkt.labelEl.parentNode.removeChild(dnsPkt.labelEl);
+                startStage2TCP(token, domain, payload);
+              }
+            });
+          };
+          if (simSpeed === 'step') pauseForStep(token, proceedReturn);
+          else proceedReturn();
+        }
+      });
+    }
+
+    function startStage2TCP(token, domain, payload) {
+      const pcInfo = nodeObjects.get('pc');
+      updatePCScreen(
+        pcInfo.screenCtx, pcInfo.screenTex,
+        vpnEnabled ? 'VPN ENCRYPTED' : 'SENDING TCP 1-4/4',
+        domain,
+        vpnEnabled ? 'ENC → 185.220.101.55' : 'DST: 142.250.185.78',
+        vpnEnabled ? '#4d9a6a' : '#e59838'
+      );
+
+      let routes = null;
+      if (vpnEnabled) {
+        const tunnelLeg = findShortestPath('pc', 'vpn');
+        const exitRoutes = computeMeshRoutes('vpn', 'server', 4);
+        if (!tunnelLeg || !exitRoutes) {
+          showBanner('ПОМИЛКА VPN-ТУНЕЛЮ', 'МАРШРУТ НЕЗНАЙДЕНО', 'Неможливо побудувати маршрут через VPN-сервер (185.220.101.55) через обрив кабелю.', 'error');
+          setSimStatus('error', 'Обрив VPN');
+          return;
+        }
+        routes = exitRoutes.map(er => [...tunnelLeg.slice(0, -1), ...er]);
+      } else {
+        routes = computeMeshRoutes('pc', 'server', 4, new Set(['vpn']));
+      }
+
+      if (!routes) {
+        showBanner('МАРШРУТ НЕЗНАЙДЕНО', 'ICMP UNREACHABLE', 'Усі можливі шляхи до веб-сервера перерізані!', 'error');
+        setSimStatus('error', 'Немає шляху');
+        return;
+      }
+
+      if (vpnEnabled) {
+        showBanner('ЕТАП 2 • ВХІД У VPN-ТУНЕЛЬ', 'ШИФРУВАННЯ НА ПК', `ПК пакує «${payload}» у броньовані зашифровані капсули та направляє у VPN-тунель.`, 'sage');
+        logEvent('VPN', 'vpn', 'Інкапсуляція TCP-пакетів у шифрований тунель (AES-256).');
+      } else {
+        showBanner('ЕТАП 2 • NAT ТА ПАКЕТИЗАЦІЯ', '192.168.1.10 → 91.204.12.44', `Роутер виконує NAT (підміна локальної IP на зовнішню) і пускає 4 пакети у WAN.`, 'amber');
+        logEvent('NAT', 'pkt', '192.168.1.10 → 91.204.12.44 (Вихід з LAN у WAN)');
+      }
+
+      let arrivedCount = 0;
+      const srv = nodeObjects.get('server');
+
+      routes.forEach((path, idx) => {
+        const seqNum = idx + 1;
+        setTimeout(() => {
+          if (token !== currentSimulationToken) return;
+          const pktKind = vpnEnabled ? 'enc' : 'tcp';
+          const pktLabel = vpnEnabled ? `ENC: #${seqNum}f$k9L` : `SEQ ${seqNum}/4 (${domain})`;
+          const pkt = createPacketMesh(pktKind, pktLabel);
+          activePackets.push(pkt);
+
+          travelPath(token, pkt, path, {
+            onCheckpoint: (cpType) => {
+              if (seqNum !== 1) return false;
+              if (cpType === 'defender') {
+                showBanner('ІНСПЕКЦІЯ WINDOWS DEFENDER', 'DPI-ШЛЮЗ (ВИХІД)', defenderEnabled ? 'Брандмауер перевіряє вихідний пакет: дозволено.' : 'Брандмауер вимкнено: пакет проходить без перевірки.', defenderEnabled ? 'sage' : 'amber');
+                return true;
+              }
+              if (cpType === 'sniffer') {
+                if (vpnEnabled) {
+                  snifferReadoutEl.className = 'sniffer-readout encrypted';
+                  snifferReadoutEl.textContent = 'Зашифрований трафік (Нечитабельно)';
+                  showBanner('ПЕРЕХОПЛЮВАЧ ПРОВАЙДЕРА', 'VPN ЗАХИСТ', 'ISP Sniffer бачить лише зашифрований потік ENC: #8f$k9L...', 'sage');
+                } else {
+                  snifferReadoutEl.className = 'sniffer-readout exposed';
+                  snifferReadoutEl.textContent = `GET ${domain} | 192.168.1.10`;
+                  showBanner('ПЕРЕХОПЛЮВАЧ ПРОВАЙДЕРА', 'ВІДКРИТИЙ ТРАФІК', `ISP Sniffer перехопив відкритий заголовок: «GET ${domain}»!`, 'amber');
+                }
+                return true;
+              }
+              return false;
+            },
+            onHop: (nodeId) => {
+              if (nodeId === 'vpn' && vpnEnabled) {
+                pkt.labelEl.className = 'packet-label tcp';
+                pkt.labelEl.textContent = `SEQ ${seqNum}/4 (VPN IP)`;
+                if (seqNum === 1) {
+                  showBanner('ВИХІД ІЗ VPN-ТУНЕЛЮ', 'VPN-СЕРВЕР (185.220.101.55)', 'VPN-сервер розшифровує пакет і відправляє до сервера від IP 185.220.101.55.', 'sage');
+                }
+              }
+            },
+            onComplete: () => {
+              if (token !== currentSimulationToken) return;
+              arrivedCount++;
+              const bar = srv.rackBars[seqNum - 1];
+              if (bar) { bar.material.color.set('#e59838'); bar.material.emissive.set('#e59838'); }
+              scene.remove(pkt.mesh);
+              if (pkt.labelEl.parentNode) pkt.labelEl.parentNode.removeChild(pkt.labelEl);
+              const seenIp = vpnEnabled ? '185.220.101.55 (VPN)' : '91.204.12.44 (Клієнт)';
+              if (arrivedCount === 4) {
+                srv.rackBars.forEach(b => { b.material.color.set('#4d9a6a'); b.material.emissive.set('#4d9a6a'); });
+                sendAckBack(token, domain, seenIp);
+              }
+            }
+          });
+        }, simSpeed === 'step' ? idx * 80 : idx * 240);
+      });
+    }
+
+    function sendAckBack(token, domain, seenIp) {
+      const ackPath = vpnEnabled ? findShortestPath('server', 'pc') : findShortestPath('server', 'pc', new Map(), new Set(['vpn']));
+      if (!ackPath) {
+        showBanner('ACK ВТРАЧЕНО', 'ОБРИВ ЗВОРОТНОГО ШЛЯХУ', 'Сервер не зміг повернути ACK через обрив кабелю.', 'error');
+        setSimStatus('error', 'ACK втрачено');
+        return;
+      }
+
+      showBanner('ЕТАП 3 • ЗБІРКА ТА ACK', `142.250.185.78 → ${seenIp}`, `Сервер зібрав 4/4 пакети (бачить IP: ${seenIp}) і повертає ACK клієнту.`, 'sage');
+      const ackPkt = createPacketMesh('ack', 'ACK 4/4');
+      activePackets.push(ackPkt);
+
+      travelPath(token, ackPkt, ackPath, {
+        onCheckpoint: (cpType) => {
+          if (cpType === 'defender') {
+            showBanner('ВХІДНА ПЕРЕВІРКА DEFENDER', 'DPI-ШЛЮЗ (ВХІД)', defenderEnabled ? 'Windows Defender сканує ACK 4/4 — безпечно.' : 'Брандмауер вимкнено.', defenderEnabled ? 'sage' : 'amber');
+            return true;
+          }
+          return false;
+        },
+        onComplete: () => {
+          if (token !== currentSimulationToken) return;
+          scene.remove(ackPkt.mesh);
+          if (ackPkt.labelEl.parentNode) ackPkt.labelEl.parentNode.removeChild(ackPkt.labelEl);
+          const pcInfo = nodeObjects.get('pc');
+          updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, '200 OK • ACK 4/4', domain, 'ДОСТАВЛЕНО УСПІШНО', '#4d9a6a');
+          showBanner('ЗАПИТ ЗАВЕРШЕНО (200 OK)', 'УСПІХ', `Усі 4 пакети для «${domain}» доставлено та підтверджено.`, 'sage');
+          logEvent('ACK', 'ack', 'Клієнтський ПК отримав ACK 4/4. З’єднання завершено!');
+          setSimStatus('idle', 'Готово');
+          nextStepBtn.disabled = true;
+        }
+      });
+    }
+
+    // --- Routing Dispatcher Mini-Game ("Диспетчер маршрутизації") ---
+    const LOCAL_IP_MAP = {
+      '192.168.1.10': 'pc',
+      '192.168.1.11': 'laptop',
+      '192.168.1.20': 'printer',
+      '192.168.1.30': 'smarttv'
+    };
+
+    function runDispatcherTask() {
+      const targetIp = (document.getElementById('dispatch-ip-input').value || '').trim();
+      const msg = (document.getElementById('dispatch-msg-input').value || 'DATA').trim();
+
+      currentSimulationToken++;
+      const token = currentSimulationToken;
+      clearActivePackets();
+      stepQueue = [];
+      nextStepBtn.disabled = true;
+
+      const pcInfo = nodeObjects.get('pc');
+
+      // Case 1: Local Subnet 192.168.1.x
+      if (targetIp.startsWith('192.168.1.')) {
+        const targetNodeId = LOCAL_IP_MAP[targetIp];
+        if (targetNodeId && targetNodeId !== 'pc') {
+          const targetNode = nodeObjects.get(targetNodeId).data;
+          const path = findShortestPath('pc', targetNodeId);
+          if (!path) {
+            showBanner('ПОМИЛКА LAN', 'ОБРИВ КАБЕЛЮ', `Локальний шлях до ${targetNode.shortName} (${targetIp}) перерізано!`, 'error');
+            setSimStatus('error', 'Обрив LAN');
+            return;
+          }
+
+          updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'LAN ROUTING', `DST: ${targetIp}`, msg, '#4d9a6a');
+          setSimStatus('running', 'LAN-маршрут');
+          showBanner('ЛОКАЛЬНА МАРШРУТИЗАЦІЯ (LAN)', `192.168.1.10 → ${targetIp}`, `Пакет прямує до Домашнього роутера. Роутер перевіряє таблицю LAN (255.255.255.0) і доставляє напряму в кімнату без виходу в Інтернет!`, 'sage');
+          logEvent('LAN', 'dns', `Локальний пакет: 192.168.1.10 → ${targetIp} (${targetNode.shortName}) [Без виходу у WAN]`);
+
+          const pkt = createPacketMesh('lan', `LAN → ${targetIp}`);
+          activePackets.push(pkt);
+
+          travelPath(token, pkt, path, {
+            onHop: (nodeId) => {
+              if (nodeId === 'router') {
+                showBanner('ТАБЛИЦЯ МАРШРУТИЗАЦІЇ', 'РОУТЕР (192.168.1.1)', `Адреса ${targetIp} належить локальній мережі! Роутер перемикає пакет на ${targetNode.shortName}, не чіпаючи ISP.`, 'sage');
+              }
+            },
+            onComplete: () => {
+              if (token !== currentSimulationToken) return;
+              showBanner('ДОСТАВЛЕНО В КІМНАТУ', targetNode.shortName.toUpperCase(), `Пристрій ${targetNode.shortName} (${targetIp}) отримав «${msg}» і повертає локальний ACK.`, 'sage');
+              pkt.labelEl.className = 'packet-label ack';
+              pkt.labelEl.textContent = 'LAN ACK';
+              const backPath = [...path].reverse();
+              travelPath(token, pkt, backPath, {
+                onComplete: () => {
+                  if (token !== currentSimulationToken) return;
+                  scene.remove(pkt.mesh);
+                  if (pkt.labelEl.parentNode) pkt.labelEl.parentNode.removeChild(pkt.labelEl);
+                  updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'LAN DELIVERED', targetIp, 'LOCAL ACK OK', '#4d9a6a');
+                  logEvent('ACK', 'ack', `Локальна доставка на ${targetIp} завершена успішно.`);
+                  setSimStatus('idle', 'Готово');
+                }
+              });
+            }
+          });
+          return;
+        }
+
+        // Case 2: Wrong / Non-existent local IP (e.g. 192.168.1.99)
+        const toRouter = findShortestPath('pc', 'router');
+        if (!toRouter) {
+          showBanner('ПОМИЛКА LAN', 'ОБРИВ', 'Кабель до роутера перерізано!', 'error');
+          return;
+        }
+        updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'PINGING...', targetIp, 'Checking ARP...', '#e59838');
+        setSimStatus('running', 'Пошук хоста');
+        showBanner('ПЕРЕВІРКА АДРЕСИ', `192.168.1.10 → ${targetIp}`, `Запит на адресу ${targetIp} прямує до Домашнього роутера для перевірки таблиці ARP/DHCP...`, 'amber');
+        logEvent('SYS', 'sys', `Пошук локального пристрою ${targetIp}...`);
+
+        const pkt = createPacketMesh('tcp', `DST: ${targetIp}`);
+        activePackets.push(pkt);
+
+        travelPath(token, pkt, toRouter, {
+          onComplete: () => {
+            if (token !== currentSimulationToken) return;
+            pkt.labelEl.className = 'packet-label drop';
+            pkt.labelEl.textContent = 'Host Unreachable!';
+            showBanner(
+              'ПОМИЛКА МАРШРУТИЗАЦІЇ (ICMP)',
+              targetIp,
+              `Destination Host Unreachable (Пристрій не знайдено): адреса ${targetIp} відсутня в таблиці DHCP роутера! Пакет повернуто з помилкою.`,
+              'error'
+            );
+            logEvent('ERR', 'err', `Destination Host Unreachable: пристрій ${targetIp} не знайдено в мережі 192.168.1.0/24.`);
+            const bounceBack = [...toRouter].reverse();
+            travelPath(token, pkt, bounceBack, {
+              onComplete: () => {
+                if (token !== currentSimulationToken) return;
+                updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'HOST UNREACHABLE', targetIp, 'ПРИСТРІЙ НЕ ЗНАЙДЕНО', '#d9534f');
+                setSimStatus('error', 'Не знайдено');
+                setTimeout(() => {
+                  if (token === currentSimulationToken) {
+                    scene.remove(pkt.mesh);
+                    if (pkt.labelEl.parentNode) pkt.labelEl.parentNode.removeChild(pkt.labelEl);
+                  }
+                }, 1800);
+              }
+            });
+          }
+        });
+        return;
+      }
+
+      // Case 3: Public IP or Domain -> Route out to WAN (with NAT + optional VPN)
+      logEvent('NAT', 'pkt', `Адреса ${targetIp} зовнішня → Роутер виконує NAT і спрямовує пакет у WAN.`);
+      runSimulation(targetIp, msg);
+    }
+
+    // Malware / Phishing Simulation
+    function runMalwareSimulation() {
+      currentSimulationToken++;
+      const token = currentSimulationToken;
+      clearActivePackets();
+      stepQueue = [];
+      nextStepBtn.disabled = true;
+
+      const path = findShortestPath('server', 'pc', new Map(), new Set(['vpn']));
+      if (!path) {
+        showBanner('НЕМАЄ МАРШРУТУ', 'КАНАЛ ПЕРЕРІЗАНО', 'Шкідливий пакет не зміг дійти через обрив кабелю.', 'error');
+        return;
+      }
+
+      setSimStatus('running', 'Атака!');
+      showBanner('СИМУЛЯЦІЯ ФІШИНГУ / ВІРУСУ', 'ЗОВНІШНЯ ЗАГРОЗА', 'Зі зламаного вузла на ПК прямує небезпечний пакет MALWARE.EXE (Trojan)!', 'error');
+      logEvent('ERR', 'err', 'УВАГА: Виявлено вхідний шкідливий пакет MALWARE.EXE / Trojan → 192.168.1.10');
+
+      const malPkt = createPacketMesh('malware', 'MALWARE.EXE / Trojan');
+      activePackets.push(malPkt);
+
+      travelPath(token, malPkt, path, {
+        stopAtDefenderIfBlocked: true,
+        onComplete: () => {
+          if (token !== currentSimulationToken) return;
+          scene.remove(malPkt.mesh);
+          if (malPkt.labelEl.parentNode) malPkt.labelEl.parentNode.removeChild(malPkt.labelEl);
+          const pcInfo = nodeObjects.get('pc');
+          updatePCScreen(pcInfo.screenCtx, pcInfo.screenTex, 'SYSTEM INFECTED!', 'MALWARE.EXE', 'DATA LEAK / TROJAN', '#d9534f');
+          showBanner('КРИТИЧНО: ПК ІНФІКОВАНО!', 'DEFENDER ВИМКНЕНО', 'Брандмауер був вимкнений! Шкідливий пакет проник у систему: можливий витік паролів і файлів.', 'error');
+          logEvent('ERR', 'err', 'ІНЦИДЕНТ: MALWARE.EXE досягнув ПК! Витік даних через вимкнений брандмауер.');
+          setSimStatus('error', 'Заражено');
+        }
+      });
+    }
+
+    // =========================================================================
+    // 8. INTERACTIVE RAYCASTING (CLICK NODES & SEVER/RESTORE CABLES)
+    // =========================================================================
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const cableTooltip = document.getElementById('cable-tooltip');
+    let hoveredLinkId = null;
+    let pointerDownPos = { x: 0, y: 0 };
+
+    function updatePointer(e) {
+      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => { pointerDownPos = { x: e.clientX, y: e.clientY }; });
+
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      updatePointer(e);
+      raycaster.setFromCamera(pointer, camera);
+
+      const nodeHits = raycaster.intersectObjects(clickableNodeMeshes, false);
+      if (nodeHits.length > 0) {
+        if (hoveredLinkId) {
+          const prev = linkObjects.get(hoveredLinkId);
+          prev.intactMat.color.set(prev.data.submarine ? '#3b424c' : prev.data.wifi ? '#4d9a6a' : '#c87d4b');
+          hoveredLinkId = null;
+        }
+        cableTooltip.style.display = 'none';
+        renderer.domElement.style.cursor = 'pointer';
+        return;
+      }
+
+      const cableHits = raycaster.intersectObjects(clickableCableMeshes, false);
+      if (cableHits.length > 0) {
+        const linkId = cableHits[0].object.userData.linkId;
+        const link = linkObjects.get(linkId);
+        if (hoveredLinkId && hoveredLinkId !== linkId) {
+          const prev = linkObjects.get(hoveredLinkId);
+          prev.intactMat.color.set(prev.data.submarine ? '#3b424c' : prev.data.wifi ? '#4d9a6a' : '#c87d4b');
+        }
+        hoveredLinkId = linkId;
+        link.intactMat.color.set('#e59838');
+        renderer.domElement.style.cursor = 'pointer';
+
+        cableTooltip.style.display = 'block';
+        cableTooltip.style.left = `${e.clientX + 14}px`;
+        cableTooltip.style.top = `${e.clientY + 14}px`;
+        cableTooltip.classList.toggle('severed', link.severed);
+        document.getElementById('tt-title').textContent = link.data.label;
+        document.getElementById('tt-meta').textContent = `Затримка: ${link.data.latency} ms • Стан: ${link.severed ? 'ПЕРЕРІЗАНО' : 'АКТИВНИЙ'}`;
+        document.getElementById('tt-action').textContent = link.severed ? 'Клікніть, щоб відновити кабель' : 'Клікніть, щоб перерізати кабель';
+        return;
+      }
+
+      if (hoveredLinkId) {
+        const prev = linkObjects.get(hoveredLinkId);
+        prev.intactMat.color.set(prev.data.submarine ? '#3b424c' : prev.data.wifi ? '#4d9a6a' : '#c87d4b');
+        hoveredLinkId = null;
+      }
+      cableTooltip.style.display = 'none';
+      renderer.domElement.style.cursor = 'grab';
+    });
+
+    renderer.domElement.addEventListener('pointerup', (e) => {
+      if (Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y) > 6) return;
+      updatePointer(e);
+      raycaster.setFromCamera(pointer, camera);
+
+      const nodeHits = raycaster.intersectObjects(clickableNodeMeshes, false);
+      if (nodeHits.length > 0) { openInspector(nodeHits[0].object.userData.nodeId); return; }
+
+      const cableHits = raycaster.intersectObjects(clickableCableMeshes, false);
+      if (cableHits.length > 0) toggleCable(cableHits[0].object.userData.linkId);
+    });
+
+    function toggleCable(linkId) {
+      const link = linkObjects.get(linkId);
+      link.severed = !link.severed;
+      link.intactMesh.visible = !link.severed;
+      link.severedGroup.visible = link.severed;
+      logEvent(link.severed ? 'ERR' : 'SYS', link.severed ? 'err' : 'sys', `Кабель «${link.data.label}» ${link.severed ? 'перерізано' : 'відновлено'}.`);
+      if (selectedNodeId) openInspector(selectedNodeId);
+    }
+
+    // =========================================================================
+    // 9. HUD CONTROLS & EVENT LISTENERS
+    // =========================================================================
+    document.getElementById('send-btn').addEventListener('click', () => runSimulation());
+    document.getElementById('malware-btn').addEventListener('click', runMalwareSimulation);
+    document.getElementById('dispatch-send-btn').addEventListener('click', runDispatcherTask);
+    document.getElementById('test-bad-ip-btn').addEventListener('click', () => {
+      document.getElementById('dispatch-ip-input').value = '192.168.1.99';
+      document.getElementById('dispatch-msg-input').value = 'PING TEST';
+      runDispatcherTask();
+    });
+
+    document.querySelectorAll('.preset-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('domain-input').value = btn.dataset.domain;
+        document.getElementById('payload-input').value = btn.dataset.payload;
+      });
+    });
+
+    document.querySelectorAll('.task-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('dispatch-ip-input').value = btn.dataset.ip;
+        document.getElementById('dispatch-msg-input').value = btn.dataset.task;
+      });
+    });
+
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        simSpeed = btn.dataset.speed;
+        nextStepBtn.classList.toggle('visible', simSpeed === 'step');
+        if (simSpeed !== 'step' && stepQueue.length > 0) {
+          const queued = [...stepQueue];
+          stepQueue = [];
+          nextStepBtn.disabled = true;
+          queued.forEach(fn => fn());
+        }
+      });
+    });
+
+    nextStepBtn.addEventListener('click', () => {
+      if (stepQueue.length > 0) {
+        const queued = [...stepQueue];
+        stepQueue = [];
+        nextStepBtn.disabled = true;
+        queued.forEach(fn => fn());
+      }
+    });
+
+    document.getElementById('restore-cables-btn').addEventListener('click', () => {
+      let restored = 0;
+      for (const link of linkObjects.values()) {
+        if (link.severed) { link.severed = false; link.intactMesh.visible = true; link.severedGroup.visible = false; restored++; }
+      }
+      logEvent('SYS', 'sys', restored > 0 ? `Відновлено ${restored} пошкоджених кабелів.` : 'Усі кабелі вже активні.');
+      if (selectedNodeId) openInspector(selectedNodeId);
+    });
+
+    // =========================================================================
+    // 10. 60FPS ANIMATION LOOP & 3D->2D LABEL PROJECTION
+    // =========================================================================
+    const clock = new THREE.Clock();
+    const tempVec = new THREE.Vector3();
+
+    function projectToScreen(pos3d) {
+      tempVec.copy(pos3d).project(camera);
+      return {
+        x: (tempVec.x * 0.5 + 0.5) * window.innerWidth,
+        y: (-tempVec.y * 0.5 + 0.5) * window.innerHeight,
+        visible: tempVec.z < 1
+      };
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+
+      if (cameraAnim.active) {
+        camera.position.lerp(cameraAnim.pos, 0.08);
+        controls.target.lerp(cameraAnim.target, 0.08);
+        if (camera.position.distanceTo(cameraAnim.pos) < 0.05) cameraAnim.active = false;
+      }
+
+      controls.update();
+
+      // Drift studio dust motes
+      const dPos = dustGeo.attributes.position.array;
+      for (let i = 0; i < DUST_COUNT; i++) {
+        dPos[i * 3] += dustSpeeds[i * 3] * dt;
+        dPos[i * 3 + 1] += dustSpeeds[i * 3 + 1] * dt;
+        dPos[i * 3 + 2] += dustSpeeds[i * 3 + 2] * dt;
+        if (dPos[i * 3] > 19) dPos[i * 3] = -23;
+        if (dPos[i * 3] < -23) dPos[i * 3] = 19;
+        if (dPos[i * 3 + 1] > 11.5) dPos[i * 3 + 1] = 0.3;
+        if (dPos[i * 3 + 1] < 0.3) dPos[i * 3 + 1] = 11.5;
+        if (dPos[i * 3 + 2] > 12) dPos[i * 3 + 2] = -12;
+        if (dPos[i * 3 + 2] < -12) dPos[i * 3 + 2] = 12;
+      }
+      dustGeo.attributes.position.needsUpdate = true;
+
+      const mult = getSpeedMultiplier();
+      for (const pkt of activePackets) {
+        if (pkt.activeSegment) {
+          const seg = pkt.activeSegment;
+          seg.progress += (dt * mult) / seg.duration;
+          if (seg.onUpdate && !seg.onUpdate(seg.progress)) continue;
+          if (seg.progress >= 1) {
+            pkt.mesh.position.copy(seg.curve.getPoint(1));
+            pkt.activeSegment = null;
+            seg.onArrive();
+          } else {
+            const pt = seg.curve.getPoint(seg.progress);
+            pkt.mesh.position.copy(pt);
+            pkt.mesh.lookAt(pt.clone().add(seg.curve.getTangent(seg.progress)));
+          }
+        }
+
+        const p2d = projectToScreen(pkt.mesh.position.clone().add(new THREE.Vector3(0, 0.35, 0)));
+        if (p2d.visible) {
+          pkt.labelEl.style.display = 'block';
+          pkt.labelEl.style.left = `${p2d.x}px`;
+          pkt.labelEl.style.top = `${p2d.y}px`;
+        } else {
+          pkt.labelEl.style.display = 'none';
+        }
+      }
+
+      for (const [id, obj] of nodeObjects.entries()) {
+        const el = nodeLabelEls.get(id);
+        let yOffset = 1.15;
+        if (obj.data.type === 'server') yOffset = 2.45;
+        else if (obj.data.type === 'dns' || obj.data.type === 'pc') yOffset = 1.75;
+        else if (obj.data.type === 'vpn' || obj.data.type === 'defender') yOffset = 1.55;
+        else if (obj.data.type === 'sniffer') yOffset = 0.95;
+        else if (obj.data.type === 'laptop' || obj.data.type === 'printer' || obj.data.type === 'smarttv') yOffset = 1.3;
+
+        const p2d = projectToScreen(obj.data.pos.clone().add(new THREE.Vector3(0, yOffset, 0)));
+        if (p2d.visible) {
+          el.style.display = 'flex';
+          el.style.left = `${p2d.x}px`;
+          el.style.top = `${p2d.y}px`;
+        } else {
+          el.style.display = 'none';
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>

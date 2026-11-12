@@ -1,0 +1,2314 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Перекладач на мову машин — Лабораторія кодування сигналів</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-studio: #040507;
+      --panel-bg: rgba(15, 18, 24, 0.88);
+      --panel-alt: #1a1f29;
+      --panel-border: rgba(255, 255, 255, 0.14);
+      --dark-surface: #0b0e14;
+      --dark-border: rgba(255, 255, 255, 0.12);
+      --alu: #a8adb5;
+      --copper: #c87d4b;
+      --accent: #38bdf8;
+      --amber: #f59e0b;
+      --amber-dark: #fbbf24;
+      --sage: #22c55e;
+      --terracotta: #ef4444;
+      --text-dark: #f1f5f9;
+      --text-muted: #cbd5e1;
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-studio);
+      color: var(--text-dark);
+      font-family: var(--font-ui);
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      cursor: grab;
+    }
+
+    #canvas-container.drawing-cursor {
+      cursor: crosshair !important;
+    }
+
+    #canvas-container:active:not(.drawing-cursor) {
+      cursor: grabbing;
+    }
+
+    /* HUD Layout */
+    .hud-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 18px;
+      gap: 12px;
+    }
+
+    .matte-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      pointer-events: auto;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 8px 14px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--panel-alt);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Mode Tabs */
+    .mode-tabs {
+      display: flex;
+      padding: 4px;
+      gap: 4px;
+      background: var(--panel-bg);
+    }
+
+    .mode-tab {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .mode-tab:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .mode-tab.active {
+      color: #04070d;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .mode-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+    }
+
+    .mode-tab.active .mode-badge {
+      background: rgba(4, 7, 13, 0.18);
+      color: #04070d;
+      font-weight: 700;
+    }
+
+    /* Camera & Audio Quick Controls */
+    .utility-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+    }
+
+    .icon-btn {
+      background: var(--panel-alt);
+      border: 1px solid var(--panel-border);
+      color: var(--text-dark);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .icon-btn:hover {
+      background: #252b38;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .icon-btn.active {
+      background: rgba(56, 189, 248, 0.18);
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+
+    /* Middle Row */
+    .middle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex: 1;
+      min-height: 0;
+      gap: 14px;
+    }
+
+    .control-drawer {
+      width: 332px;
+      max-width: calc(100vw - 36px);
+      max-height: calc(100vh - 205px);
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .control-drawer::-webkit-scrollbar {
+      width: 5px;
+    }
+    .control-drawer::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .hint-text {
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text-muted);
+    }
+
+    .text-input {
+      width: 100%;
+      background: var(--dark-surface);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 7px;
+      padding: 9px 11px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      user-select: text;
+    }
+
+    .text-input:focus {
+      border-color: var(--accent);
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #04070d;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      background: #7dd3fc;
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      padding: 7px 11px;
+      border-radius: 7px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel-alt);
+      color: #ffffff;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .secondary-btn:hover:not(:disabled) {
+      background: #252b38;
+    }
+
+    .secondary-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip-btn {
+      padding: 5px 9px;
+      border-radius: 6px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel-alt);
+      color: var(--text-dark);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .chip-btn:hover {
+      background: #252b38;
+    }
+
+    .chip-btn.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.2);
+      color: #ffffff;
+    }
+
+    /* Color Swatches for Mode 2 */
+    .palette-row {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      transition: transform 0.12s, outline 0.12s;
+    }
+
+    .swatch.active {
+      transform: scale(1.12);
+      outline: 2px solid #ffffff;
+      outline-offset: 1px;
+    }
+
+    /* Live Data Inspector Box (Dark PCB Readout) */
+    .data-box {
+      background: var(--dark-surface);
+      border: 1px solid var(--dark-border);
+      border-radius: 7px;
+      padding: 9px 10px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.5;
+      max-height: 145px;
+      overflow-y: auto;
+      color: #e2e8f0;
+    }
+
+    .bit-1 {
+      color: var(--amber-dark);
+      font-weight: 700;
+    }
+
+    .bit-0 {
+      color: #64748b;
+    }
+
+    /* Right Telemetry Card */
+    .telemetry-card {
+      width: 260px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Bottom Algorithm Pipeline HUD */
+    .pipeline-bar {
+      padding: 11px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .pipeline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+
+    .toggle-switch {
+      width: 34px;
+      height: 18px;
+      border-radius: 99px;
+      background: #334155;
+      border: 1px solid var(--panel-border);
+      position: relative;
+      transition: background 0.18s;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform 0.18s;
+    }
+
+    .toggle-wrap.active .toggle-switch {
+      background: var(--accent);
+    }
+
+    .toggle-wrap.active .toggle-switch::after {
+      transform: translateX(16px);
+      background: #04070d;
+    }
+
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .steps-track {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .step-node {
+      background: var(--panel-alt);
+      border: 1px solid var(--panel-border);
+      border-radius: 7px;
+      padding: 8px 10px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .step-node.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.14);
+    }
+
+    .step-node.done {
+      border-color: var(--sage);
+      background: rgba(34, 197, 94, 0.12);
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .step-node.active .step-num {
+      color: var(--accent);
+    }
+
+    .step-node.done .step-num {
+      color: var(--sage);
+    }
+
+    .step-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+
+    .step-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .step-tooltip {
+      font-size: 12px;
+      color: #f1f5f9;
+      background: var(--panel-alt);
+      border-left: 3px solid var(--accent);
+      padding: 6px 10px;
+      border-radius: 5px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1024px) {
+      .telemetry-card {
+        display: none;
+      }
+      .steps-track {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .control-drawer {
+        width: 100%;
+        max-height: 220px;
+      }
+      .steps-track {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div class="hud-layer">
+    <!-- Top Navigation & Utility Bar -->
+    <div class="top-bar">
+      <div class="matte-panel brand-box">
+        <div class="brand-logo">01</div>
+        <div>
+          <div class="brand-title">Перекладач на мову машин</div>
+          <div class="brand-sub">Лабораторія кодування сигналів та апаратної передачі даних</div>
+        </div>
+      </div>
+
+      <div class="matte-panel mode-tabs" role="tablist">
+        <button class="mode-tab active" data-mode="1" title="Кодування тексту у двійкові світлові імпульси">
+          <span class="mode-badge">Рівень 1</span>
+          <span>Текст та ASCII</span>
+        </button>
+        <button class="mode-tab" data-mode="2" title="Малювання та передача піксельної матриці 8×8">
+          <span class="mode-badge">Рівень 2</span>
+          <span>Піксельна матриця 8×8</span>
+        </button>
+        <button class="mode-tab" data-mode="3" title="Аналого-цифрове перетворення звукової хвилі">
+          <span class="mode-badge">Рівень 3</span>
+          <span>Звукова хвиля (АЦП)</span>
+        </button>
+      </div>
+
+      <div class="matte-panel utility-bar">
+        <button class="icon-btn" id="cam-overview" title="Загальний вигляд стенда">Огляд</button>
+        <button class="icon-btn" id="cam-tx" title="Наблизити Передавач">Передавач</button>
+        <button class="icon-btn" id="cam-rx" title="Наблизити Приймач">Приймач</button>
+        <button class="icon-btn active" id="btn-sound" title="Увімкнути / вимкнути синтезатор Web Audio">Звук: Увімк.</button>
+      </div>
+    </div>
+
+    <!-- Middle Panels -->
+    <div class="middle-row">
+      <!-- Left Interactive Control Drawer -->
+      <div class="matte-panel control-drawer">
+        <!-- MODE 1 CONTROLS -->
+        <div id="panel-mode-1" class="mode-panel" style="display:flex;flex-direction:column;gap:11px;">
+          <div class="section-label">
+            <span>Вхідні дані (Текст)</span>
+            <span style="font-family:var(--font-mono);font-size:10px;">ASCII / UTF-8</span>
+          </div>
+          <p class="hint-text">
+            Введіть слово або ім'я. Кожен символ перетворюється на байти (8 біт), якими керують 3D-перемикачі та індикатори на консолі.
+          </p>
+          <input id="text-input" class="text-input" type="text" maxlength="16" value="МАРС" placeholder="Введіть текст..." />
+          <div class="chip-row">
+            <button class="chip-btn text-preset" data-val="HELLO">HELLO</button>
+            <button class="chip-btn text-preset" data-val="МАРС">МАРС</button>
+            <button class="chip-btn text-preset" data-val="AI-01">AI-01</button>
+            <button class="chip-btn text-preset" data-val="СВІТ">СВІТ</button>
+          </div>
+          <button id="btn-send-text" class="primary-btn">
+            <span>Передати сигнал</span>
+          </button>
+          <div class="section-label" style="margin-top:2px;">
+            <span>Таблиця байтів</span>
+            <span id="text-byte-count" style="font-family:var(--font-mono);color:var(--text-dark);">0 байт</span>
+          </div>
+          <div id="text-binary-preview" class="data-box"></div>
+        </div>
+
+        <!-- MODE 2 CONTROLS -->
+        <div id="panel-mode-2" class="mode-panel hidden" style="display:flex;flex-direction:column;gap:11px;">
+          <div class="section-label">
+            <span>Графічний редактор 8×8</span>
+            <span id="pixel-mode-label" style="font-family:var(--font-mono);color:var(--text-dark);">1-біт (Ч/Б)</span>
+          </div>
+          <p class="hint-text">
+            Клікайте або проводьте мишкою прямо по <strong>3D-матриці</strong> на Передавачі. Поруч миттєво формується матриця нулів та одиниць.
+          </p>
+          <div class="chip-row">
+            <button id="btn-color-bw" class="chip-btn active">1-біт (Ч/Б)</button>
+            <button id="btn-color-rgb" class="chip-btn">RGB (Колір)</button>
+          </div>
+          <div id="rgb-palette" class="palette-row hidden">
+            <span style="font-size:11px;color:var(--text-muted);">Колір:</span>
+            <div class="swatch active" data-color="#e59838" style="background:#e59838;" title="Бурштиновий"></div>
+            <div class="swatch" data-color="#d9534f" style="background:#d9534f;" title="Теракотовий"></div>
+            <div class="swatch" data-color="#4d9a6a" style="background:#4d9a6a;" title="Зелений"></div>
+            <div class="swatch" data-color="#4a7c9b" style="background:#4a7c9b;" title="Сталевий синій"></div>
+            <div class="swatch" data-color="#c87d4b" style="background:#c87d4b;" title="Мідний"></div>
+            <div class="swatch" data-color="#f4f4f1" style="background:#f4f4f1;" title="Білий"></div>
+            <div class="swatch" data-color="#000000" style="background:#26292e;" title="Гумка"></div>
+          </div>
+          <div class="chip-row">
+            <button class="chip-btn pixel-preset" data-preset="heart">Серце</button>
+            <button class="chip-btn pixel-preset" data-preset="smile">Смайл</button>
+            <button class="chip-btn pixel-preset" data-preset="rocket">Ракета</button>
+            <button class="chip-btn pixel-preset" data-preset="clear">Очистити</button>
+          </div>
+          <button id="btn-send-pixels" class="primary-btn">
+            <span>Надіслати зображення</span>
+          </button>
+          <div class="section-label">
+            <span>Поточний кадр (64 пікселі)</span>
+          </div>
+          <div id="pixel-binary-preview" class="data-box" style="font-size:10.5px;line-height:1.35;"></div>
+        </div>
+
+        <!-- MODE 3 CONTROLS -->
+        <div id="panel-mode-3" class="mode-panel hidden" style="display:flex;flex-direction:column;gap:11px;">
+          <div class="section-label">
+            <span>АЦП — Звукова хвиля</span>
+            <span id="adc-freq-label" style="font-family:var(--font-mono);color:var(--text-dark);">440 Гц</span>
+          </div>
+          <p class="hint-text">
+            Оберіть форму хвилі або увімкніть мікрофон. Плавний аналоговий сигнал нарізається лініями <strong>дискретизації</strong> та квантується у 4-бітні числа.
+          </p>
+          <div class="chip-row">
+            <button class="chip-btn wave-type active" data-wave="sine">Синус</button>
+            <button class="chip-btn wave-type" data-wave="triangle">Трикутник</button>
+            <button class="chip-btn wave-type" data-wave="sawtooth">Пилка</button>
+            <button class="chip-btn wave-type" data-wave="chord">Акорд</button>
+          </div>
+          <div class="slider-wrap" style="justify-content:space-between;">
+            <span>Частота:</span>
+            <input id="freq-slider" type="range" min="220" max="880" step="20" value="440" style="flex:1;" />
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button id="btn-play-analog" class="secondary-btn" style="flex:1;">Прослухати</button>
+            <button id="btn-mic" class="secondary-btn" style="flex:1;">Мікрофон</button>
+          </div>
+          <button id="btn-send-audio" class="primary-btn">
+            <span>Оцифрувати і передати</span>
+          </button>
+          <div class="section-label">
+            <span>Квантовані відліки (4-біт)</span>
+          </div>
+          <div id="audio-binary-preview" class="data-box"></div>
+        </div>
+      </div>
+
+      <!-- Right Telemetry Panel -->
+      <div class="matte-panel telemetry-card">
+        <div class="section-label">
+          <span>Телеметрія каналу</span>
+          <span id="tx-status-dot" style="font-family:var(--font-mono);color:var(--sage);">ГОТОВИЙ</span>
+        </div>
+        <div class="stat-row">
+          <span style="color:var(--text-muted);">Активний біт:</span>
+          <span id="stat-bit" class="stat-val">—</span>
+        </div>
+        <div class="stat-row">
+          <span style="color:var(--text-muted);">Передано бітів:</span>
+          <span id="stat-progress" class="stat-val">0 / 0</span>
+        </div>
+        <div class="stat-row">
+          <span style="color:var(--text-muted);">Поточний блок:</span>
+          <span id="stat-current-item" class="stat-val">—</span>
+        </div>
+        <div class="section-label" style="margin-top:2px;">
+          <span>Легенда сигналів</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background:var(--amber);"></span>
+          <span><strong>Біт «1»</strong> — активний світловий імпульс</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background:#6c737d;"></span>
+          <span><strong>Біт «0»</strong> — базовий низький імпульс</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background:var(--copper);"></span>
+          <span><strong>Мідний дріт</strong> — синхронізація струмом</span>
+        </div>
+        <p class="hint-text" style="font-size:11px;margin-top:2px;">
+          Обертайте камеру лівою кнопкою миші, наближайте коліщатком.
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom Live Algorithm Visualizer -->
+    <div class="matte-panel pipeline-bar">
+      <div class="pipeline-header">
+        <div class="section-label" style="border-bottom:none;padding-bottom:0;">
+          <span>Візуалізація алгоритму кодування</span>
+        </div>
+        <div class="pipeline-controls">
+          <div id="toggle-step-mode" class="toggle-wrap" title="Пауза після кожного етапу для детального пояснення">
+            <div class="toggle-switch"></div>
+            <span>Покроковий режим</span>
+          </div>
+          <button id="btn-next-step" class="secondary-btn hidden">Наступний крок ➔</button>
+          <div class="slider-wrap">
+            <span>Швидкість:</span>
+            <input id="speed-slider" type="range" min="0.4" max="2.5" step="0.1" value="1.2" />
+            <span id="speed-label" style="font-family:var(--font-mono);color:var(--text-dark);font-weight:600;min-width:34px;">1.2×</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps-track">
+        <div class="step-node" data-step="1">
+          <div class="step-num">КРОК 01</div>
+          <div class="step-title">Вхідні дані</div>
+          <div class="step-desc" id="step1-desc">Текст, малюнок або звук</div>
+        </div>
+        <div class="step-node" data-step="2">
+          <div class="step-num">КРОК 02</div>
+          <div class="step-title" id="step2-title">Кодування в таблицю</div>
+          <div class="step-desc" id="step2-desc">ASCII/UTF-8 або пікселі</div>
+        </div>
+        <div class="step-node" data-step="3">
+          <div class="step-num">КРОК 03</div>
+          <div class="step-title">Перетворення у двійковий код</div>
+          <div class="step-desc">Послідовність бітів (0 та 1)</div>
+        </div>
+        <div class="step-node" data-step="4">
+          <div class="step-num">КРОК 04</div>
+          <div class="step-title">Модуляція сигналу</div>
+          <div class="step-desc">Світлові імпульси в оптоволокні</div>
+        </div>
+        <div class="step-node" data-step="5">
+          <div class="step-num">КРОК 05</div>
+          <div class="step-title">Декодування на приймачі</div>
+          <div class="step-desc">Відновлення вихідного повідомлення</div>
+        </div>
+      </div>
+
+      <div id="pipeline-explanation" class="step-tooltip">
+        Оберіть рівень зверху, підготуйте дані та натисніть кнопку передачі, щоб побачити шлях сигналу в реальному часі.
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js ESM Import Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // =========================================================================
+    // 1. AUDIO ENGINE (Web Audio API Synth)
+    // =========================================================================
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      ensure() {
+        if (!this.enabled) return null;
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        return this.ctx;
+      }
+      playBit(bit) {
+        const ctx = this.ensure();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = bit === 1 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(bit === 1 ? 880 : 330, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(bit === 1 ? 0.07 : 0.035, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.085);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.095);
+      }
+      playByteComplete() {
+        const ctx = this.ensure();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        [523.25, 659.25].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.045);
+          gain.gain.setValueAtTime(0.0001, now + i * 0.045);
+          gain.gain.exponentialRampToValueAtTime(0.055, now + i * 0.045 + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.045 + 0.16);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.045);
+          osc.stop(now + i * 0.045 + 0.18);
+        });
+      }
+      playTone(type, freq, duration = 0.55) {
+        const ctx = this.ensure();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const freqs = type === 'chord' ? [freq, freq * 1.25, freq * 1.5] : [freq];
+        const wave = type === 'chord' ? 'sine' : type;
+        freqs.forEach((f) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = wave;
+          osc.frequency.setValueAtTime(f, now);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.065 / freqs.length, now + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration + 0.02);
+        });
+      }
+      playClick() {
+        const ctx = this.ensure();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1100, now);
+        gain.gain.setValueAtTime(0.025, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+    }
+    const sound = new SoundEngine();
+
+    // =========================================================================
+    // 2. THREE.JS SCENE, CAMERA, STUDIO LIGHTING & PHYSICAL WORKBENCH
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x040507);
+    scene.fog = new THREE.FogExp2(0x040507, 0.016);
+
+    const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 120);
+    camera.position.set(0, 6.4, 16.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxDistance = 30;
+    controls.minDistance = 5.5;
+    controls.maxPolarAngle = Math.PI * 0.48;
+    controls.target.set(0, 1.35, 0);
+
+    let camAnim = null;
+    function flyCameraTo(pos, target) {
+      camAnim = {
+        startPos: camera.position.clone(),
+        endPos: new THREE.Vector3(...pos),
+        startTarget: controls.target.clone(),
+        endTarget: new THREE.Vector3(...target),
+        progress: 0
+      };
+    }
+
+    // Diffused Studio Daylight & Overhead Lab Lighting
+    const hemiLight = new THREE.HemisphereLight(0xf4f4f1, 0x2a2d33, 1.15);
+    scene.add(hemiLight);
+
+    const overheadLight = new THREE.DirectionalLight(0xfffcf5, 1.85);
+    overheadLight.position.set(5, 14, 9);
+    overheadLight.castShadow = true;
+    overheadLight.shadow.mapSize.width = 2048;
+    overheadLight.shadow.mapSize.height = 2048;
+    overheadLight.shadow.camera.near = 2;
+    overheadLight.shadow.camera.far = 36;
+    overheadLight.shadow.camera.left = -14;
+    overheadLight.shadow.camera.right = 14;
+    overheadLight.shadow.camera.top = 10;
+    overheadLight.shadow.camera.bottom = -10;
+    overheadLight.shadow.bias = -0.0005;
+    scene.add(overheadLight);
+
+    const fillLight = new THREE.DirectionalLight(0xdbe2ea, 0.75);
+    fillLight.position.set(-9, 7, -6);
+    scene.add(fillLight);
+
+    // Physical Architectural Workbench Surface
+    const benchGeo = new THREE.BoxGeometry(24, 0.4, 9.5);
+    const benchMat = new THREE.MeshStandardMaterial({
+      color: 0x2b2f36,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+    const bench = new THREE.Mesh(benchGeo, benchMat);
+    bench.position.set(0, -0.7, 0);
+    bench.receiveShadow = true;
+    scene.add(bench);
+
+    // Subtle anodized aluminum edge trim on bench
+    const benchTrim = new THREE.Mesh(
+      new THREE.BoxGeometry(24.06, 0.08, 9.56),
+      new THREE.MeshStandardMaterial({ color: 0xa8adb5, metalness: 0.65, roughness: 0.42 })
+    );
+    benchTrim.position.set(0, -0.52, 0);
+    scene.add(benchTrim);
+
+    // Subtle engineering measurement grid on the workbench top
+    const gridHelper = new THREE.GridHelper(22, 22, 0x454a54, 0x343840);
+    gridHelper.position.y = -0.495;
+    scene.add(gridHelper);
+
+    // Floating ambient particles in black space
+    const particleGeo = new THREE.BufferGeometry();
+    const particleCount = 900;
+    const particlePos = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      particlePos[i * 3] = (Math.random() - 0.5) * 85;
+      particlePos[i * 3 + 1] = (Math.random() - 0.5) * 55 + 4;
+      particlePos[i * 3 + 2] = (Math.random() - 0.5) * 85;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0xcbd5e1,
+      size: 0.14,
+      transparent: true,
+      opacity: 0.72
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    // Subtle warm amber & muted gray pulse halo sprites (no neon bloom)
+    function makePulseSpriteTexture(hexRgbaInner, hexRgbaOuter) {
+      const c = document.createElement('canvas');
+      c.width = 96;
+      c.height = 96;
+      const g = c.getContext('2d');
+      const grad = g.createRadialGradient(48, 48, 4, 48, 48, 46);
+      grad.addColorStop(0, '#fff7eb');
+      grad.addColorStop(0.35, hexRgbaInner);
+      grad.addColorStop(0.75, hexRgbaOuter);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 96, 96);
+      return new THREE.CanvasTexture(c);
+    }
+    const amberPulseTex = makePulseSpriteTexture('rgba(229,152,56,0.85)', 'rgba(229,152,56,0.12)');
+    const zeroPulseTex = makePulseSpriteTexture('rgba(140,148,160,0.45)', 'rgba(108,115,125,0.05)');
+
+    // =========================================================================
+    // 3. HARDWARE LAB 3D ARCHITECTURE (Matte Tactile Engineering Materials)
+    // =========================================================================
+    const graphitePcbMat = new THREE.MeshStandardMaterial({
+      color: 0x26292e,
+      metalness: 0.18,
+      roughness: 0.78
+    });
+    const anodizedAluMat = new THREE.MeshStandardMaterial({
+      color: 0xa8adb5,
+      metalness: 0.65,
+      roughness: 0.42
+    });
+    const copperTraceMat = new THREE.MeshStandardMaterial({
+      color: 0xc87d4b,
+      metalness: 0.82,
+      roughness: 0.32
+    });
+    const amberAccentMat = new THREE.MeshStandardMaterial({
+      color: 0xe59838,
+      emissive: 0xe59838,
+      emissiveIntensity: 0.35,
+      roughness: 0.4,
+      metalness: 0.2
+    });
+    const fiberGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0xdbe2ea,
+      transparent: true,
+      opacity: 0.34,
+      roughness: 0.18,
+      metalness: 0.05,
+      transmission: 0.45
+    });
+
+    function makeLabelMesh(text, w = 2.6, h = 0.44, bg = '#26292e', fg = '#f4f4f1') {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 96;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, 512, 96);
+      ctx.strokeStyle = '#a8adb5';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(4, 4, 504, 88);
+      ctx.fillStyle = fg;
+      ctx.font = '700 34px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 256, 48);
+      const tex = new THREE.CanvasTexture(c);
+      return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex }));
+    }
+
+    // --- A. TRANSMITTER CONSOLE (LEFT, x = -6.2) ---
+    const txGroup = new THREE.Group();
+    txGroup.position.set(-6.2, 0, 0);
+    txGroup.rotation.y = 0.22;
+    scene.add(txGroup);
+
+    const txBase = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 4.0), graphitePcbMat);
+    txBase.position.y = -0.25;
+    txBase.castShadow = true;
+    txBase.receiveShadow = true;
+    txGroup.add(txBase);
+
+    const txTrim = new THREE.Mesh(new THREE.BoxGeometry(5.24, 0.06, 4.04), anodizedAluMat);
+    txTrim.position.y = 0.02;
+    txGroup.add(txTrim);
+
+    const txBackplane = new THREE.Mesh(new THREE.BoxGeometry(5.0, 3.6, 0.28), graphitePcbMat);
+    txBackplane.position.set(0, 1.8, -1.6);
+    txBackplane.castShadow = true;
+    txBackplane.receiveShadow = true;
+    txGroup.add(txBackplane);
+
+    const txLabel = makeLabelMesh('ПЕРЕДАВАЧ · TX');
+    txLabel.position.set(0, 3.84, -1.42);
+    txGroup.add(txLabel);
+
+    const txPort = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.32, 0.48, 24), anodizedAluMat);
+    txPort.rotation.z = Math.PI / 2;
+    txPort.position.set(2.65, 0.65, 0.2);
+    txPort.castShadow = true;
+    txGroup.add(txPort);
+
+    const txPortRing = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.038, 12, 24), copperTraceMat);
+    txPortRing.rotation.y = Math.PI / 2;
+    txPortRing.position.set(2.9, 0.65, 0.2);
+    txGroup.add(txPortRing);
+
+    // --- B. RECEIVER MONITOR (RIGHT, x = +6.2) ---
+    const rxGroup = new THREE.Group();
+    rxGroup.position.set(6.2, 0, 0);
+    rxGroup.rotation.y = -0.22;
+    scene.add(rxGroup);
+
+    const rxBase = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 3.8), graphitePcbMat);
+    rxBase.position.y = -0.25;
+    rxBase.castShadow = true;
+    rxBase.receiveShadow = true;
+    rxGroup.add(rxBase);
+
+    const rxTrim = new THREE.Mesh(new THREE.BoxGeometry(5.24, 0.06, 3.84), anodizedAluMat);
+    rxTrim.position.y = 0.02;
+    rxGroup.add(rxTrim);
+
+    const rxFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.4, 0.3), graphitePcbMat);
+    rxFrame.position.set(0, 1.9, -0.4);
+    rxFrame.castShadow = true;
+    rxFrame.receiveShadow = true;
+    rxGroup.add(rxFrame);
+
+    const rxBezel = new THREE.Mesh(new THREE.BoxGeometry(4.56, 3.12, 0.05), anodizedAluMat);
+    rxBezel.position.set(0, 1.9, -0.24);
+    rxGroup.add(rxBezel);
+
+    const rxLabel = makeLabelMesh('ПРИЙМАЧ · RX');
+    rxLabel.position.set(0, 3.84, -0.22);
+    rxGroup.add(rxLabel);
+
+    const rxCanvas = document.createElement('canvas');
+    rxCanvas.width = 768;
+    rxCanvas.height = 512;
+    const rxCtx = rxCanvas.getContext('2d');
+    const rxTexture = new THREE.CanvasTexture(rxCanvas);
+    const rxScreen = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.36, 2.9),
+      new THREE.MeshBasicMaterial({ map: rxTexture })
+    );
+    rxScreen.position.set(0, 1.9, -0.2);
+    rxGroup.add(rxScreen);
+
+    const rxPort = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.32, 0.48, 24), anodizedAluMat);
+    rxPort.rotation.z = Math.PI / 2;
+    rxPort.position.set(-2.65, 0.65, 0.2);
+    rxPort.castShadow = true;
+    rxGroup.add(rxPort);
+
+    const rxPortRing = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.038, 12, 24), copperTraceMat);
+    rxPortRing.rotation.y = Math.PI / 2;
+    rxPortRing.position.set(-2.9, 0.65, 0.2);
+    rxGroup.add(rxPortRing);
+
+    // 3D Speaker on Receiver (visible in Mode 3)
+    const speakerGroup = new THREE.Group();
+    speakerGroup.position.set(0, 0.48, 0.95);
+    speakerGroup.visible = false;
+    rxGroup.add(speakerGroup);
+
+    const speakerBox = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.9, 1.0), graphitePcbMat);
+    speakerBox.castShadow = true;
+    speakerGroup.add(speakerBox);
+    const speakerCone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.36, 0.22, 24, 1, true),
+      new THREE.MeshStandardMaterial({ color: 0x3b4048, metalness: 0.4, roughness: 0.6, side: THREE.DoubleSide })
+    );
+    speakerCone.rotation.x = -Math.PI / 2;
+    speakerCone.position.set(0, 0, 0.45);
+    speakerGroup.add(speakerCone);
+    const speakerRing = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.035, 12, 28), anodizedAluMat);
+    speakerRing.position.set(0, 0, 0.51);
+    speakerGroup.add(speakerRing);
+
+    // --- C. FIBER-OPTIC & COPPER TRANSMISSION CABLE (CENTER) ---
+    txGroup.updateMatrixWorld(true);
+    rxGroup.updateMatrixWorld(true);
+    const pStart = new THREE.Vector3(2.9, 0.65, 0.2).applyMatrix4(txGroup.matrixWorld);
+    const pEnd = new THREE.Vector3(-2.9, 0.65, 0.2).applyMatrix4(rxGroup.matrixWorld);
+
+    const cableCurve = new THREE.CatmullRomCurve3([
+      pStart,
+      new THREE.Vector3(-1.8, 0.1, 1.25),
+      new THREE.Vector3(0, 0.65, 1.75),
+      new THREE.Vector3(1.8, 0.1, 1.25),
+      pEnd
+    ]);
+
+    const fiberSheath = new THREE.Mesh(
+      new THREE.TubeGeometry(cableCurve, 90, 0.18, 18, false),
+      fiberGlassMat
+    );
+    fiberSheath.castShadow = true;
+    scene.add(fiberSheath);
+
+    const fiberCoreMat = new THREE.MeshBasicMaterial({
+      color: 0x8e95a0,
+      transparent: true,
+      opacity: 0.25
+    });
+    const fiberCore = new THREE.Mesh(
+      new THREE.TubeGeometry(cableCurve, 90, 0.05, 12, false),
+      fiberCoreMat
+    );
+    scene.add(fiberCore);
+
+    const copperPoints = [];
+    for (let i = 0; i <= 80; i++) {
+      const t = i / 80;
+      const pt = cableCurve.getPointAt(t);
+      const angle = t * Math.PI * 10;
+      copperPoints.push(new THREE.Vector3(
+        pt.x,
+        pt.y + Math.sin(angle) * 0.21 - 0.16,
+        pt.z + Math.cos(angle) * 0.21
+      ));
+    }
+    const copperCurve = new THREE.CatmullRomCurve3(copperPoints);
+    const copperWire = new THREE.Mesh(
+      new THREE.TubeGeometry(copperCurve, 100, 0.032, 8, false),
+      copperTraceMat
+    );
+    copperWire.castShadow = true;
+    scene.add(copperWire);
+
+    // =========================================================================
+    // 4. MODE-SPECIFIC 3D HARDWARE ON TRANSMITTER
+    // =========================================================================
+    // --- MODE 1 HARDWARE: 8 Tactile Toggle Switches & Warm Amber Filament Bulbs ---
+    const mode1Group = new THREE.Group();
+    txGroup.add(mode1Group);
+
+    const bitUnits = [];
+    for (let i = 0; i < 8; i++) {
+      const x = -1.75 + i * 0.5;
+      const unit = new THREE.Group();
+      unit.position.set(x, 0.05, 0.35);
+
+      const socket = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.14, 0.55), graphitePcbMat);
+      socket.castShadow = true;
+      unit.add(socket);
+
+      const leverPivot = new THREE.Group();
+      leverPivot.position.set(0, 0.07, 0);
+      const leverStick = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.035, 0.38, 12),
+        anodizedAluMat
+      );
+      leverStick.position.y = 0.19;
+      leverStick.castShadow = true;
+      const leverTip = new THREE.Mesh(
+        new THREE.SphereGeometry(0.062, 14, 14),
+        new THREE.MeshStandardMaterial({ color: 0xc87d4b, emissive: 0xe59838, emissiveIntensity: 0.1, roughness: 0.35 })
+      );
+      leverTip.position.y = 0.38;
+      leverPivot.add(leverStick, leverTip);
+      leverPivot.rotation.x = 0.48;
+      unit.add(leverPivot);
+
+      const bulbBase = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.18, 16), anodizedAluMat);
+      bulbBase.position.set(0, 0.72, -1.25);
+      bulbBase.castShadow = true;
+      unit.add(bulbBase);
+
+      const filamentMat = new THREE.MeshStandardMaterial({
+        color: 0x353940,
+        emissive: 0xe59838,
+        emissiveIntensity: 0.02,
+        roughness: 0.35
+      });
+      const filament = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 12), filamentMat);
+      filament.position.set(0, 1.06, -1.25);
+      unit.add(filament);
+
+      const tubeGlass = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.42, 8, 16), fiberGlassMat);
+      tubeGlass.position.set(0, 1.08, -1.25);
+      unit.add(tubeGlass);
+
+      const bitVal = 1 << (7 - i);
+      const lbl = makeLabelMesh(String(bitVal), 0.36, 0.18, '#e8e8e3', '#1c1e21');
+      lbl.position.set(0, 0.08, 0.42);
+      lbl.rotation.x = -Math.PI / 3;
+      unit.add(lbl);
+
+      mode1Group.add(unit);
+      bitUnits.push({
+        leverPivot,
+        leverTip,
+        filamentMat,
+        targetBit: 0,
+        currentAngle: 0.48
+      });
+    }
+
+    function setSwitchBankByte(byteVal) {
+      for (let i = 0; i < 8; i++) {
+        bitUnits[i].targetBit = (byteVal >> (7 - i)) & 1;
+      }
+    }
+
+    // --- MODE 2 HARDWARE: Interactive 3D 8x8 Pixel Grid + Live Binary Matrix ---
+    const mode2Group = new THREE.Group();
+    mode2Group.visible = false;
+    txGroup.add(mode2Group);
+
+    const PIXEL_SIZE = 8;
+    const pixelGridData = Array.from({ length: PIXEL_SIZE }, () => Array(PIXEL_SIZE).fill('#000000'));
+    const pixelMeshes = [];
+    const pixelInteractables = [];
+
+    const gridBoard = new THREE.Mesh(new THREE.BoxGeometry(2.65, 2.65, 0.16), graphitePcbMat);
+    gridBoard.position.set(-1.0, 1.75, -0.55);
+    gridBoard.castShadow = true;
+    mode2Group.add(gridBoard);
+
+    for (let r = 0; r < PIXEL_SIZE; r++) {
+      pixelMeshes[r] = [];
+      for (let c = 0; c < PIXEL_SIZE; c++) {
+        const tileMat = new THREE.MeshStandardMaterial({
+          color: 0x353940,
+          emissive: 0x000000,
+          emissiveIntensity: 0.45,
+          roughness: 0.55,
+          metalness: 0.15
+        });
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.27, 0.1), tileMat);
+        tile.position.set(
+          -1.0 + (c - 3.5) * 0.3,
+          1.75 + (3.5 - r) * 0.3,
+          -0.44
+        );
+        tile.userData = { r, c };
+        mode2Group.add(tile);
+        pixelMeshes[r][c] = tile;
+        pixelInteractables.push(tile);
+      }
+    }
+
+    const binMatrixCanvas = document.createElement('canvas');
+    binMatrixCanvas.width = 512;
+    binMatrixCanvas.height = 512;
+    const binMatrixCtx = binMatrixCanvas.getContext('2d');
+    const binMatrixTex = new THREE.CanvasTexture(binMatrixCanvas);
+    const binMatrixPanel = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.35, 2.35),
+      new THREE.MeshBasicMaterial({ map: binMatrixTex })
+    );
+    binMatrixPanel.position.set(1.55, 1.75, -0.45);
+    mode2Group.add(binMatrixPanel);
+
+    // --- MODE 3 HARDWARE: 3D Analog Wave + Sampling Lines ---
+    const mode3Group = new THREE.Group();
+    mode3Group.visible = false;
+    txGroup.add(mode3Group);
+
+    const waveBackdrop = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.5, 0.12), graphitePcbMat);
+    waveBackdrop.position.set(0, 1.7, -0.8);
+    waveBackdrop.castShadow = true;
+    mode3Group.add(waveBackdrop);
+
+    const analogPointsCount = 80;
+    const analogPositions = new Float32Array(analogPointsCount * 3);
+    const analogGeo = new THREE.BufferGeometry();
+    analogGeo.setAttribute('position', new THREE.BufferAttribute(analogPositions, 3));
+    const analogLine = new THREE.Line(
+      analogGeo,
+      new THREE.LineBasicMaterial({ color: 0xf4f4f1 })
+    );
+    mode3Group.add(analogLine);
+
+    const SAMPLE_COUNT = 16;
+    const sampleLines = [];
+    const sampleDots = [];
+    for (let i = 0; i < SAMPLE_COUNT; i++) {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0.7, -0.68),
+        new THREE.Vector3(0, 2.7, -0.68)
+      ]);
+      const line = new THREE.Line(
+        lineGeo,
+        new THREE.LineBasicMaterial({ color: 0xe59838, transparent: true, opacity: 0.55 })
+      );
+      mode3Group.add(line);
+      sampleLines.push(line);
+
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.062, 12, 12),
+        new THREE.MeshStandardMaterial({ color: 0xd9534f, emissive: 0xd9534f, emissiveIntensity: 0.35, roughness: 0.4 })
+      );
+      mode3Group.add(dot);
+      sampleDots.push(dot);
+    }
+
+    // =========================================================================
+    // 5. APPLICATION STATE & RECEIVER SCREEN RENDERING
+    // =========================================================================
+    const state = {
+      mode: 1,
+      isTransmitting: false,
+      stepMode: false,
+      stepResolve: null,
+      speed: 1.2,
+      rxText: '',
+      rxCurrentBits: '',
+      colorMode: 'bw',
+      selectedColor: '#e59838',
+      rxPixels: Array.from({ length: 8 }, () => Array(8).fill('#000000')),
+      rxPixelRow: -1,
+      waveType: 'sine',
+      freq: 440,
+      samples: [],
+      rxSamples: [],
+      micActive: false,
+      micStream: null,
+      micAnalyser: null,
+      speakerPulse: 0
+    };
+
+    function drawRxScreen() {
+      const ctx = rxCtx;
+      ctx.fillStyle = '#1e2126';
+      ctx.fillRect(0, 0, 768, 512);
+
+      // Subtle engineering grid on screen
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 768; x += 32) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
+      }
+      for (let y = 0; y < 512; y += 32) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(768, y); ctx.stroke();
+      }
+
+      // Header
+      ctx.fillStyle = '#a8adb5';
+      ctx.font = '700 20px "Inter", sans-serif';
+      ctx.fillText(
+        state.mode === 1 ? 'ПРИЙМАЧ · ДЕКОДЕР ASCII / UTF-8' :
+        state.mode === 2 ? 'ПРИЙМАЧ · ВІДНОВЛЕННЯ МАТРИЦІ 8×8' :
+        'ПРИЙМАЧ · ЦАП (ВІДНОВЛЕННЯ ХВИЛІ)',
+        28, 42
+      );
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(28, 58);
+      ctx.lineTo(740, 58);
+      ctx.stroke();
+
+      if (state.mode === 1) {
+        ctx.fillStyle = '#a8adb5';
+        ctx.font = '600 20px "Consolas", monospace';
+        ctx.fillText('БУФЕР БІТІВ: ' + (state.rxCurrentBits || '--------').padEnd(8, '·'), 28, 108);
+
+        ctx.fillStyle = '#e59838';
+        ctx.font = '700 84px "Consolas", monospace';
+        const displayStr = state.rxText || '...';
+        ctx.fillText(displayStr + (state.isTransmitting ? '_' : ''), 28, 260);
+
+        ctx.fillStyle = '#8b929c';
+        ctx.font = '500 18px "Inter", sans-serif';
+        ctx.fillText(`Декодовано символів: ${state.rxText.length}`, 28, 455);
+      } else if (state.mode === 2) {
+        const size = 360;
+        const cell = size / 8;
+        const ox = 204;
+        const oy = 96;
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const col = state.rxPixels[r][c];
+            ctx.fillStyle = col === '#000000' ? '#2c3037' : col;
+            ctx.fillRect(ox + c * cell + 2, oy + r * cell + 2, cell - 4, cell - 4);
+            if (r === state.rxPixelRow) {
+              ctx.strokeStyle = '#e59838';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(ox + c * cell + 2, oy + r * cell + 2, cell - 4, cell - 4);
+            }
+          }
+        }
+      } else if (state.mode === 3) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(40, 280);
+        ctx.lineTo(728, 280);
+        ctx.stroke();
+
+        if (state.rxSamples.length > 0) {
+          const stepW = 688 / SAMPLE_COUNT;
+          ctx.strokeStyle = '#4d9a6a';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          state.rxSamples.forEach((val, idx) => {
+            const norm = (val - 7.5) / 7.5;
+            const x = 40 + idx * stepW;
+            const y = 280 - norm * 145;
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            ctx.lineTo(x + stepW, y);
+          });
+          ctx.stroke();
+
+          ctx.fillStyle = '#e59838';
+          ctx.font = '600 19px "Consolas", monospace';
+          ctx.fillText(`Відновлено відліків: ${state.rxSamples.length} / ${SAMPLE_COUNT}`, 28, 465);
+        } else {
+          ctx.fillStyle = '#8b929c';
+          ctx.font = '500 22px "Inter", sans-serif';
+          ctx.fillText('Очікування цифрового потоку від АЦП...', 150, 280);
+        }
+      }
+
+      rxTexture.needsUpdate = true;
+    }
+
+    // =========================================================================
+    // 6. MODE 1 LOGIC: TEXT -> UTF-8 / ASCII -> 8-BIT PULSES
+    // =========================================================================
+    const textInput = document.getElementById('text-input');
+    const textBinaryPreview = document.getElementById('text-binary-preview');
+    const textByteCount = document.getElementById('text-byte-count');
+
+    function encodeTextBytes(str) {
+      const encoder = new TextEncoder();
+      const result = [];
+      for (const ch of str) {
+        const bytes = encoder.encode(ch);
+        bytes.forEach((b, idx) => {
+          result.push({
+            char: ch,
+            byte: b,
+            bits: b.toString(2).padStart(8, '0'),
+            isAscii: b < 128,
+            partLabel: bytes.length > 1 ? `${ch} (${idx + 1}/${bytes.length})` : ch
+          });
+        });
+      }
+      return result;
+    }
+
+    function formatBitsHtml(bits) {
+      return bits.split('').map(b => `<span class="bit-${b}">${b}</span>`).join('');
+    }
+
+    function updateTextPreview() {
+      const val = textInput.value || '';
+      const bytes = encodeTextBytes(val);
+      textByteCount.textContent = `${bytes.length} байт (${bytes.length * 8} біт)`;
+      textBinaryPreview.innerHTML = bytes.map(item =>
+        `<div><strong>${item.partLabel}</strong> → <span style="color:#a8adb5;">${item.byte}</span> → ${formatBitsHtml(item.bits)}</div>`
+      ).join('') || '<span style="color:#7d8490;">Введіть текст вище...</span>';
+      if (bytes.length > 0 && !state.isTransmitting) {
+        setSwitchBankByte(bytes[0].byte);
+      }
+    }
+
+    textInput.addEventListener('input', updateTextPreview);
+    document.querySelectorAll('.text-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        textInput.value = btn.dataset.val;
+        updateTextPreview();
+        sound.playClick();
+      });
+    });
+
+    // =========================================================================
+    // 7. MODE 2 LOGIC: 3D PIXEL GRID DRAWING & LIVE BINARY MATRIX
+    // =========================================================================
+    const pixelBinaryPreview = document.getElementById('pixel-binary-preview');
+    const pixelModeLabel = document.getElementById('pixel-mode-label');
+    const rgbPalette = document.getElementById('rgb-palette');
+
+    function colorToBits(hex) {
+      if (state.colorMode === 'bw') {
+        return hex === '#000000' ? '0' : '1';
+      }
+      const c = new THREE.Color(hex);
+      const r = c.r > 0.4 ? '1' : '0';
+      const g = c.g > 0.4 ? '1' : '0';
+      const b = c.b > 0.4 ? '1' : '0';
+      return r + g + b;
+    }
+
+    function drawBinMatrixPanel() {
+      const ctx = binMatrixCtx;
+      ctx.fillStyle = '#1e2126';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.strokeStyle = '#a8adb5';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(4, 4, 504, 504);
+
+      ctx.fillStyle = '#f4f4f1';
+      ctx.font = '700 20px "Inter", sans-serif';
+      ctx.fillText(state.colorMode === 'bw' ? 'МАТРИЦЯ БІТІВ (1-БІТ)' : 'МАТРИЦЯ RGB (3-БІТ)', 24, 38);
+
+      const startY = 85;
+      const rowH = 52;
+      const colW = 58;
+      ctx.textAlign = 'center';
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const bits = colorToBits(pixelGridData[r][c]);
+          const isOn = bits.includes('1');
+          ctx.fillStyle = isOn ? (state.colorMode === 'bw' ? '#e59838' : pixelGridData[r][c]) : '#565c66';
+          ctx.font = state.colorMode === 'bw' ? '700 30px "Consolas", monospace' : '700 19px "Consolas", monospace';
+          ctx.fillText(bits, 52 + c * colW, startY + r * rowH);
+        }
+      }
+      ctx.textAlign = 'left';
+      binMatrixTex.needsUpdate = true;
+    }
+
+    function updatePixelPreview() {
+      let html = '';
+      for (let r = 0; r < 8; r++) {
+        const rowBits = pixelGridData[r].map(col => colorToBits(col));
+        html += `<div>R${r}: ` + rowBits.map(b =>
+          b.split('').map(bit => `<span class="bit-${bit}">${bit}</span>`).join('')
+        ).join(' ') + '</div>';
+      }
+      pixelBinaryPreview.innerHTML = html;
+      drawBinMatrixPanel();
+    }
+
+    function setPixel(r, c, hex) {
+      pixelGridData[r][c] = hex;
+      const mesh = pixelMeshes[r][c];
+      if (hex === '#000000') {
+        mesh.material.color.setHex(0x353940);
+        mesh.material.emissive.setHex(0x000000);
+        mesh.scale.z = 1;
+      } else {
+        mesh.material.color.set(hex);
+        mesh.material.emissive.set(hex);
+        mesh.scale.z = 1.45;
+      }
+      updatePixelPreview();
+    }
+
+    function applyPixelPreset(name) {
+      const patterns = {
+        clear: [
+          '00000000','00000000','00000000','00000000',
+          '00000000','00000000','00000000','00000000'
+        ],
+        heart: [
+          '01100110','11111111','11111111','11111111',
+          '01111110','00111100','00011000','00000000'
+        ],
+        smile: [
+          '00111100','01000010','10100101','10000001',
+          '10100101','10011001','01000010','00111100'
+        ],
+        rocket: [
+          '00011000','00111100','00111100','01111110',
+          '01100110','11111111','01011010','10000001'
+        ]
+      };
+      const pat = patterns[name] || patterns.clear;
+      const fillCol = name === 'heart' && state.colorMode === 'rgb' ? '#d9534f' :
+                      name === 'smile' && state.colorMode === 'rgb' ? '#e59838' :
+                      state.colorMode === 'rgb' ? state.selectedColor : '#e59838';
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          setPixel(r, c, pat[r][c] === '1' ? fillCol : '#000000');
+        }
+      }
+    }
+
+    document.getElementById('btn-color-bw').addEventListener('click', (e) => {
+      state.colorMode = 'bw';
+      e.target.classList.add('active');
+      document.getElementById('btn-color-rgb').classList.remove('active');
+      rgbPalette.classList.add('hidden');
+      pixelModeLabel.textContent = '1-біт (Ч/Б)';
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (pixelGridData[r][c] !== '#000000') setPixel(r, c, '#e59838');
+        }
+      }
+      updatePixelPreview();
+    });
+
+    document.getElementById('btn-color-rgb').addEventListener('click', (e) => {
+      state.colorMode = 'rgb';
+      e.target.classList.add('active');
+      document.getElementById('btn-color-bw').classList.remove('active');
+      rgbPalette.classList.remove('hidden');
+      pixelModeLabel.textContent = 'RGB (3-біт)';
+      updatePixelPreview();
+    });
+
+    document.querySelectorAll('.swatch').forEach(sw => {
+      sw.addEventListener('click', () => {
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+        state.selectedColor = sw.dataset.color;
+        sound.playClick();
+      });
+    });
+
+    document.querySelectorAll('.pixel-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyPixelPreset(btn.dataset.preset);
+        sound.playClick();
+      });
+    });
+
+    // Raycasting for 3D 8x8 Pixel Painting
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let isPainting = false;
+    let paintModeVal = '#e59838';
+
+    function getHitPixel(clientX, clientY) {
+      pointer.x = (clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(pixelInteractables, false);
+      return hits.length > 0 ? hits[0].object : null;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      if (state.mode !== 2 || state.isTransmitting) return;
+      const hit = getHitPixel(e.clientX, e.clientY);
+      if (hit) {
+        isPainting = true;
+        controls.enabled = false;
+        container.classList.add('drawing-cursor');
+        const { r, c } = hit.userData;
+        if (state.colorMode === 'bw') {
+          paintModeVal = pixelGridData[r][c] === '#000000' ? '#e59838' : '#000000';
+        } else {
+          paintModeVal = state.selectedColor;
+        }
+        setPixel(r, c, paintModeVal);
+        sound.playClick();
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isPainting) return;
+      const hit = getHitPixel(e.clientX, e.clientY);
+      if (hit) {
+        const { r, c } = hit.userData;
+        if (pixelGridData[r][c] !== paintModeVal) {
+          setPixel(r, c, paintModeVal);
+        }
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (isPainting) {
+        isPainting = false;
+        controls.enabled = true;
+        container.classList.remove('drawing-cursor');
+      }
+    });
+
+    // =========================================================================
+    // 8. MODE 3 LOGIC: ANALOG WAVE -> SAMPLING -> QUANTIZATION (ADC)
+    // =========================================================================
+    const freqSlider = document.getElementById('freq-slider');
+    const adcFreqLabel = document.getElementById('adc-freq-label');
+    const audioBinaryPreview = document.getElementById('audio-binary-preview');
+
+    function evalWave(tNorm) {
+      const cycles = (state.freq / 220) * 1.5;
+      const phase = tNorm * Math.PI * 2 * cycles;
+      if (state.waveType === 'sine') return Math.sin(phase);
+      if (state.waveType === 'triangle') return (2 / Math.PI) * Math.asin(Math.sin(phase));
+      if (state.waveType === 'sawtooth') return 2 * ((tNorm * cycles) - Math.floor(0.5 + tNorm * cycles));
+      if (state.waveType === 'chord') return (Math.sin(phase) + 0.6 * Math.sin(phase * 1.25) + 0.5 * Math.sin(phase * 1.5)) / 2.1;
+      return Math.sin(phase);
+    }
+
+    function updateAnalogWave3D(liveMicData = null) {
+      const posAttr = analogGeo.attributes.position;
+      for (let i = 0; i < analogPointsCount; i++) {
+        const t = i / (analogPointsCount - 1);
+        const x = -2.0 + t * 4.0;
+        let amp = liveMicData
+          ? (liveMicData[Math.floor(t * (liveMicData.length - 1))] - 128) / 128
+          : evalWave(t);
+        amp = Math.max(-1, Math.min(1, amp));
+        const y = 1.7 + amp * 0.85;
+        posAttr.setXYZ(i, x, y, -0.68);
+      }
+      posAttr.needsUpdate = true;
+
+      state.samples = [];
+      for (let i = 0; i < SAMPLE_COUNT; i++) {
+        const t = i / (SAMPLE_COUNT - 1);
+        const x = -2.0 + t * 4.0;
+        let amp = liveMicData
+          ? (liveMicData[Math.floor(t * (liveMicData.length - 1))] - 128) / 128
+          : evalWave(t);
+        amp = Math.max(-1, Math.min(1, amp));
+        const qVal = Math.max(0, Math.min(15, Math.round(((amp + 1) / 2) * 15)));
+        state.samples.push(qVal);
+
+        const qY = 1.7 + ((qVal / 15) * 2 - 1) * 0.85;
+        const linePos = sampleLines[i].geometry.attributes.position;
+        linePos.setXYZ(0, x, 0.8, -0.68);
+        linePos.setXYZ(1, x, qY, -0.68);
+        linePos.needsUpdate = true;
+        sampleDots[i].position.set(x, qY, -0.66);
+      }
+
+      audioBinaryPreview.innerHTML = state.samples.map((v, idx) => {
+        const bits = v.toString(2).padStart(4, '0');
+        return `<span>S${String(idx).padStart(2, '0')}:${String(v).padStart(2, '0')}(${formatBitsHtml(bits)})</span>`;
+      }).join(' · ');
+    }
+
+    freqSlider.addEventListener('input', () => {
+      state.freq = Number(freqSlider.value);
+      adcFreqLabel.textContent = `${state.freq} Гц`;
+      updateAnalogWave3D();
+    });
+
+    document.querySelectorAll('.wave-type').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.wave-type').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.waveType = btn.dataset.wave;
+        updateAnalogWave3D();
+        sound.playTone(state.waveType, state.freq, 0.35);
+      });
+    });
+
+    document.getElementById('btn-play-analog').addEventListener('click', () => {
+      sound.playTone(state.waveType, state.freq, 0.6);
+    });
+
+    document.getElementById('btn-mic').addEventListener('click', async (e) => {
+      if (state.micActive) {
+        state.micActive = false;
+        if (state.micStream) state.micStream.getTracks().forEach(t => t.stop());
+        e.target.textContent = 'Мікрофон';
+        updateAnalogWave3D();
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const ctx = sound.ensure() || new (window.AudioContext || window.webkitAudioContext)();
+        const src = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        src.connect(analyser);
+        state.micStream = stream;
+        state.micAnalyser = analyser;
+        state.micActive = true;
+        e.target.textContent = 'Стоп мік.';
+      } catch (err) {
+        alert('Не вдалося отримати доступ до мікрофона. Використовуйте генератор хвиль.');
+      }
+    });
+
+    // =========================================================================
+    // 9. ALGORITHM PIPELINE & SIGNAL TRANSMISSION ENGINE
+    // =========================================================================
+    const stepNodes = document.querySelectorAll('.step-node');
+    const pipelineExp = document.getElementById('pipeline-explanation');
+    const toggleStepMode = document.getElementById('toggle-step-mode');
+    const btnNextStep = document.getElementById('btn-next-step');
+    const speedSlider = document.getElementById('speed-slider');
+    const speedLabel = document.getElementById('speed-label');
+
+    const statBit = document.getElementById('stat-bit');
+    const statProgress = document.getElementById('stat-progress');
+    const statCurrentItem = document.getElementById('stat-current-item');
+    const txStatusDot = document.getElementById('tx-status-dot');
+
+    toggleStepMode.addEventListener('click', () => {
+      state.stepMode = !state.stepMode;
+      toggleStepMode.classList.toggle('active', state.stepMode);
+      if (!state.stepMode && state.stepResolve) {
+        btnNextStep.classList.add('hidden');
+        state.stepResolve();
+        state.stepResolve = null;
+      }
+    });
+
+    btnNextStep.addEventListener('click', () => {
+      if (state.stepResolve) {
+        btnNextStep.classList.add('hidden');
+        const res = state.stepResolve;
+        state.stepResolve = null;
+        res();
+      }
+    });
+
+    speedSlider.addEventListener('input', () => {
+      state.speed = Number(speedSlider.value);
+      speedLabel.textContent = `${state.speed.toFixed(1)}×`;
+    });
+
+    function setPipelineStep(stepNum, message) {
+      stepNodes.forEach(node => {
+        const n = Number(node.dataset.step);
+        node.classList.remove('active', 'done');
+        if (n < stepNum) node.classList.add('done');
+        else if (n === stepNum) node.classList.add('active');
+      });
+      if (message) pipelineExp.textContent = message;
+    }
+
+    async function waitStepGate() {
+      if (!state.stepMode) {
+        await new Promise(r => setTimeout(r, 420 / state.speed));
+        return;
+      }
+      btnNextStep.classList.remove('hidden');
+      await new Promise(resolve => { state.stepResolve = resolve; });
+    }
+
+    const activePulses = [];
+    const pulseGeo = new THREE.SphereGeometry(0.1, 14, 14);
+
+    function firePulse(bit, onArrive) {
+      const isOne = bit === 1;
+      const mat = new THREE.MeshBasicMaterial({ color: isOne ? 0xe59838 : 0x6c737d });
+      const mesh = new THREE.Mesh(pulseGeo, mat);
+      mesh.scale.setScalar(isOne ? 1.2 : 0.72);
+
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: isOne ? amberPulseTex : zeroPulseTex,
+        transparent: true,
+        depthWrite: false
+      }));
+      sprite.scale.setScalar(isOne ? 0.65 : 0.36);
+      mesh.add(sprite);
+
+      scene.add(mesh);
+      activePulses.push({
+        mesh,
+        t: 0,
+        speed: 1.35 * state.speed,
+        onArrive
+      });
+    }
+
+    function setTransmissionBusy(busy) {
+      state.isTransmitting = busy;
+      document.getElementById('btn-send-text').disabled = busy;
+      document.getElementById('btn-send-pixels').disabled = busy;
+      document.getElementById('btn-send-audio').disabled = busy;
+      txStatusDot.textContent = busy ? 'ПЕРЕДАЧА' : 'ГОТОВИЙ';
+      txStatusDot.style.color = busy ? '#fbbf24' : '#22c55e';
+    }
+
+    // --- TRANSMIT MODE 1: TEXT ---
+    document.getElementById('btn-send-text').addEventListener('click', async () => {
+      const text = textInput.value.trim();
+      if (!text || state.isTransmitting) return;
+      setTransmissionBusy(true);
+      state.rxText = '';
+      state.rxCurrentBits = '';
+      drawRxScreen();
+
+      const bytes = encodeTextBytes(text);
+      const totalBits = bytes.length * 8;
+      let sentBits = 0;
+
+      setPipelineStep(1, `Крок 1: Отримано вхідний текст «${text}» (${text.length} симв.).`);
+      await waitStepGate();
+
+      setPipelineStep(2, `Крок 2: Кодування символів за таблицею ASCII/UTF-8 у ${bytes.length} байтів.`);
+      await waitStepGate();
+
+      const rxRawBytes = [];
+      const decoder = new TextDecoder();
+
+      for (let bIdx = 0; bIdx < bytes.length; bIdx++) {
+        const item = bytes[bIdx];
+        statCurrentItem.textContent = `${item.partLabel} (${item.byte})`;
+        setSwitchBankByte(item.byte);
+
+        setPipelineStep(3, `Крок 3: Байт ${item.byte} («${item.partLabel}») → двійковий код ${item.bits}. Перемикачі виставлено.`);
+        await waitStepGate();
+
+        setPipelineStep(4, `Крок 4: Модуляція. 8 світлових імпульсів прямують оптоволоконним каналом до Приймача.`);
+        state.rxCurrentBits = '';
+
+        for (let bitPos = 0; bitPos < 8; bitPos++) {
+          const bit = Number(item.bits[bitPos]);
+          sentBits++;
+          statBit.textContent = bit === 1 ? '1 (АКТИВНИЙ)' : '0 (БАЗОВИЙ)';
+          statProgress.textContent = `${sentBits} / ${totalBits}`;
+          sound.playBit(bit);
+
+          await new Promise(resolve => {
+            firePulse(bit, () => {
+              state.rxCurrentBits += String(bit);
+              drawRxScreen();
+              resolve();
+            });
+          });
+          await new Promise(r => setTimeout(r, 85 / state.speed));
+        }
+
+        rxRawBytes.push(item.byte);
+        state.rxText = decoder.decode(new Uint8Array(rxRawBytes), { stream: true });
+        sound.playByteComplete();
+        drawRxScreen();
+      }
+
+      setPipelineStep(5, `Крок 5: Приймач декодував усі ${bytes.length} байтів та відновив слово «${state.rxText}».`);
+      statBit.textContent = 'ЗАВЕРШЕНО';
+      setTransmissionBusy(false);
+    });
+
+    // --- TRANSMIT MODE 2: PIXEL MATRIX 8x8 ---
+    document.getElementById('btn-send-pixels').addEventListener('click', async () => {
+      if (state.isTransmitting) return;
+      setTransmissionBusy(true);
+      state.rxPixels = Array.from({ length: 8 }, () => Array(8).fill('#000000'));
+      state.rxPixelRow = 0;
+      drawRxScreen();
+
+      setPipelineStep(1, 'Крок 1: Зчитано 8×8 піксельну матрицю (64 клітинки) з 3D-панелі Передавача.');
+      await waitStepGate();
+
+      setPipelineStep(2, `Крок 2: Кодування кольору кожної клітинки у ${state.colorMode === 'bw' ? '1-бітний' : '3-бітний RGB'} формат.`);
+      await waitStepGate();
+
+      const totalCells = 64;
+      let sent = 0;
+
+      for (let r = 0; r < 8; r++) {
+        state.rxPixelRow = r;
+        statCurrentItem.textContent = `Рядок ${r + 1} / 8`;
+        const rowBits = pixelGridData[r].map(col => colorToBits(col)).join('');
+
+        setPipelineStep(3, `Крок 3: Рядок ${r + 1} перетворено на бітовий пакет: ${rowBits}`);
+        if (r === 0) await waitStepGate();
+
+        setPipelineStep(4, `Крок 4: Потокова передача рядка ${r + 1} світловими імпульсами...`);
+        for (let c = 0; c < 8; c++) {
+          const col = pixelGridData[r][c];
+          const bits = colorToBits(col);
+          const mainBit = bits.includes('1') ? 1 : 0;
+          sent++;
+          statBit.textContent = mainBit === 1 ? `1 (${bits})` : `0 (${bits})`;
+          statProgress.textContent = `${sent} / ${totalCells} пікс.`;
+          sound.playBit(mainBit);
+
+          await new Promise(resolve => {
+            firePulse(mainBit, () => {
+              state.rxPixels[r][c] = col;
+              drawRxScreen();
+              resolve();
+            });
+          });
+          await new Promise(rDelay => setTimeout(rDelay, 35 / state.speed));
+        }
+        sound.playByteComplete();
+      }
+
+      state.rxPixelRow = -1;
+      drawRxScreen();
+      setPipelineStep(5, 'Крок 5: Усі 8 рядків декодовано. Піксельне зображення повністю відновлено на Приймачі.');
+      statBit.textContent = 'ЗАВЕРШЕНО';
+      setTransmissionBusy(false);
+    });
+
+    // --- TRANSMIT MODE 3: AUDIO WAVE (ADC -> DAC) ---
+    document.getElementById('btn-send-audio').addEventListener('click', async () => {
+      if (state.isTransmitting) return;
+      setTransmissionBusy(true);
+      state.rxSamples = [];
+      drawRxScreen();
+
+      setPipelineStep(1, `Крок 1: Аналоговий звуковий сигнал (${state.freq} Гц) подано на вхід АЦП.`);
+      sound.playTone(state.waveType, state.freq, 0.45);
+      await waitStepGate();
+
+      setPipelineStep(2, `Крок 2: Дискретизація — хвилю нарізано на ${SAMPLE_COUNT} вертикальних часових відліків.`);
+      await waitStepGate();
+
+      setPipelineStep(3, 'Крок 3: Квантування — кожен рівень амплітуди округлено до 4-бітного двійкового числа (0000–1111).');
+      await waitStepGate();
+
+      setPipelineStep(4, 'Крок 4: Модуляція — 64 біти (16 відліків × 4 біти) передаються по оптоволокну.');
+      const totalBits = SAMPLE_COUNT * 4;
+      let sent = 0;
+
+      for (let i = 0; i < SAMPLE_COUNT; i++) {
+        const val = state.samples[i];
+        const bits = val.toString(2).padStart(4, '0');
+        statCurrentItem.textContent = `Відлік #${i + 1}: ${val} (${bits})`;
+
+        for (let b = 0; b < 4; b++) {
+          const bit = Number(bits[b]);
+          sent++;
+          statBit.textContent = bit === 1 ? '1 (АКТИВНИЙ)' : '0 (БАЗОВИЙ)';
+          statProgress.textContent = `${sent} / ${totalBits}`;
+          sound.playBit(bit);
+
+          await new Promise(resolve => {
+            firePulse(bit, () => {
+              if (b === 3) {
+                state.rxSamples.push(val);
+                state.speakerPulse = 1.0;
+                drawRxScreen();
+              }
+              resolve();
+            });
+          });
+          await new Promise(rDelay => setTimeout(rDelay, 30 / state.speed));
+        }
+      }
+
+      setPipelineStep(5, 'Крок 5: ЦАП на Приймачі відновив сходинкову хвилю та відтворив її на 3D-динаміку.');
+      sound.playTone(state.waveType, state.freq, 0.7);
+      state.speakerPulse = 1.6;
+      statBit.textContent = 'ЗАВЕРШЕНО';
+      setTransmissionBusy(false);
+    });
+
+    // =========================================================================
+    // 10. MODE SWITCHING & UTILITY BUTTONS
+    // =========================================================================
+    function switchMode(modeNum) {
+      if (state.isTransmitting) return;
+      state.mode = modeNum;
+
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        t.classList.toggle('active', Number(t.dataset.mode) === modeNum);
+      });
+
+      document.getElementById('panel-mode-1').classList.toggle('hidden', modeNum !== 1);
+      document.getElementById('panel-mode-2').classList.toggle('hidden', modeNum !== 2);
+      document.getElementById('panel-mode-3').classList.toggle('hidden', modeNum !== 3);
+
+      mode1Group.visible = modeNum === 1;
+      mode2Group.visible = modeNum === 2;
+      mode3Group.visible = modeNum === 3;
+      speakerGroup.visible = modeNum === 3;
+
+      const s2Title = document.getElementById('step2-title');
+      const s2Desc = document.getElementById('step2-desc');
+      if (modeNum === 1) {
+        s2Title.textContent = 'Кодування в таблицю';
+        s2Desc.textContent = 'Символи у байти ASCII/UTF-8';
+      } else if (modeNum === 2) {
+        s2Title.textContent = 'Розбиття на пікселі';
+        s2Desc.textContent = 'Координати та колір у матриці 8×8';
+      } else {
+        s2Title.textContent = 'Дискретизація та квантування';
+        s2Desc.textContent = 'Нарізка хвилі на 16 відліків';
+      }
+
+      setPipelineStep(0, 'Готово до передачі. Налаштуйте дані ліворуч та натисніть кнопку запуску.');
+      statBit.textContent = '—';
+      statProgress.textContent = '0 / 0';
+      statCurrentItem.textContent = '—';
+      drawRxScreen();
+      sound.playClick();
+    }
+
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchMode(Number(tab.dataset.mode)));
+    });
+
+    document.getElementById('cam-overview').addEventListener('click', () => flyCameraTo([0, 6.4, 16.5], [0, 1.35, 0]));
+    document.getElementById('cam-tx').addEventListener('click', () => flyCameraTo([-5.4, 3.3, 6.4], [-6.2, 1.5, -0.3]));
+    document.getElementById('cam-rx').addEventListener('click', () => flyCameraTo([5.4, 3.3, 6.4], [6.2, 1.6, -0.2]));
+
+    document.getElementById('btn-sound').addEventListener('click', (e) => {
+      sound.enabled = !sound.enabled;
+      e.target.classList.toggle('active', sound.enabled);
+      e.target.textContent = sound.enabled ? 'Звук: Увімк.' : 'Звук: Вимк.';
+    });
+
+    // =========================================================================
+    // 11. ANIMATION LOOP (60 FPS)
+    // =========================================================================
+    const clock = new THREE.Clock();
+    const micBuffer = new Uint8Array(128);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.getElapsedTime();
+
+      if (camAnim) {
+        camAnim.progress += dt * 2.2;
+        const t = Math.min(1, camAnim.progress);
+        const ease = 1 - Math.pow(1 - t, 3);
+        camera.position.lerpVectors(camAnim.startPos, camAnim.endPos, ease);
+        controls.target.lerpVectors(camAnim.startTarget, camAnim.endTarget, ease);
+        if (t >= 1) camAnim = null;
+      }
+
+      controls.update();
+
+      // Gentle drift for floating particles
+      particles.rotation.y = elapsed * 0.012;
+      particles.rotation.x = Math.sin(elapsed * 0.06) * 0.03;
+
+      // Mode 1: Smoothly animate 8 toggle switches & warm amber filament glow
+      for (let i = 0; i < 8; i++) {
+        const u = bitUnits[i];
+        const targetAngle = u.targetBit === 1 ? -0.52 : 0.52;
+        u.currentAngle += (targetAngle - u.currentAngle) * Math.min(1, dt * 14);
+        u.leverPivot.rotation.x = u.currentAngle;
+
+        const targetEmissive = u.targetBit === 1 ? 1.45 : 0.02;
+        u.filamentMat.emissiveIntensity += (targetEmissive - u.filamentMat.emissiveIntensity) * Math.min(1, dt * 12);
+        u.leverTip.material.emissiveIntensity = u.targetBit === 1 ? 0.6 : 0.08;
+      }
+
+      // Mode 3: Live Mic Waveform + Speaker Cone Vibration
+      if (state.mode === 3 && state.micActive && state.micAnalyser) {
+        state.micAnalyser.getByteTimeDomainData(micBuffer);
+        updateAnalogWave3D(micBuffer);
+      }
+
+      if (state.speakerPulse > 0.01) {
+        const vib = Math.sin(elapsed * 45) * 0.06 * state.speakerPulse;
+        speakerCone.position.z = 0.45 + vib;
+        speakerRing.scale.setScalar(1 + Math.abs(vib) * 0.8);
+        state.speakerPulse *= Math.pow(0.25, dt);
+      } else {
+        speakerCone.position.z = 0.45;
+        speakerRing.scale.setScalar(1);
+      }
+
+      // Update flying light pulses along cable
+      for (let i = activePulses.length - 1; i >= 0; i--) {
+        const p = activePulses[i];
+        p.t += dt * p.speed;
+        if (p.t >= 1) {
+          scene.remove(p.mesh);
+          activePulses.splice(i, 1);
+          if (p.onArrive) p.onArrive();
+        } else {
+          p.mesh.position.copy(cableCurve.getPointAt(p.t));
+        }
+      }
+
+      fiberCoreMat.opacity = state.isTransmitting ? 0.35 + Math.sin(elapsed * 10) * 0.08 : 0.22;
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateTextPreview();
+    applyPixelPreset('heart');
+    updateAnalogWave3D();
+    drawRxScreen();
+    animate();
+  </script>
+</body>
+</html>

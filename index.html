@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uk" class="dark">
 <head>
   <meta charset="UTF-8" />
@@ -39,9 +39,6 @@
   <!-- KaTeX (формули) та Prism.js (підсвітка коду) — стилі -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
-
-  <!-- Google Model-Viewer (3D-тренажер будови комп'ютера) -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
   <style>
     /* ============================ БАЗА ============================ */
@@ -279,65 +276,6 @@
     .toc-link.active { color: #6366f1; border-color: #6366f1; }
     html.dark .toc-link.active { color: #a5b4fc; border-color: #818cf8; }
 
-    /* ===================== 3D-ТРЕНАЖЕР (<model-viewer> + HOTSPOTS) ===================== */
-    model-viewer {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      --poster-color: transparent;
-      outline: none;
-    }
-    /* Важливо: на самому <button slot="hotspot-..."> НЕ задаємо transform,
-       бо <model-viewer> позиціонує кожен маркер через inline transform: translate3d(...) */
-    .mv-hotspot {
-      border: 0;
-      padding: 0;
-      background: transparent;
-      cursor: pointer;
-      outline: none;
-    }
-    .mv-hotspot-dot {
-      position: relative;
-      width: 30px;
-      height: 30px;
-      border-radius: 9999px;
-      border: 2px solid #fff;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: #fff;
-      font-family: Consolas, "Fira Code", monospace;
-      font-size: 12px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.55);
-      transform: translate(-50%, -50%) scale(1);
-      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    }
-    .mv-hotspot-dot::after {
-      content: "";
-      position: absolute;
-      inset: -6px;
-      border-radius: 9999px;
-      border: 2px solid rgba(99, 102, 241, 0.75);
-      animation: hotspotPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-      pointer-events: none;
-    }
-    .mv-hotspot:hover .mv-hotspot-dot,
-    .mv-hotspot.is-selected .mv-hotspot-dot {
-      transform: translate(-50%, -50%) scale(1.24);
-      background: linear-gradient(135deg, #f59e0b, #ea580c);
-      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.65);
-    }
-    .mv-hotspot.is-selected .mv-hotspot-dot::after {
-      border-color: rgba(245, 158, 11, 0.9);
-    }
-    @keyframes hotspotPulse {
-      0% { transform: scale(0.85); opacity: 0.95; }
-      75% { transform: scale(1.55); opacity: 0; }
-      100% { transform: scale(1.55); opacity: 0; }
-    }
-
     @media print {
       header, #hubBar, #hubSidebar, #tocPane, #readerNav, footer { display: none !important; }
       body { background: #fff !important; color: #000 !important; }
@@ -368,10 +306,11 @@
 
       <!-- Динамічні посилання та інструменти -->
       <div class="flex items-center gap-2">
-        <a href="#/projects" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-tech">
-          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-          <span>Мої проєкти</span>
+        <a href="#/simulators" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-amber-500/50 hover:text-amber-600 dark:hover:text-amber-400 transition-all font-tech">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>Симулятори</span>
         </a>
+        $1
         <a href="https://www.classtime.com/uk/" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-colors">
           <span class="w-2 h-2 rounded-full bg-sky-500"></span>ClassTime<span class="text-zinc-400 text-[10px]">↗</span>
         </a>
@@ -436,6 +375,9 @@
           <div class="flex flex-wrap gap-3 pt-1">
             <a href="#/hub" class="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 transition-all">
               Увійти до Навчального хабу →
+            </a>
+            <a href="#/simulators" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/15 transition-all font-tech">
+              Симулятори 🧪
             </a>
             <a href="#/projects" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-tech">
               Мої авторські проєкти ⚡
@@ -564,7 +506,7 @@
           </h2>
 
           <p class="text-base sm:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl mx-auto">
-            Шкільні підручники, покрокові конспекти, 3D-тренажер заліза та практичні симулятори — усе відкрито та структуровано за твоїм класом.
+            Шкільні підручники, покрокові конспекти, інтерактивні 3D-лабораторії та практичні симулятори — усе відкрито та структуровано за твоїм класом.
           </p>
         </div>
 
@@ -586,6 +528,11 @@
           <a href="#/hub" id="portalMainEnterBtn" class="portal-btn-pulse w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 text-white font-bold text-base font-tech flex items-center justify-center gap-3">
             <span>Увійти в Навчальний хаб</span>
             <span class="text-xl">→</span>
+          </a>
+
+          <a href="#/simulators" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:border-amber-500/60 text-sm font-bold font-tech transition-all flex items-center justify-center gap-2 backdrop-blur-sm">
+            <span>Симулятори</span>
+            <span>→</span>
           </a>
 
           <a href="#/projects" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:border-indigo-500/50 text-sm font-bold font-tech transition-all flex items-center justify-center gap-2 backdrop-blur-sm">
@@ -616,22 +563,27 @@
   <!-- ======================================================================
        ОКРЕМИЙ ПРОСТІР: МОЇ АВТОРСЬКІ ПРОЄКТИ
        ====================================================================== -->
-  <div id="projectsView" class="hidden flex-1 flex flex-col view-enter">
+  $1
+
+  <!-- ======================================================================
+       ОКРЕМИЙ ПРОСТІР: ІНТЕРАКТИВНІ СИМУЛЯТОРИ
+       ====================================================================== -->
+  <div id="simulatorsView" class="hidden flex-1 flex flex-col view-enter">
     <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <a href="#/" class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline mb-2 font-tech">← На головну</a>
-          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Авторські проєкти та цифрові сервіси</h1>
-          <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">Інтерактивні застосунки, навчальні інструменти та розробки з відкритим кодом.</p>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Інтерактивні симулятори</h1>
+          <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">3D-лабораторії та віртуальні стенди для вивчення мереж, машинного коду й архітектури комп'ютера.</p>
         </div>
-        <a href="https://github.com/dark1604?tab=repositories" target="_blank" rel="noopener noreferrer" class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-tech hover:opacity-90 transition-opacity">
-          <span>GitHub репозиторії</span>
-          <span>↗</span>
+        <a href="#/hub" class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white font-tech hover:bg-indigo-500 transition-colors">
+          <span>До Навчального хабу</span>
+          <span>→</span>
         </a>
       </div>
     </div>
     <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
-      <div id="projectsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div id="simulatorsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
   </div>
 
@@ -659,54 +611,6 @@
        ====================================================================== -->
 
   <!-- ============================ ІНФОРМАТИКА ============================ -->
-<script type="text/markdown" data-id="cs-3d-hardware">
-# Інтерактивний 3D-тренажер: Будова комп'ютера
-
-Сучасний персональний комп'ютер — це модульна інженерна система, де кожен вузол виконує свою роль і обмінюється даними на швидкостях десятків гігабайтів за секунду. Досліджуйте будову **системного блока** та **материнської плати ROG** у 3D-тренажері нижче: обертайте модель мишкою, масштабуйте коліщатком і натискайте на пульсуючі маркери!
-
-```widget
-pc3d
-```
-
-## Ключові вузли апаратного забезпечення
-
-| Вузол | Технічна назва | Основне призначення | Типові характеристики |
-| :--- | :--- | :--- | :--- |
-| **Процесор** | `CPU` (Central Processing Unit) | Виконує арифметико-логічні операції та керує всіма пристроями | $6\text{–}16$ ядер, частота $3{,}5\text{–}5{,}5\text{ ГГц}$ |
-| **Оперативна пам'ять** | `RAM` (DDR4 / DDR5) | Тимчасове надшвидке сховище для запущених програм і даних | $16\text{–}32\text{ ГБ}$, пропускна здатність $>50\text{ ГБ/с}$ |
-| **Відеокарта** | `GPU` (Graphics Processing Unit) | Паралельні обчислення для 3D-графіки, ігор, монтажу та ШІ | Тисячі ядер CUDA/Stream, пам'ять `GDDR6` |
-| **Материнська плата** | `Motherboard` (ATX / mATX) | З'єднує процесор, пам'ять, накопичувачі й периферію шинами `PCIe` | Сокет `LGA 1700` / `AM5`, лінії `PCIe 4.0/5.0` |
-| **Твердотілий накопичувач** | `SSD M.2 NVMe` | Довготривале зберігання ОС, програм і файлів без рухомих частин | Швидкість читання $3500\text{–}7000\text{ МБ/с}$ |
-| **Блок живлення** | `PSU` (Power Supply Unit) | Перетворює змінну напругу $220\text{ В}$ на постійну $+12\text{ В}$, $+5\text{ В}$, $+3{,}3\text{ В}$ | Потужність $550\text{–}850\text{ Вт}$, ККД `80 PLUS Gold` |
-
-## Пропускна здатність оперативної пам'яті
-
-Теоретична пропускна здатність шини пам'яті обчислюється за формулою:
-
-$$B = \frac{f_{\text{еф}} \cdot w \cdot c}{8}$$
-
-де $f_{\text{еф}}$ — ефективна частота пам'яті ($\text{МГц}$), $w = 64\text{ біт}$ — ширина одного каналу, $c$ — кількість каналів ($c = 2$ для **Dual Channel**), а ділення на $8$ переводить біти у байти.
-
-> **Приклад.** Для двох планок `DDR4-3200` у двоканальному режимі ($c=2$):
-> $$B = \frac{3200 \cdot 64 \cdot 2}{8} = 51\,200\text{ МБ/с} \approx 51{,}2\text{ ГБ/с}$$
-> Саме тому дві планки по $8\text{ ГБ}$ у слотах `A2 + B2` працюють майже вдвічі швидше за одну планку на $16\text{ ГБ}$!
-
-## Як дізнатися характеристики ПК за допомогою Python
-
-```python
-import platform
-import os
-
-print("Операційна система:", platform.system(), platform.release())
-print("Архітектура процесора:", platform.machine())
-print("Модель процесора:", platform.processor())
-print("Логічних ядер (потоків):", os.cpu_count())
-```
-
-```quiz
-{"q":"У які слоти материнської плати потрібно встановити дві планки ОЗП (RAM), щоб увімкнути двоканальний режим (Dual Channel)?","options":["У два сусідні слоти поспіль (A1 та A2)","Через один слот — зазвичай у другий і четвертий від процесора (A2 та B2)","У будь-який один слот","У слот PCIe x16"],"answer":1,"explain":"Для активації Dual Channel два модулі пам'яті встановлюють у різні канали (зазвичай слоти A2 та B2 — через один від сокета процесора)."}
-```
-</script>
 
 <script type="text/markdown" data-id="cs-algorithms-5">
 # Алгоритми та виконавці
@@ -1654,16 +1558,39 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       desc: "Освітній веб-проєкт з інформаційної гігієни, медіаграмотності, критичного мислення та захисту від дезінформації й цифрового перевантаження.",
       tags: ["Інфогігієна", "Кібербезпека", "Медіаграмотність", "EdTech"],
       icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+    }
+  ];
+
+  const MY_SIMULATORS = [
+    {
+      title: "OneClick Network Lab",
+      badge: "3D WebGL · Мережі",
+      tone: "sky",
+      url: "./simulators/one-click-network-lab/index.html",
+      repo: "LAN → WAN · Three.js",
+      actionLabel: "Запустити симулятор ↗",
+      desc: "Інтерактивний 3D-симулятор шляху одного кліку: локальна мережа (LAN), глобальний Інтернет (WAN), DNS, NAT, маршрутизація пакетів, VPN-тунелювання та брандмауер.",
+      tags: ["Three.js", "LAN / WAN", "DNS / NAT", "VPN", "3D"]
     },
     {
-      title: "3D-лабораторія будови ПК",
-      badge: "3D WebGL · Інформатика",
+      title: "Machine Language 3D",
+      badge: "3D Лабораторія · Кодування",
+      tone: "violet",
+      url: "./simulators/machine-language-3d/index.html",
+      repo: "Сигнали · Двійковий код",
+      actionLabel: "Запустити симулятор ↗",
+      desc: "Візуальний перекладач на мову машин: дослідження кодування сигналів, бінарної логіки та перетворення команд у машинні інструкції.",
+      tags: ["Машинний код", "Сигнали", "Бінарна логіка", "3D"]
+    },
+    {
+      title: "PC Architecture Sim",
+      badge: "Симулятор · Архітектура ПК",
       tone: "amber",
-      internalHash: "#/hub/cs/cs-3d-hardware",
-      repo: "Model-Viewer · GLB",
-      desc: "Інтерактивний 3D-тренажер системного блока та материнської плати ASUS ROG із живими маркерами вузлів (CPU, GPU, RAM, M.2 NVMe, VRM, PCH).",
-      tags: ["3D", "WebGL", "Апаратне забезпечення", "Тренажер"],
-      icon: "M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"
+      url: "./simulators/pc-architecture-sim/index.html",
+      repo: "KiberOS 12 · CPU / RAM / SSD",
+      actionLabel: "Запустити симулятор ↗",
+      desc: "Логістичний центр всередині ПК: віртуальна ОС KiberOS 12, інтерактивна материнська плата X-Ray, режим Swap та покрокова мікроархітектура процесора (Fetch → Decode → Execute).",
+      tags: ["CPU / RAM / SSD", "X-Ray", "Мікроархітектура", "Three.js"]
     }
   ];
 
@@ -1674,7 +1601,6 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
      ========================================================================== */
   const DEMO_ARTICLES = [
     // Інформатика
-    { id: "cs-3d-hardware",    subject: "cs", grade: 8,   type: "lesson",  kind: "3D-тренажер", time: "15 хв", title: "Будова комп'ютера (3D-тренажер)", summary: "Інтерактивні 3D-моделі системного блока та материнської плати ROG із маркерами вузлів.", tags: ["3D", "Апаратне забезпечення", "CPU", "GPU", "RAM", "Материнська плата"] },
     { id: "cs-algorithms-5",   subject: "cs", grade: 5,  type: "lesson",  time: "8 хв",  title: "Алгоритми та виконавці", summary: "Що таке алгоритм, його властивості та перша програма з Черепашкою.", tags: ["Алгоритми", "Turtle"] },
     { id: "python-algo-sort",  subject: "cs", grade: 9,  type: "lesson",  time: "15 хв", title: "Пошук і сортування в Python", summary: "Big-O, бінарний пошук та оптимізоване сортування бульбашкою.", tags: ["Python", "Big-O"] },
     { id: "js-dom-events",     subject: "cs", grade: 10, type: "lesson",  time: "12 хв", title: "DOM-дерево та події в JavaScript", summary: "querySelector, делегування подій і інтерфейс як функція від стану.", tags: ["JavaScript", "DOM"] },
@@ -2105,527 +2031,59 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       return box;
     }
 
-    if (kind === "pc3d") {
-      const MODELS = {
-        gaming_pc: {
-          label: "🖥 Системний блок",
-          src: "models/gaming_pc.glb",
-          altSrc: "models/gaming setup1.glb",
-          subtitle: "Системний блок ПК із прозорою скляною панеллю",
-          defaultOrbit: "25deg 78deg 90%",
-          expectedZ: -3.5,
-          hotspots: [
-            {
-              id: "cpu-cooler", num: 1, pos: "-1.61m 2.69m -3.36m", norm: "0m 0m 1m", rel: [-0.14, 0.15, -0.22], x: 43, y: 31, orbit: "18deg 74deg 75%",
-              title: "Процесор (CPU) та кулер охолодження", tag: "CPU + Cooler", spec: "6–16 ядер · 3.5–5.5 ГГц · PWM",
-              desc: "Центральний процесор — головний обчислювальний вузол ПК, який виконує машинний код програм. Кулер із радіатором та вентилятором відводить тепло від кришки процесора."
-            },
-            {
-              id: "ram-ddr4", num: 2, pos: "-1.07m 2.71m -4.20m", norm: "0m 0m 1m", rel: [-0.06, 0.15, -0.39], x: 59, y: 30, orbit: "28deg 74deg 75%",
-              title: "Слоти оперативної пам'яті (RAM DDR4)", tag: "RAM DDR4 / DDR5", spec: "16–32 ГБ · Dual Channel",
-              desc: "Швидкодіюча енергозалежна пам'ять, у якій зберігаються запущені програми та дані поточної сесії. Працює у десятки разів швидше за накопичувачі, але очищується після вимкнення ПК."
-            },
-            {
-              id: "gpu-rtx", num: 3, pos: "-1.27m 1.95m -3.16m", norm: "0m 0m 1m", rel: [-0.09, 0.05, -0.19], x: 47, y: 54, orbit: "20deg 80deg 75%",
-              title: "Дискретна відеокарта (GPU)", tag: "GPU PCIe 4.0 x16", spec: "GDDR6 · Ray Tracing · CUDA",
-              desc: "Окрема плата з графічним процесором, власною відеопам'яттю VRAM і системою охолодження. Виконує побудову 3D-графіки, рендеринг відео та паралельні обчислення для задач штучного інтелекту."
-            },
-            {
-              id: "ssd-m2", num: 4, pos: "-1.16m 1.51m -4.30m", norm: "0m 0m 1m", rel: [-0.07, 0.00, -0.40], x: 46, y: 43, orbit: "24deg 78deg 75%",
-              title: "Твердотілий накопичувач SSD M.2 NVMe", tag: "SSD M.2 NVMe", spec: "PCIe 4.0 · 3500–7000 МБ/с",
-              desc: "Компактний енергонезалежний накопичувач на базі флеш-пам'яті, що встановлюється прямо в роз'єм M.2 на материнській платі. Забезпечує завантаження ОС за лічені секунди."
-            },
-            {
-              id: "psu-atx", num: 5, pos: "-0.93m 0.83m -2.89m", norm: "0m 0m 1m", rel: [-0.04, -0.09, -0.15], x: 37, y: 79, orbit: "15deg 86deg 80%",
-              title: "Блок живлення (PSU)", tag: "PSU ATX 80+ Gold", spec: "650–850 Вт · +12V / +5V / +3.3V",
-              desc: "Перетворює змінну напругу електромережі 220 В на стабілізовану постійну напругу (+12 В для процесора та відеокарти, +5 В і +3.3 В для накопичувачів та USB) і захищає систему від короткого замикання."
-            },
-            {
-              id: "case-airflow", num: 6, pos: "0.78m 2.35m -3.45m", norm: "1m 0m 0m", rel: [0.19, 0.11, -0.25], x: 75, y: 47, orbit: "42deg 76deg 82%",
-              title: "Корпусне охолодження та прозора панель", tag: "Airflow & Glass", spec: "120/140 мм ARGB PWM · Скло",
-              desc: "Корпусні вентилятори нагнітають холодне повітря всередину крізь пилові фільтри та виводять гаряче повітря назовні, підтримуючи оптимальну температуру всіх компонентів."
-            }
-          ]
-        },
-        motherboard: {
-          label: "🔌 Материнська плата ROG",
-          src: "models/rog_strix_motherboard.glb",
-          subtitle: "Материнська плата ASUS ROG Strix Z370-E Gaming (models/rog_strix_motherboard.glb)",
-          defaultOrbit: "-18deg 78deg 105%",
-          expectedZ: -7.24,
-          hotspots: [
-            {
-              id: "socket-lga", num: 1, pos: "0.69m 1.85m -7.75m", norm: "0m 0m 1m", rel: [0.05, 0.20, -0.33], x: 47, y: 33, orbit: "-8deg 74deg 85%",
-              title: "Процесорний сокет LGA", tag: "CPU Socket LGA", spec: "LGA 1151 / 1700 · Притискний механізм",
-              desc: "Спеціальний роз'єм у верхній частині материнської плати з сотнями позолочених пружинних контактів, куди встановлюється центральний процесор і фіксується металевою рамкою."
-            },
-            {
-              id: "dimm-ddr4", num: 2, pos: "2.80m 1.90m -6.55m", norm: "0m 0m 1m", rel: [0.32, 0.21, 0.45], x: 67, y: 33, orbit: "16deg 74deg 88%",
-              title: "Слоти оперативної пам'яті DDR4 DIMM", tag: "4× DDR4 DIMM", spec: "Канали A1/A2 та B1/B2",
-              desc: "Чотири 288-контактні слоти зі встановленими модулями ОЗП праворуч від процесора. Для двоканального режиму (Dual Channel) планки ставлять через один слот (A2 та B2)."
-            },
-            {
-              id: "pcie-slot", num: 3, pos: "0.15m -1.12m -7.55m", norm: "0m 0m 1m", rel: [-0.02, -0.11, -0.20], x: 45, y: 55, orbit: "-12deg 80deg 88%",
-              title: "Армований слот PCIe x16 (для GPU)", tag: "PCI Express x16", spec: "16 ліній PCIe · ASUS SafeSlot",
-              desc: "Головний високошвидкісний роз'єм розширення з металевим армуванням, підключений напряму до процесора. Призначений для встановлення дискретної відеокарти."
-            },
-            {
-              id: "m2-nvme", num: 4, pos: "0.21m -0.38m -7.68m", norm: "0m 0m 1m", rel: [-0.01, -0.04, -0.28], x: 51, y: 66, orbit: "-6deg 78deg 82%",
-              title: "Накопичувач Samsung 970 EVO у слоті M.2", tag: "M.2 Key-M NVMe", spec: "Форм-фактор 2280 · PCIe x4",
-              desc: "Високошвидкісний роз'єм M.2 під процесором, у який встановлено твердотілий накопичувач NVMe SSD без жодних кабелів SATA чи живлення."
-            },
-            {
-              id: "vrm-power", num: 5, pos: "-1.50m 2.36m -7.10m", norm: "0m 0m 1m", rel: [-0.24, 0.26, 0.09], x: 32, y: 26, orbit: "-26deg 72deg 90%",
-              title: "Радіатори живлення VRM та кожух I/O", tag: "VRM + I/O Shield", spec: "Фази DrMOS · Алюмінієвий радіатор",
-              desc: "Модуль регулювання напруги (VRM) ліворуч і зверху від сокета процесора. Знижує +12 В від блока живлення до точних ~1.2 В для ядер CPU; накритий масивними радіаторами ROG."
-            },
-            {
-              id: "chipset-pch", num: 6, pos: "2.56m -2.10m -7.44m", norm: "0m 0m 1m", rel: [0.29, -0.22, -0.13], x: 65, y: 72, orbit: "18deg 82deg 90%",
-              title: "Чіпсет материнської плати ROG (PCH)", tag: "Chipset (PCH)", spec: "Радіатор ROG · USB 3.2 · SATA 6 Гбіт/с",
-              desc: "Мікросхема системної логіки під великим фігурним радіатором із логотипом ROG праворуч унизу. Керує портами USB, роз'ємами SATA, звуковим трактом і мережевою картою."
-            }
-          ]
-        }
-      };
-
-      let curMode = "gaming_pc";
-      let curIdx = 0;
-      let autoRotate = true;
-      let calibrateMode = false;
-      let customBlobUrl = null;
-      let triedAltSrc = false;
-
-      box.className = "my-6 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg";
-      box.innerHTML = `
-        <!-- Верхня панель керування 3D-тренажером -->
-        <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-2" data-mode-tabs>
-            <button type="button" data-mode="gaming_pc" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all"></button>
-            <button type="button" data-mode="motherboard" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all"></button>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" data-toggle-rotate class="font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500/50 transition-colors">⟳ Автообертання: УВІМК</button>
-            <button type="button" data-toggle-calibrate class="font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-amber-500/50 transition-colors" title="Увімкніть і клікніть по 3D-моделі, щоб переставити активну точку">📍 Калібрувати точки</button>
-            <button type="button" data-reset-cam class="font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-500/50 transition-colors" title="Повернути камеру у вихідне положення">🎯 Камера</button>
-            <label class="font-tech text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500/20 cursor-pointer transition-colors" title="Підвантажити локальний .glb файл із комп'ютера">
-              📂 Свій .glb
-              <input type="file" accept=".glb,.gltf" data-glb-input class="hidden" />
-            </label>
-          </div>
-        </div>
-
-        <!-- 3D Viewport: <model-viewer> + інтерактивна fallback-схема -->
-        <div class="relative h-[430px] sm:h-[500px] w-full bg-gradient-to-b from-zinc-900 via-zinc-950 to-zinc-900 overflow-hidden select-none" data-viewport>
-          <div class="absolute inset-0 grid-pattern opacity-40 pointer-events-none"></div>
-
-          <!-- Підпис моделі та статус -->
-          <div class="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-            <span data-model-subtitle class="font-tech text-xs px-3 py-1 rounded-full bg-zinc-900/85 text-zinc-300 border border-zinc-700/80 backdrop-blur-sm"></span>
-            <span data-model-status class="font-tech text-[11px] px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 backdrop-blur-sm"></span>
-          </div>
-
-          <!-- Google <model-viewer> -->
-          <model-viewer
-            data-mv
-            src="models/gaming_pc.glb"
-            alt="3D-модель будови комп'ютера"
-            camera-controls
-            auto-rotate
-            rotation-per-second="18deg"
-            shadow-intensity="1"
-            exposure="1.05"
-            touch-action="pan-y"
-            class="w-full h-full relative z-10"
-          ></model-viewer>
-
-          <!-- Інтерактивний Fallback / Заглушка (показується, доки .glb файл ще не завантажено у папку models/) -->
-          <div data-fallback class="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
-            <div data-fallback-stage class="relative w-full max-w-[540px] aspect-[16/11] rounded-2xl border border-zinc-800/90 bg-zinc-900/75 backdrop-blur-sm shadow-2xl overflow-hidden transition-transform duration-200">
-              <div data-fallback-svg class="w-full h-full"></div>
-              <div data-fallback-hotspots class="absolute inset-0"></div>
-            </div>
-            <div class="mt-2.5 text-center text-xs text-zinc-400 max-w-xl px-2">
-              💡 <span>Інтерактивний прев'ю-стенд активний: натискайте на пульсуючі маркери <strong class="text-white">1–6</strong>! Коли файл <code class="font-tech text-indigo-300" data-expected-path>models/gaming_pc.glb</code> буде додано в репозиторій (або обрано кнопкою «📂 Свій .glb»), автоматично увімкнеться повноцінна 3D-сцена WebGL.</span>
-            </div>
-          </div>
-
-          <!-- Підказка керування камерою знизу сцени -->
-          <div class="absolute bottom-3 left-3 z-20 hidden sm:flex items-center gap-3 font-tech text-[11px] text-zinc-400 bg-zinc-900/80 px-3 py-1 rounded-full border border-zinc-800 pointer-events-none">
-            <span>🖱 ЛКМ — обертання</span>
-            <span>⚙ Коліщатко — масштаб</span>
-            <span>👆 Клік по маркеру — опис вузла</span>
-          </div>
-        </div>
-
-        <!-- Швидкий вибір вузлів (пігулки 1–6) -->
-        <div class="px-4 sm:px-5 py-3 bg-zinc-50 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 overflow-x-auto" data-node-pills></div>
-
-        <!-- Інформаційна картка обраного компонента -->
-        <div data-info-card class="p-5 sm:p-6 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all"></div>
-      `;
-
-      const mv = box.querySelector("[data-mv]");
-      const fallbackEl = box.querySelector("[data-fallback]");
-      const fallbackStage = box.querySelector("[data-fallback-stage]");
-      const fallbackSvg = box.querySelector("[data-fallback-svg]");
-      const fallbackHs = box.querySelector("[data-fallback-hotspots]");
-      const expectedPathEl = box.querySelector("[data-expected-path]");
-      const subtitleEl = box.querySelector("[data-model-subtitle]");
-      const statusEl = box.querySelector("[data-model-status]");
-      const pillsEl = box.querySelector("[data-node-pills]");
-      const infoCardEl = box.querySelector("[data-info-card]");
-      const rotateBtn = box.querySelector("[data-toggle-rotate]");
-      const calibrateBtn = box.querySelector("[data-toggle-calibrate]");
-      const resetCamBtn = box.querySelector("[data-reset-cam]");
-      const glbInput = box.querySelector("[data-glb-input]");
-
-      function buildFallbackBlueprint(mode) {
-        if (mode === "gaming_pc") {
-          return `
-            <svg viewBox="0 0 600 410" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="115" y="28" width="370" height="354" rx="18" fill="#09090b" stroke="#6366f1" stroke-width="2.5"/>
-              <rect x="132" y="44" width="305" height="250" rx="10" fill="#18181b" stroke="#3f3f46" stroke-width="1.5"/>
-              <rect x="152" y="58" width="215" height="215" rx="8" fill="#1e1b4b" fill-opacity="0.55" stroke="#818cf8" stroke-width="1.5"/>
-              <rect x="218" y="88" width="78" height="78" rx="12" fill="#312e81" stroke="#a5b4fc" stroke-width="2"/>
-              <circle cx="257" cy="127" r="28" fill="#1e1b4b" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 4"/>
-              <text x="257" y="131" text-anchor="middle" fill="#e0e7ff" font-family="Consolas, monospace" font-size="11" font-weight="bold">CPU FAN</text>
-              <rect x="338" y="84" width="8" height="82" rx="3" fill="#8b5cf6"/>
-              <rect x="351" y="84" width="8" height="82" rx="3" fill="#f59e0b"/>
-              <rect x="364" y="84" width="8" height="82" rx="3" fill="#8b5cf6"/>
-              <rect x="377" y="84" width="8" height="82" rx="3" fill="#f59e0b"/>
-              <rect x="235" y="172" width="86" height="20" rx="4" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
-              <text x="278" y="185" text-anchor="middle" fill="#a7f3d0" font-family="Consolas, monospace" font-size="9">M.2 NVMe SSD</text>
-              <rect x="165" y="200" width="245" height="54" rx="10" fill="#27272a" stroke="#f59e0b" stroke-width="2"/>
-              <circle cx="225" cy="227" r="18" fill="#18181b" stroke="#fbbf24" stroke-width="1.5"/>
-              <circle cx="345" cy="227" r="18" fill="#18181b" stroke="#fbbf24" stroke-width="1.5"/>
-              <text x="285" y="231" text-anchor="middle" fill="#fde68a" font-family="Consolas, monospace" font-size="11" font-weight="bold">GEFORCE RTX</text>
-              <rect x="132" y="302" width="185" height="64" rx="8" fill="#18181b" stroke="#52525b" stroke-width="2"/>
-              <text x="224" y="338" text-anchor="middle" fill="#a1a1aa" font-family="Consolas, monospace" font-size="12" font-weight="bold">PSU 750W 80+ GOLD</text>
-              <circle cx="456" cy="105" r="30" fill="#18181b" stroke="#38bdf8" stroke-width="2"/>
-              <circle cx="456" cy="185" r="30" fill="#18181b" stroke="#a855f7" stroke-width="2"/>
-              <circle cx="456" cy="265" r="30" fill="#18181b" stroke="#f59e0b" stroke-width="2"/>
-              <path d="M135 48 L245 48 L155 290 L135 290 Z" fill="white" fill-opacity="0.04"/>
-            </svg>
-          `;
-        }
-        return `
-          <svg viewBox="0 0 600 410" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="125" y="24" width="350" height="362" rx="14" fill="#111827" stroke="#8b5cf6" stroke-width="2.5"/>
-            <rect x="150" y="65" width="48" height="125" rx="6" fill="#27272a" stroke="#f43f5e" stroke-width="2"/>
-            <rect x="208" y="42" width="130" height="36" rx="6" fill="#27272a" stroke="#f43f5e" stroke-width="2"/>
-            <text x="273" y="64" text-anchor="middle" fill="#fda4af" font-family="Consolas, monospace" font-size="10" font-weight="bold">ROG VRM HEATSINK</text>
-            <rect x="232" y="96" width="96" height="96" rx="10" fill="#1e293b" stroke="#6366f1" stroke-width="2.5"/>
-            <rect x="248" y="112" width="64" height="64" rx="4" fill="#0f172a" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <text x="280" y="148" text-anchor="middle" fill="#c7d2fe" font-family="Consolas, monospace" font-size="11" font-weight="bold">LGA SOCKET</text>
-            <rect x="378" y="75" width="12" height="132" rx="3" fill="#312e81" stroke="#818cf8"/>
-            <rect x="396" y="75" width="12" height="132" rx="3" fill="#4c1d95" stroke="#c084fc"/>
-            <rect x="414" y="75" width="12" height="132" rx="3" fill="#312e81" stroke="#818cf8"/>
-            <rect x="432" y="75" width="12" height="132" rx="3" fill="#4c1d95" stroke="#c084fc"/>
-            <rect x="175" y="218" width="215" height="18" rx="4" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
-            <text x="282" y="230" text-anchor="middle" fill="#fde68a" font-family="Consolas, monospace" font-size="9" font-weight="bold">PCIe 4.0 x16 SAFESLOT</text>
-            <rect x="175" y="305" width="195" height="14" rx="3" fill="#1e293b" stroke="#64748b"/>
-            <rect x="235" y="258" width="145" height="28" rx="6" fill="#064e3b" stroke="#34d399" stroke-width="2"/>
-            <text x="307" y="276" text-anchor="middle" fill="#a7f3d0" font-family="Consolas, monospace" font-size="10" font-weight="bold">M.2 NVMe SHIELD</text>
-            <rect x="352" y="268" width="95" height="75" rx="10" fill="#18181b" stroke="#ec4899" stroke-width="2"/>
-            <text x="399" y="309" text-anchor="middle" fill="#f9a8d4" font-family="Consolas, monospace" font-size="11" font-weight="bold">ROG CHIPSET</text>
-          </svg>
-        `;
-      }
-
-      function selectHotspot(idx) {
-        const cfg = MODELS[curMode];
-        curIdx = Math.max(0, Math.min(cfg.hotspots.length - 1, idx));
-        const h = cfg.hotspots[curIdx];
-
-        $$("[data-hs-idx]", box).forEach((btn) => {
-          btn.classList.toggle("is-selected", Number(btn.dataset.hsIdx) === curIdx);
-        });
-
-        $$("[data-pill-idx]", pillsEl).forEach((btn) => {
-          const active = Number(btn.dataset.pillIdx) === curIdx;
-          btn.className = `px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-            active
-              ? "bg-amber-500 text-zinc-950 shadow-sm"
-              : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50"
-          }`;
-        });
-
-        if (mv && h.orbit) {
-          try {
-            mv.cameraOrbit = h.orbit;
-          } catch (e) {}
-        }
-
-        infoCardEl.innerHTML = `
-          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-            <div class="space-y-1.5">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-tech text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-zinc-950">Вузол #${h.num}</span>
-                <span class="font-tech text-xs px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20">${esc(h.tag)}</span>
-                <span class="font-tech text-xs px-2.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${esc(h.spec)}</span>
-                <span class="font-tech text-[11px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80 text-zinc-400" title="3D-координати маркера">${esc(h.pos)}</span>
-              </div>
-              <h4 class="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-100">${esc(h.title)}</h4>
-              <p class="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">${esc(h.desc)}</p>
-            </div>
-            <div class="flex sm:flex-col gap-1.5 shrink-0">
-              <button type="button" data-prev-hs class="font-tech text-xs px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700">← Попередній</button>
-              <button type="button" data-next-hs class="font-tech text-xs px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700">Наступний →</button>
-            </div>
-          </div>
-        `;
-
-        infoCardEl.querySelector("[data-prev-hs]")?.addEventListener("click", () => {
-          selectHotspot((curIdx - 1 + cfg.hotspots.length) % cfg.hotspots.length);
-        });
-        infoCardEl.querySelector("[data-next-hs]")?.addEventListener("click", () => {
-          selectHotspot((curIdx + 1) % cfg.hotspots.length);
-        });
-      }
-
-      function renderMode(mode, customSrc = null) {
-        curMode = mode;
-        curIdx = 0;
-        triedAltSrc = false;
-        const cfg = MODELS[mode];
-
-        $$("[data-mode]", box).forEach((btn) => {
-          const m = btn.dataset.mode;
-          btn.textContent = MODELS[m].label;
-          const active = m === mode;
-          btn.className = `px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            active
-              ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/30"
-              : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50"
-          }`;
-        });
-
-        subtitleEl.textContent = cfg.subtitle;
-        expectedPathEl.textContent = cfg.src;
-
-        // Внутрішній <span class="mv-hotspot-dot"> гарантує, що CSS transform
-        // НЕ перезаписує inline transform: translate3d(...) від <model-viewer>
-        mv.innerHTML = cfg.hotspots
-          .map(
-            (h, i) => `
-          <button
-            type="button"
-            slot="hotspot-${esc(h.id)}"
-            data-position="${esc(h.pos)}"
-            data-normal="${esc(h.norm)}"
-            data-hs-idx="${i}"
-            class="mv-hotspot"
-            title="${esc(h.title)}"
-            aria-label="${esc(h.title)}"
-          ><span class="mv-hotspot-dot">${h.num}</span></button>`
-          )
-          .join("");
-
-        fallbackSvg.innerHTML = buildFallbackBlueprint(mode);
-        fallbackHs.innerHTML = cfg.hotspots
-          .map(
-            (h, i) => `
-          <button
-            type="button"
-            data-hs-idx="${i}"
-            style="left:${h.x}%;top:${h.y}%"
-            class="mv-hotspot !absolute"
-            title="${esc(h.title)}"
-            aria-label="${esc(h.title)}"
-          ><span class="mv-hotspot-dot">${h.num}</span></button>`
-          )
-          .join("");
-
-        pillsEl.innerHTML = cfg.hotspots
-          .map(
-            (h, i) => `
-          <button type="button" data-pill-idx="${i}">
-            <span class="font-tech font-bold">${h.num}.</span>
-            <span>${esc(h.tag)}</span>
-          </button>`
-          )
-          .join("");
-
-        fallbackEl.classList.remove("hidden");
-        statusEl.textContent = "Завантаження 3D-моделі…";
-        statusEl.className = "font-tech text-[11px] px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 backdrop-blur-sm";
-
-        mv.setAttribute("src", customSrc || cfg.src);
-        mv.cameraOrbit = cfg.defaultOrbit;
-
-        selectHotspot(0);
-      }
-
-      mv.addEventListener("load", () => {
-        fallbackEl.classList.add("hidden");
-        statusEl.textContent = "✓ 3D GLB завантажено";
-        statusEl.className = "font-tech text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-sm";
-
-        // Якщо підвантажено іншу 3D-модель з іншим масштабом/центром — автоматично масштабуємо маркери за її габаритами
-        try {
-          const c = mv.getBoundingBoxCenter();
-          const s = mv.getDimensions();
-          const cfg = MODELS[curMode];
-          if (c && s && Math.abs(c.z - (cfg.expectedZ || 0)) > 2.5 && curMode !== "gaming_pc") {
-            cfg.hotspots.forEach((h) => {
-              if (!h.rel) return;
-              const nx = (c.x + h.rel[0] * s.x).toFixed(2);
-              const ny = (c.y + h.rel[1] * s.y).toFixed(2);
-              const nz = (c.z + h.rel[2] * s.z).toFixed(2);
-              h.pos = `${nx}m ${ny}m ${nz}m`;
-              mv.updateHotspot({ name: `hotspot-${h.id}`, position: h.pos });
-            });
-          }
-        } catch (e) {}
-      });
-
-      mv.addEventListener("error", () => {
-        const cfg = MODELS[curMode];
-        if (!triedAltSrc && cfg.altSrc && !customBlobUrl) {
-          triedAltSrc = true;
-          mv.setAttribute("src", cfg.altSrc);
-          return;
-        }
-        fallbackEl.classList.remove("hidden");
-        statusEl.textContent = "Інтерактивний стенд (GLB-заглушка)";
-      });
-
-      // Клік по 3D-поверхні в режимі калібрування (або з клавішею Shift) переставляє активну точку прямо під курсор
-      mv.addEventListener("click", (e) => {
-        if (e.target.closest("[data-hs-idx]")) return;
-        if (!calibrateMode && !e.shiftKey) return;
-        if (typeof mv.positionAndNormalFromPoint !== "function") return;
-        const hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY);
-        if (!hit) return;
-        const cfg = MODELS[curMode];
-        const h = cfg.hotspots[curIdx];
-        const p = hit.position;
-        const n = hit.normal;
-        h.pos = `${p.x.toFixed(2)}m ${p.y.toFixed(2)}m ${p.z.toFixed(2)}m`;
-        h.norm = `${n.x.toFixed(2)}m ${n.y.toFixed(2)}m ${n.z.toFixed(2)}m`;
-        mv.updateHotspot({ name: `hotspot-${h.id}`, position: h.pos, normal: h.norm });
-        selectHotspot(curIdx);
-        navigator.clipboard?.writeText(h.pos).catch(() => {});
-        toast(`Точку #${h.num} переміщено: ${h.pos} (скопійовано)`);
-      });
-
-      // Легкий 3D-нахил для fallback-стенду за курсором миші
-      const viewport = box.querySelector("[data-viewport]");
-      viewport.addEventListener("mousemove", (e) => {
-        if (fallbackEl.classList.contains("hidden")) return;
-        const r = viewport.getBoundingClientRect();
-        const rx = (((0.5 - (e.clientY - r.top) / r.height) * 10)).toFixed(2);
-        const ry = ((((e.clientX - r.left) / r.width - 0.5) * 14)).toFixed(2);
-        fallbackStage.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-      });
-      viewport.addEventListener("mouseleave", () => {
-        fallbackStage.style.transform = "none";
-      });
-
-      box.addEventListener("click", (e) => {
-        const modeBtn = e.target.closest("[data-mode]");
-        if (modeBtn) {
-          renderMode(modeBtn.dataset.mode);
-          return;
-        }
-        const hsBtn = e.target.closest("[data-hs-idx]");
-        if (hsBtn) {
-          e.stopPropagation();
-          selectHotspot(Number(hsBtn.dataset.hsIdx));
-          return;
-        }
-        const pillBtn = e.target.closest("[data-pill-idx]");
-        if (pillBtn) {
-          selectHotspot(Number(pillBtn.dataset.pillIdx));
-        }
-      });
-
-      rotateBtn.addEventListener("click", () => {
-        autoRotate = !autoRotate;
-        if (autoRotate) mv.setAttribute("auto-rotate", "");
-        else mv.removeAttribute("auto-rotate");
-        rotateBtn.textContent = `⟳ Автообертання: ${autoRotate ? "УВІМК" : "ВИМК"}`;
-      });
-
-      calibrateBtn.addEventListener("click", () => {
-        calibrateMode = !calibrateMode;
-        if (calibrateMode) {
-          autoRotate = false;
-          mv.removeAttribute("auto-rotate");
-          rotateBtn.textContent = "⟳ Автообертання: ВИМК";
-          calibrateBtn.className = "font-tech text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-zinc-950 font-bold shadow-sm transition-colors";
-          calibrateBtn.textContent = "📍 Режим калібрування: АКТИВНИЙ";
-          toast("Клікніть по 3D-моделі, щоб поставити обрану точку в потрібне місце");
-        } else {
-          calibrateBtn.className = "font-tech text-xs px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-amber-500/50 transition-colors";
-          calibrateBtn.textContent = "📍 Калібрувати точки";
-        }
-      });
-
-      resetCamBtn.addEventListener("click", () => {
-        mv.cameraOrbit = MODELS[curMode].defaultOrbit;
-        toast("Камеру скинуто у вихідне положення");
-      });
-
-      glbInput.addEventListener("change", (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (customBlobUrl) URL.revokeObjectURL(customBlobUrl);
-        customBlobUrl = URL.createObjectURL(file);
-        renderMode(curMode, customBlobUrl);
-        subtitleEl.textContent = `Локальна 3D-модель: ${file.name}`;
-        toast(`Завантажено 3D-файл: ${file.name}`);
-      });
-
-      renderMode("gaming_pc");
-      return box;
-    }
-
     return box;
   }
 
   /* ==========================================================================
      7. АВТОРСЬКІ ПРОЄКТИ (VIEW: #/projects)
      ========================================================================== */
-  function renderProjectsView() {
-    const projGrid = $("#projectsGrid");
-    if (!projGrid) return;
-    projGrid.innerHTML = MY_PROJECTS.map((p) => {
+  function renderCardGrid(gridEl, items, defaultActionLabel) {
+    if (!gridEl) return;
+    gridEl.innerHTML = items.map((p) => {
       const t = TONES[p.tone] || TONES.indigo;
       const href = p.internalHash || p.url;
-      const extAttrs = p.internalHash ? "" : `target="_blank" rel="noopener noreferrer"`;
-      const actionLabel = p.internalHash ? "Відкрити 3D-тренажер →" : "Відкрити застосунок ↗";
+      const extAttrs = p.internalHash ? "" : 	arget="_blank" rel="noopener noreferrer";
+      const actionLabel = p.actionLabel || (p.internalHash ? "Відкрити →" : defaultActionLabel);
+      const iconPath = p.icon || "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z";
       const tagsHtml = (p.tags || [])
-        .map((tag) => `<span class="font-tech text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300">${esc(tag)}</span>`)
+        .map((tag) => <span class="font-tech text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300"></span>)
         .join("");
 
-      return `
+      return 
         <div class="glass-card glass-panel group rounded-2xl p-6 transition-all duration-200 flex flex-col justify-between">
           <div class="relative z-10">
             <div class="flex items-center justify-between gap-2 mb-4">
-              <div class="w-12 h-12 rounded-xl border ${t.soft} ${t.text} flex items-center justify-center group-hover:scale-105 transition-transform">
-                ${icon(p.icon, "w-6 h-6")}
+              <div class="w-12 h-12 rounded-xl border   flex items-center justify-center group-hover:scale-105 transition-transform">
+                
               </div>
-              <span class="font-tech text-xs px-2.5 py-1 rounded-full border ${t.soft} ${t.text}">${esc(p.badge)}</span>
+              <span class="font-tech text-xs px-2.5 py-1 rounded-full border  "></span>
             </div>
 
             <div class="flex items-center justify-between gap-2 mb-2">
-              <h3 class="text-lg font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">${esc(p.title)}</h3>
-              <span class="font-tech text-[11px] text-zinc-400">${esc(p.repo || "")}</span>
+              <h3 class="text-lg font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></h3>
+              <span class="font-tech text-[11px] text-zinc-400"></span>
             </div>
-            <p class="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-5">${esc(p.desc)}</p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-5"></p>
           </div>
 
           <div class="relative z-10 space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-            <div class="flex flex-wrap gap-1.5">${tagsHtml}</div>
-            <a href="${esc(href)}" ${extAttrs} class="inline-flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold ${t.soft} ${t.text} hover:opacity-90 transition-opacity font-tech">
-              <span>${actionLabel}</span>
-              <span aria-hidden="true">${p.internalHash ? "→" : "↗"}</span>
+            <div class="flex flex-wrap gap-1.5"></div>
+            <a href=""  class="inline-flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold   hover:opacity-90 transition-opacity font-tech">
+              <span></span>
+              <span aria-hidden="true"></span>
             </a>
           </div>
         </div>
-      `;
+      ;
     }).join("");
+  }
+
+  function renderProjectsView() {
+    renderCardGrid(#projectsGrid, MY_PROJECTS, "Відкрити застосунок ↗");
+  }
+
+  function renderSimulatorsView() {
+    renderCardGrid(#simulatorsGrid, MY_SIMULATORS, "Запустити симулятор ↗");
   }
 
   function initTiltCard() {
@@ -3062,7 +2520,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
 
     const books = (subj.books || []).filter((b) => b.grade == null || Number(b.grade) === Number(grade));
     const items = bySubject(subject);
-    const lessons = items.filter((a) => a.type === "lesson" && (a.grade == null || Number(a.grade) === Number(grade)) && a.id !== "cs-3d-hardware");
+    const lessons = items.filter((a) => a.type === "lesson" && (a.grade == null || Number(a.grade) === Number(grade)));
     const refs = items.filter((a) => a.type === "ref");
 
     container.innerHTML = `
@@ -3114,21 +2572,21 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
           </div>
         </div>
 
-        <!-- СПЕЦІАЛЬНИЙ 3D-ТРЕНАЖЕР ЗАЛІЗА (ТІЛЬКИ В ІНФОРМАТИЦІ) -->
+        <!-- СПЕЦІАЛЬНІ СИМУЛЯТОРИ (ТІЛЬКИ В ІНФОРМАТИЦІ) -->
         ${subject === "cs" ? `
           <div class="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div class="space-y-2">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-zinc-950 font-tech">
-                  <span>🖥 3D WebGL Лабораторія</span>
+                  <span>🧪 3D WebGL Лабораторії</span>
                 </div>
-                <h2 class="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100">Будова комп'ютера (3D-тренажер)</h2>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100">Інтерактивні симулятори з інформатики</h2>
                 <p class="text-sm text-zinc-600 dark:text-zinc-400 max-w-2xl">
-                  Інтерактивний тренажер системного блока та материнської плати ASUS ROG: обертайте, досліджуйте сокет CPU, VRM, M.2 SSD та кулери!
+                  OneClick Network Lab, Machine Language 3D та PC Architecture Sim: досліджуйте мережі, машинний код та архітектуру комп'ютера наживо!
                 </p>
               </div>
-              <a href="#/hub/${grade}/cs/cs-3d-hardware" class="shrink-0 px-6 py-3.5 rounded-2xl bg-amber-500 text-zinc-950 font-tech font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
-                <span>Запустити 3D-тренажер</span>
+              <a href="#/simulators" class="shrink-0 px-6 py-3.5 rounded-2xl bg-amber-500 text-zinc-950 font-tech font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
+                <span>Відкрити симулятори</span>
                 <span>→</span>
               </a>
             </div>
@@ -3326,9 +2784,22 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     if (hash.startsWith("#/projects")) {
       state.view = "projects";
       $("#portfolioView").classList.add("hidden");
+      $("#simulatorsView").classList.add("hidden");
       $("#hubView").classList.add("hidden");
       $("#projectsView").classList.remove("hidden");
       renderProjectsView();
+      window.scrollTo({ top: 0 });
+      return;
+    }
+
+    // 1Б. СИМУЛЯТОРИ
+    if (hash.startsWith("#/simulators")) {
+      state.view = "simulators";
+      $("#portfolioView").classList.add("hidden");
+      $("#projectsView").classList.add("hidden");
+      $("#hubView").classList.add("hidden");
+      $("#simulatorsView").classList.remove("hidden");
+      renderSimulatorsView();
       window.scrollTo({ top: 0 });
       return;
     }
@@ -3338,6 +2809,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       state.view = "hub";
       $("#portfolioView").classList.add("hidden");
       $("#projectsView").classList.add("hidden");
+      $("#simulatorsView").classList.add("hidden");
       $("#hubView").classList.remove("hidden");
 
       const parts = hash.replace(/^#\/hub\/?/, "").split("/").filter(Boolean);
@@ -3378,10 +2850,10 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
         return;
       }
 
-      // Зворотна сумісність (#/hub/cs або #/hub/cs/cs-3d-hardware)
+      // Зворотна сумісність (#/hub/cs)
       if (SUBJECTS[parts[0]]) {
         state.subject = parts[0];
-        state.grade = parts[0] === "math" ? 5 : (parts[1] === "cs-3d-hardware" ? 8 : 7);
+        state.grade = parts[0] === "math" ? 5 : 7;
         if (parts[1]) {
           location.hash = `#/hub/${state.grade}/${state.subject}/${parts[1]}`;
         } else {
@@ -3400,6 +2872,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     state.view = "portfolio";
     $("#hubView").classList.add("hidden");
     $("#projectsView").classList.add("hidden");
+    $("#simulatorsView").classList.add("hidden");
     $("#portfolioView").classList.remove("hidden");
     if (wasOther) window.scrollTo({ top: state.portfolioScroll || 0 });
   }

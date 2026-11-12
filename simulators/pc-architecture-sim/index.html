@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Логістичний центр всередині ПК — Симулятор потоків даних</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- TOP COMMAND BAR -->
+  <header class="top-bar glass">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">
+        <span class="logo-core"></span>
+      </div>
+      <div>
+        <h1>Логістичний центр всередині ПК</h1>
+        <p class="subtitle">Склад (SSD) ➔ Верстак (ОЗП) ➔ Майстер (CPU) ➔ Графіка (GPU)</p>
+      </div>
+    </div>
+
+    <!-- Live Hardware Telemetry Strip -->
+    <div class="telemetry-strip">
+      <div class="tele-card" title="Частота та навантаження процесора">
+        <span class="tele-lbl">CPU</span>
+        <span id="hudCpu" class="tele-val mono">4% • 3.6 ГГц</span>
+      </div>
+      <div class="tele-card" title="Температура кристалу CPU">
+        <span class="tele-lbl">ТЕМП</span>
+        <span id="hudTemp" class="tele-val mono">38°C</span>
+      </div>
+      <div class="tele-card" title="Оперативна пам'ять DDR5">
+        <span class="tele-lbl">ОЗП (DDR5)</span>
+        <span id="hudRam" class="tele-val mono">2.0 / 16.0 ГБ</span>
+      </div>
+      <div class="tele-card" title="Відеокарта та частота кадрів">
+        <span class="tele-lbl">GPU</span>
+        <span id="hudGpu" class="tele-val mono">2% • 60 FPS</span>
+      </div>
+      <div class="tele-card" title="Швидкість потоку даних по шинах">
+        <span class="tele-lbl">ШИНА</span>
+        <span id="hudBus" class="tele-val mono">0.4 ГБ/с</span>
+      </div>
+    </div>
+
+    <!-- View Mode & Controls -->
+    <div class="top-controls">
+      <div class="mode-tabs" role="tablist" aria-label="Режим відображення">
+        <button class="mode-tab active" data-view="split" title="Одночасно віртуальний комп'ютер і рентген материнської плати">
+          🖥️ Повний ПК
+        </button>
+        <button class="mode-tab" data-view="hardware" title="Повноекранний детальний вигляд материнської плати">
+          🔌 Залізо (X-Ray)
+        </button>
+        <button class="mode-tab" data-view="cpu" title="Зазирнути всередину процесора: цикл Fetch-Decode-Execute">
+          🔬 Мікросвіт CPU
+        </button>
+      </div>
+
+      <div class="speed-pills" role="group" aria-label="Швидкість потоків">
+        <button class="speed-pill" data-speed="slow" title="Уповільнити сигнали для детального спостереження">Повільно</button>
+        <button class="speed-pill active" data-speed="normal" title="Звичайна швидкість">Норма</button>
+        <button class="speed-pill" data-speed="step" title="Пауза на кожному етапі передачі даних">Крок за кроком</button>
+      </div>
+
+      <button id="btnSound" class="ctrl-btn" title="Увімкнути реалістичний звук кулерів та імпульсів даних">
+        <span id="soundIcon">🔇</span>
+      </button>
+      <button id="btnPower" class="ctrl-btn power-on" title="Перезавантажити або вимкнути віртуальний ПК">
+        ⏻
+      </button>
+      <button id="btnGuide" class="ctrl-btn" title="Інструкція та підказки">❓</button>
+    </div>
+  </header>
+
+  <!-- RAM OVERFLOW / THERMAL THROTTLING ALERT -->
+  <div id="alertBanner" class="alert-banner" role="alert">
+    <span class="alert-icon">⚠️</span>
+    <div class="alert-body">
+      <strong id="alertTitle">ПЕРЕПОВНЕННЯ ОЗП (100%) — Активовано Swap (Файл підкачки)!</strong>
+      <span id="alertDesc">Оперативна пам'ять закінчилась. ПК переганяє дані на повільний SSD — FPS у 3D-грі падає, на шині затори, кулери на максимумі!</span>
+    </div>
+    <button id="btnQuickFree" class="alert-fix-btn">Звільнити ОЗП</button>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <main id="workspace" class="workspace view-split">
+    <!-- LEFT PANE: REALISTIC VIRTUAL OS MONITOR -->
+    <section id="osPane" class="pane os-pane glass">
+      <div class="monitor-bezel">
+        <div class="monitor-topbar">
+          <div class="monitor-dots">
+            <span class="dot red"></span>
+            <span class="dot amber"></span>
+            <span class="dot green"></span>
+            <span class="os-title">KiberOS 12.4 LTS — Віртуальний монітор</span>
+          </div>
+          <div class="os-status-right mono">
+            <span id="osClock">23:50</span>
+            <span id="osFpsBadge" class="fps-badge">60 FPS</span>
+          </div>
+        </div>
+
+        <!-- OS Desktop Area -->
+        <div id="osDesktop" class="os-desktop">
+          <!-- Desktop Icons -->
+          <div class="desktop-icons">
+            <button class="desk-icon" data-launch="browser">
+              <div class="icon-box blue">🌐</div>
+              <span>Браузер</span>
+            </button>
+            <button class="desk-icon" data-launch="game">
+              <div class="icon-box purple">🎮</div>
+              <span>3D-Гра</span>
+            </button>
+            <button class="desk-icon" data-launch="photo">
+              <div class="icon-box gold">🖼️</div>
+              <span>Фотостудія</span>
+            </button>
+            <button class="desk-icon" data-launch="video">
+              <div class="icon-box red">🎬</div>
+              <span>Рендер відео</span>
+            </button>
+            <button class="desk-icon" data-launch="terminal">
+              <div class="icon-box green">💻</div>
+              <span>Термінал</span>
+            </button>
+            <button class="desk-icon" data-launch="files">
+              <div class="icon-box teal">💾</div>
+              <span>Файли (SSD)</span>
+            </button>
+          </div>
+
+          <!-- Live Cyber-Grid & System Widget on Desktop -->
+          <div class="os-cyber-grid" aria-hidden="true"></div>
+          <div class="os-sys-widget glass">
+            <div class="widget-top">
+              <span class="widget-title">⚡ СИСТЕМНИЙ МОНІТОР</span>
+              <span id="widgetClock" class="mono widget-clock">00:00</span>
+            </div>
+            <canvas id="osWaveCanvas" width="180" height="44"></canvas>
+            <div class="widget-stats mono">
+              <span id="widgetCpu">CPU: 4%</span>
+              <span id="widgetRam">ОЗП: 13%</span>
+            </div>
+          </div>
+
+          <!-- Active App Window Container -->
+          <div id="osWindowArea" class="os-window-area">
+            <!-- Windows are rendered dynamically by osDesktop.js -->
+          </div>
+
+          <!-- Ephemeral Bus Log Toast Notifications (Bottom-Right of Desktop) -->
+          <div id="busToastContainer" class="bus-toast-container" aria-live="polite"></div>
+
+          <!-- Boot / Power Off Overlay -->
+          <div id="osBootOverlay" class="os-boot-overlay hidden">
+            <div class="boot-content mono">
+              <div class="boot-logo">⚡ KIBER-BIOS v4.8</div>
+              <div id="bootLog" class="boot-log"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OS Taskbar -->
+        <div class="os-taskbar">
+          <div class="taskbar-left">
+            <button class="start-btn" id="btnStartMenu">❖ Пуск</button>
+            <div id="taskbarApps" class="taskbar-apps"></div>
+          </div>
+          <div class="taskbar-right">
+            <button class="quick-action-btn" id="btnStressTest" title="Запустити одразу кілька важких програм для тесту перевантаження">
+              🔥 Навантажити ПК
+            </button>
+            <button class="quick-action-btn danger" id="btnKillAll" title="Закрити всі програми та очистити ОЗП">
+              🧹 Очистити ОЗП
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANE: HYPER-DETAILED HARDWARE MOTHERBOARD (CANVAS) -->
+    <section id="hwPane" class="pane hw-pane glass">
+      <div class="hw-toolbar">
+        <div class="hw-toolbar-left">
+          <span class="hw-badge">3D АПАРАТНА ПЛАТФОРМА</span>
+          <button id="btnBuildPc" class="hw-chip-btn" title="Налаштувати комплектуючі ПК (ОЗП, Диск, Кулер)">
+            🛠️ Збери ПК
+          </button>
+          <button id="btnToggleXray" class="hw-chip-btn" title="Повністю зняти кулер, щоб бачити кристал CPU та 8 активних ядер">
+            🔍 Прозорий кулер
+          </button>
+          <button id="btnResetCam" class="hw-chip-btn" title="Повернути 3D-камеру у вихідне положення">
+            🎯 Скинути камеру
+          </button>
+        </div>
+        <div class="hw-legend">
+          <span><i class="leg-dot cyan"></i>Дані (RAM↔CPU)</span>
+          <span><i class="leg-dot green"></i>Диск (SSD)</span>
+          <span><i class="leg-dot purple"></i>Графіка (GPU)</span>
+          <span><i class="leg-dot red"></i>Swap / Затор</span>
+        </div>
+      </div>
+
+      <div class="hw-canvas-wrap" id="hwCanvasWrap">
+        <!-- 3D Bus & Component Hover Tooltip -->
+        <div id="hoverTooltip3d" class="hover-tooltip-3d hidden">
+          <div id="ttTitle" class="tt-title"></div>
+          <div id="ttSub" class="tt-sub mono"></div>
+        </div>
+
+        <!-- Interactive PC Builder Drawer -->
+        <aside id="pcBuilderDrawer" class="pc-builder-drawer glass hidden">
+          <div class="insp-head">
+            <div class="insp-title-row">
+              <span class="insp-icon">🛠️</span>
+              <div>
+                <h3>Конфігуратор «Збери ПК»</h3>
+                <span class="insp-specs mono">Змінюй деталі в реальному часі</span>
+              </div>
+            </div>
+            <button id="btnCloseBuilder" class="close-x">✕</button>
+          </div>
+
+          <div class="builder-group">
+            <label>⚡ Оперативна пам'ять (ОЗП)</label>
+            <div class="builder-opts" data-cfg="ramGb">
+              <button class="cfg-btn" data-val="4">4 ГБ (1 планка)</button>
+              <button class="cfg-btn active" data-val="16">16 ГБ (4 планки)</button>
+              <button class="cfg-btn" data-val="32">32 ГБ (4 планки)</button>
+            </div>
+          </div>
+
+          <div class="builder-group">
+            <label>💾 Накопичувач (Склад даних)</label>
+            <div class="builder-opts" data-cfg="diskType">
+              <button class="cfg-btn" data-val="hdd">HDD 5400 (Повільний)</button>
+              <button class="cfg-btn active" data-val="nvme">NVMe SSD (Швидкий)</button>
+            </div>
+          </div>
+
+          <div class="builder-group">
+            <label>❄️ Охолодження процесора (Кулер)</label>
+            <div class="builder-opts" data-cfg="coolerType">
+              <button class="cfg-btn" data-val="box">Боксовий</button>
+              <button class="cfg-btn active" data-val="tower">Потужна вежа</button>
+              <button class="cfg-btn" data-val="aio">Водянка (СРО)</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Step-by-Step Floating Controller -->
+        <div id="stepCard" class="step-card glass hidden">
+          <div class="step-info">
+            <span id="stepStageBadge" class="step-stage mono">ЕТАП 1: DMA</span>
+            <h4 id="stepStageTitle">Читання з SSD</h4>
+            <p id="stepStageDesc">Контролер накопичувача передає дані до оперативної пам'яті.</p>
+          </div>
+          <div class="step-btns">
+            <button id="btnStepNext" class="btn-primary">Далі ➔</button>
+            <button id="btnStepAuto" class="btn-ghost">Авто</button>
+          </div>
+        </div>
+
+        <!-- Floating Hardware Inspector -->
+        <aside id="hwInspector" class="hw-inspector glass hidden">
+          <div class="insp-head">
+            <div class="insp-title-row">
+              <span id="inspIcon" class="insp-icon">🧠</span>
+              <div>
+                <h3 id="inspName">Процесор (CPU)</h3>
+                <span id="inspSpecs" class="insp-specs mono">8 Ядер • 4.8 ГГц</span>
+              </div>
+            </div>
+            <button id="btnCloseInsp" class="close-x">✕</button>
+          </div>
+          <p id="inspExplain" class="insp-explain"></p>
+          <div class="insp-grid">
+            <div class="insp-stat">
+              <span>Затримка</span>
+              <strong id="inspLat" class="mono">~0.3 нс</strong>
+            </div>
+            <div class="insp-stat">
+              <span>Пропускна здатність</span>
+              <strong id="inspBw" class="mono">~120 ГБ/с</strong>
+            </div>
+          </div>
+          <div id="inspLiveBox" class="insp-live">
+            <span class="live-dot"></span>
+            <span id="inspLiveText">Працює у штатному режимі.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- CPU MICROARCHITECTURE PANE (VISIBLE IN 'cpu' MODE) -->
+    <section id="cpuPane" class="pane cpu-pane glass">
+      <div class="cpu-micro-header">
+        <div>
+          <h2>🔬 Мікроархітектура процесора: Цикл Fetch ➔ Decode ➔ Execute</h2>
+          <p>Подивись, як процесор крок за кроком виконує машинні інструкції всередині кремнієвого кристала</p>
+        </div>
+        <div class="cpu-program-controls">
+          <select id="cpuProgramSelect" class="cpu-select">
+            <option value="add">Програма 1: Додавання (5 + 7)</option>
+            <option value="loop">Програма 2: Цикл лічильника (1..3)</option>
+            <option value="render">Програма 3: Розрахунок пікселя GPU</option>
+          </select>
+          <button id="btnCpuStep" class="btn-primary">Наступний такт ➔</button>
+          <button id="btnCpuRun" class="btn-ghost">▶ Авто-виконання</button>
+          <button id="btnCpuReset" class="btn-ghost">↺ Скинути</button>
+        </div>
+      </div>
+
+      <div class="cpu-micro-grid">
+        <!-- Registers & Control Unit -->
+        <div class="micro-col">
+          <div class="micro-block" id="mb-cu">
+            <div class="mb-title">Пристрій керування (Control Unit)</div>
+            <div class="reg-row"><span>PC (Лічильник команд)</span><strong id="regPC" class="mono">0x00</strong></div>
+            <div class="reg-row"><span>IR (Регістр інструкції)</span><strong id="regIR" class="mono">NOP</strong></div>
+            <div class="reg-row"><span>Поточна фаза</span><strong id="regPhase" class="mono phase-pill">ОЧІКУВАННЯ</strong></div>
+          </div>
+
+          <div class="micro-block" id="mb-regs">
+            <div class="mb-title">Швидкі регістри CPU (0.2 нс)</div>
+            <div class="reg-grid mono">
+              <div class="reg-cell"><span>R0 (ACC)</span><strong id="regR0">0</strong></div>
+              <div class="reg-cell"><span>R1</span><strong id="regR1">0</strong></div>
+              <div class="reg-cell"><span>R2</span><strong id="regR2">0</strong></div>
+              <div class="reg-cell"><span>FLAGS</span><strong id="regFlags">Z=0</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALU & Data Bus Visualization -->
+        <div class="micro-col center">
+          <div class="micro-block alu-block" id="mb-alu">
+            <div class="mb-title">⚡ АЛУ (Арифметико-логічний пристрій)</div>
+            <div class="alu-visual">
+              <div class="alu-in mono" id="aluInA">A: 0</div>
+              <div class="alu-op mono" id="aluOp">+</div>
+              <div class="alu-in mono" id="aluInB">B: 0</div>
+            </div>
+            <div class="alu-out mono" id="aluOut">Результат: 0</div>
+          </div>
+
+          <div class="micro-explain-box" id="cpuStepExplain">
+            Обери програму та натисни <strong>«Наступний такт ➔»</strong>, щоб побачити, як команда з ОЗП потрапляє в процесор.
+          </div>
+        </div>
+
+        <!-- Mini RAM Instruction Table -->
+        <div class="micro-col">
+          <div class="micro-block" id="mb-ram">
+            <div class="mb-title">Оперативна пам'ять (Інструкції та Дані)</div>
+            <div id="microRamTable" class="micro-ram-table mono"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- GUIDE MODAL -->
+  <div id="guideModal" class="modal-overlay hidden">
+    <div class="modal-box glass">
+      <div class="modal-head">
+        <h2>🎓 Гід по «Логістичному центру ПК»</h2>
+        <button id="btnCloseGuide" class="close-x">✕</button>
+      </div>
+      <div class="modal-content">
+        <p>Це повноцінний інтерактивний симулятор, який поєднує <strong>справжній віртуальний комп'ютер (ліворуч)</strong> та <strong>живу апаратну схему (праворуч)</strong>.</p>
+        <ul>
+          <li><strong>Запускай реальні програми на робочому столі:</strong> відкрий 🌐 Браузер, пограй у 🎮 3D-Гру, застосуй фільтри у 🖼️ Фотостудії або введи команди в 💻 Терміналі.</li>
+          <li><strong>Спостерігай за реакцією заліза:</strong> кожен клік у віртуальній ОС миттєво викликає потоки пакетів між SSD, Чипсетом, ОЗП, CPU та GPU.</li>
+          <li><strong>Перевір перевантаження (🔥 Навантажити ПК):</strong> коли ОЗП заповниться на 100%, увімкнеться <em>Файл підкачки (Swap)</em> на SSD — ти на власні очі побачиш, як FPS у 3D-грі впаде з 60 до ~8 кадрів/с!</li>
+          <li><strong>Досліджуй деталі:</strong> натисни на будь-яку деталь материнської плати (CPU, слоти DDR5, GPU, SSD, шини), щоб відкрити живий інспектор.</li>
+          <li><strong>Мікросвіт CPU:</strong> перемкни вкладку вгорі на <em>«🔬 Мікросвіт CPU»</em>, щоб покроково побачити роботу регістрів та АЛУ.</li>
+        </ul>
+      </div>
+      <button id="btnOkGuide" class="btn-primary" style="align-self:flex-end;">Зрозуміло, поїхали!</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script defer src="js/audio.js"></script>
+  <script defer src="js/hardware.js"></script>
+  <script defer src="js/osDesktop.js"></script>
+  <script defer src="js/cpuMicro.js"></script>
+  <script defer src="js/main.js"></script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+    window.PCSim = window.PCSim || {};
+
+    window.PCSim.BoardRenderer = (() => {
+      let container = null;
+      let labelsLayer = null;
+      let onSelect = null;
+
+      let scene, camera, renderer, controls, dustPoints;
+      let cpuCoreMat, ssdLedMat, gpuLedMat, pchAccentMat;
+      let boxCoolerGroup = null, towerCoolerGroup = null, aioCoolerGroup = null;
+      let nvmeGroup = null, hddGroup = null;
+      const coreMeshes = [];
+      const ramStickGroups = [];
+      const fans = [];
+      const ramLightBars = [];
+      const interactiveMeshes = [];
+      const componentAnchors = {};
+      const labelEls = {};
+      const buses = {};
+
+      const BUS_TOOLTIPS = {
+        'cpu-ram': { title: '🛣️ CPU ↔ ОЗП (Шина DDR5)', sub: '64 ГБ/с • ~12 нс (у 6000× швидше за SSD)' },
+        'cpu-chipset': { title: '🛣️ CPU ↔ Чипсет (DMI 4.0)', sub: '16 ГБ/с • Керування периферією та дисками' },
+        'ssd-chipset': { title: '🛣️ Накопичувач ↔ Чипсет (NVMe / SATA)', sub: 'NVMe: 5 ГБ/с (~80 мкс) | HDD: 0.15 ГБ/с (~10 мс)' },
+        'chipset-ram': { title: '🛣️ Чипсет ↔ ОЗП (Канал DMA)', sub: 'Пряме перекачування файлів зі складу на верстак' },
+        'cpu-gpu': { title: '🛣️ CPU ↔ Відеокарта (PCIe 4.0 x16)', sub: '32 ГБ/с • Геометрія, текстури та кадри FPS' }
+      };
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      let pointerDownPos = { x: 0, y: 0 };
+
+      const defaultCamPos = new THREE.Vector3(10.2, 8.8, 11.8);
+      const defaultTarget = new THREE.Vector3(0, 0.35, 0);
+
+      function createPCBTexture() {
+        const c = document.createElement('canvas');
+        c.width = 1024;
+        c.height = 1024;
+        const ctx = c.getContext('2d');
+
+        ctx.fillStyle = '#080b12';
+        ctx.fillRect(0, 0, 1024, 1024);
+
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.04)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 1024; i += 32) {
+          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1024); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
+        }
+
+        for (let i = 0; i < 140; i++) {
+          const isCopper = i % 3 === 0;
+          ctx.strokeStyle = isCopper ? 'rgba(217, 155, 67, 0.14)' : 'rgba(56, 189, 248, 0.08)';
+          ctx.lineWidth = 1.4;
+          let x = Math.floor(Math.random() * 32) * 32;
+          let y = Math.floor(Math.random() * 32) * 32;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          const steps = 3 + Math.floor(Math.random() * 5);
+          for (let s = 0; s < steps; s++) {
+            const dir = Math.floor(Math.random() * 4);
+            const len = (1 + Math.floor(Math.random() * 4)) * 32;
+            if (dir === 0) x += len;
+            else if (dir === 1) x -= len;
+            else if (dir === 2) y += len;
+            else y -= len;
+            ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.anisotropy = 8;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      }
+
+      function tagInteractive(obj, hwKey) {
+        obj.traverse((child) => {
+          if (child.isMesh) {
+            child.userData.hwKey = hwKey;
+            interactiveMeshes.push(child);
+          }
+        });
+      }
+
+      function init(wrapEl, selectCallback) {
+        container = wrapEl;
+        onSelect = selectCallback;
+
+        const width = Math.max(300, container.clientWidth);
+        const height = Math.max(300, container.clientHeight);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x040507);
+        scene.fog = new THREE.FogExp2(0x040507, 0.014);
+
+        camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 200);
+        camera.position.copy(defaultCamPos);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.domElement.style.display = 'block';
+        renderer.domElement.style.width = '100%';
+        renderer.domElement.style.height = '100%';
+        container.prepend(renderer.domElement);
+
+        labelsLayer = document.createElement('div');
+        labelsLayer.className = 'labels-3d-layer';
+        container.appendChild(labelsLayer);
+
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environmentIntensity = 0.55;
+
+        // Calm drifting dust particles (#cbd5e1, opacity 0.7)
+        const dCount = 320;
+        const dGeo = new THREE.BufferGeometry();
+        const dPos = new Float32Array(dCount * 3);
+        for (let i = 0; i < dCount; i++) {
+          dPos[i * 3] = (Math.random() - 0.5) * 42;
+          dPos[i * 3 + 1] = (Math.random() - 0.2) * 22;
+          dPos[i * 3 + 2] = (Math.random() - 0.5) * 42;
+        }
+        dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+        dustPoints = new THREE.Points(dGeo, new THREE.PointsMaterial({
+          color: 0xcbd5e1, size: 0.055, transparent: true, opacity: 0.7
+        }));
+        scene.add(dustPoints);
+
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.minDistance = 5.5;
+        controls.maxDistance = 26;
+        controls.maxPolarAngle = Math.PI * 0.48;
+        controls.target.copy(defaultTarget);
+
+        // Soft Diffused Studio Lighting (HemisphereLight + DirectionalLight only)
+        scene.add(new THREE.HemisphereLight(0xf1f5f9, 0x1e293b, 0.95));
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.9);
+        keyLight.position.set(10, 16, 10);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(2048, 2048);
+        keyLight.shadow.camera.near = 2;
+        keyLight.shadow.camera.far = 45;
+        keyLight.shadow.camera.left = -10;
+        keyLight.shadow.camera.right = 10;
+        keyLight.shadow.camera.top = 10;
+        keyLight.shadow.camera.bottom = -10;
+        scene.add(keyLight);
+
+        buildMotherboard();
+        buildBuses();
+        buildLabels();
+
+        const hoverTt = document.getElementById('hoverTooltip3d');
+        const ttTitle = document.getElementById('ttTitle');
+        const ttSub = document.getElementById('ttSub');
+
+        renderer.domElement.addEventListener('pointermove', (e) => {
+          const rect = renderer.domElement.getBoundingClientRect();
+          pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(pointer, camera);
+          const hits = raycaster.intersectObjects(interactiveMeshes, false);
+
+          // Reset bus highlight
+          Object.values(buses).forEach(b => {
+            b.mat.emissiveIntensity = 0.25;
+            b.mat.opacity = 0.55;
+          });
+
+          if (hits.length > 0 && hits[0].object.userData.busKey) {
+            const bKey = hits[0].object.userData.busKey;
+            const info = BUS_TOOLTIPS[bKey];
+            if (buses[bKey]) {
+              buses[bKey].mat.emissiveIntensity = 0.9;
+              buses[bKey].mat.opacity = 0.95;
+            }
+            if (info && hoverTt) {
+              ttTitle.textContent = info.title;
+              ttSub.textContent = info.sub;
+              hoverTt.style.left = `${e.clientX - rect.left + 14}px`;
+              hoverTt.style.top = `${e.clientY - rect.top + 14}px`;
+              hoverTt.classList.remove('hidden');
+            }
+            renderer.domElement.style.cursor = 'pointer';
+          } else {
+            if (hoverTt) hoverTt.classList.add('hidden');
+            renderer.domElement.style.cursor = hits.length > 0 ? 'pointer' : 'grab';
+          }
+        });
+
+        renderer.domElement.addEventListener('pointerleave', () => {
+          if (hoverTt) hoverTt.classList.add('hidden');
+        });
+
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+          pointerDownPos = { x: e.clientX, y: e.clientY };
+        });
+        renderer.domElement.addEventListener('pointerup', (e) => {
+          const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+          if (dist > 6) return;
+          const rect = renderer.domElement.getBoundingClientRect();
+          pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(pointer, camera);
+          const hits = raycaster.intersectObjects(interactiveMeshes, false);
+          if (hits.length > 0 && hits[0].object.userData.hwKey && onSelect) {
+            onSelect(hits[0].object.userData.hwKey);
+          }
+        });
+
+        const ro = new ResizeObserver(() => handleResize());
+        ro.observe(container);
+        window.addEventListener('resize', handleResize);
+      }
+
+      function handleResize() {
+        if (!container || !renderer) return;
+        const w = Math.max(200, container.clientWidth);
+        const h = Math.max(200, container.clientHeight);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
+
+      function resetCamera() {
+        if (!camera || !controls) return;
+        camera.position.copy(defaultCamPos);
+        controls.target.copy(defaultTarget);
+        controls.update();
+      }
+
+      function buildMotherboard() {
+        const matPCB = new THREE.MeshStandardMaterial({ map: createPCBTexture(), roughness: 0.72, metalness: 0.15 });
+        const matGunmetal = new THREE.MeshStandardMaterial({ color: 0x26292e, roughness: 0.78, metalness: 0.15 });
+        const matAlum = new THREE.MeshStandardMaterial({ color: 0xa8adb5, roughness: 0.42, metalness: 0.65 });
+        const matCopper = new THREE.MeshStandardMaterial({ color: 0xc87d4b, roughness: 0.32, metalness: 0.82 });
+        const matDarkPlastic = new THREE.MeshStandardMaterial({ color: 0x181b20, roughness: 0.75, metalness: 0.1 });
+
+        // Physical Laboratory Stand / Platform (#2b2f36 + anodized aluminum #a8adb5 rim + grid)
+        const labBench = new THREE.Mesh(
+          new THREE.BoxGeometry(14.4, 0.34, 11.4),
+          new THREE.MeshStandardMaterial({ color: 0x2b2f36, roughness: 0.82, metalness: 0.12 })
+        );
+        labBench.position.y = -0.52;
+        labBench.receiveShadow = true;
+        scene.add(labBench);
+
+        const benchGrid = new THREE.GridHelper(14.0, 28, 0x475569, 0x334155);
+        benchGrid.position.y = -0.345;
+        benchGrid.material.transparent = true;
+        benchGrid.material.opacity = 0.38;
+        scene.add(benchGrid);
+
+        // Anodized Aluminum Bench Frame Trim
+        const rimF = new THREE.Mesh(new THREE.BoxGeometry(14.48, 0.08, 0.08), matAlum);
+        rimF.position.set(0, -0.38, 5.72);
+        const rimB = rimF.clone(); rimB.position.z = -5.72;
+        const rimL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 11.48), matAlum);
+        rimL.position.set(-7.22, -0.38, 0);
+        const rimR = rimL.clone(); rimR.position.x = 7.22;
+        scene.add(rimF, rimB, rimL, rimR);
+
+        // Brass/Copper Standoffs supporting the PCB on the lab bench
+        [[-5.2, -4.0], [5.2, -4.0], [-5.2, 4.0], [5.2, 4.0]].forEach(([sx, sz]) => {
+          const standoff = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.24, 12), matCopper);
+          standoff.position.set(sx, -0.24, sz);
+          scene.add(standoff);
+        });
+
+        const boardGroup = new THREE.Group();
+        scene.add(boardGroup);
+
+        const pcb = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.24, 9.2), matPCB);
+        pcb.position.y = -0.12;
+        pcb.receiveShadow = true;
+        pcb.castShadow = true;
+        boardGroup.add(pcb);
+
+        const trimMat = matCopper;
+        const trimF = new THREE.Mesh(new THREE.BoxGeometry(11.64, 0.04, 0.04), trimMat);
+        trimF.position.set(0, -0.12, 4.61);
+        const trimB = trimF.clone(); trimB.position.z = -4.61;
+        boardGroup.add(trimF, trimB);
+
+        const ioArmor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.35, 3.6), matGunmetal);
+        ioArmor.position.set(-4.85, 0.67, -2.3);
+        ioArmor.castShadow = true;
+        boardGroup.add(ioArmor);
+        const ioStripe = new THREE.Mesh(
+          new THREE.BoxGeometry(0.06, 0.08, 3.1),
+          new THREE.MeshStandardMaterial({ color: 0xd99b43, emissive: 0xd99b43, emissiveIntensity: 0.35 })
+        );
+        ioStripe.position.set(-4.08, 1.15, -2.3);
+        boardGroup.add(ioStripe);
+
+        function createFinHeatsink(w, h, d, fins = 10) {
+          const g = new THREE.Group();
+          const base = new THREE.Mesh(new THREE.BoxGeometry(w, h * 0.45, d), matGunmetal);
+          base.position.y = h * 0.225;
+          base.castShadow = true;
+          g.add(base);
+          const step = w / fins;
+          for (let i = 0; i < fins; i++) {
+            const fin = new THREE.Mesh(new THREE.BoxGeometry(step * 0.55, h * 0.55, d * 0.94), matAlum);
+            fin.position.set(-w / 2 + step * (i + 0.5), h * 0.72, 0);
+            fin.castShadow = true;
+            g.add(fin);
+          }
+          return g;
+        }
+
+        function createSpinningFan(radius, bladeCount = 9, ringColor = 0x38bdf8) {
+          const fanGroup = new THREE.Group();
+          const ringGeo = new THREE.TorusGeometry(radius, 0.05, 12, 36);
+          const ringMat = new THREE.MeshStandardMaterial({
+            color: ringColor, emissive: ringColor, emissiveIntensity: 0.32, roughness: 0.25, metalness: 0.6
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = Math.PI / 2;
+          fanGroup.add(ring);
+
+          const rotor = new THREE.Group();
+          const hub = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.28, radius * 0.28, 0.14, 24), matGunmetal);
+          rotor.add(hub);
+
+          const bladeGeo = new THREE.BoxGeometry(radius * 0.68, 0.025, radius * 0.22);
+          for (let i = 0; i < bladeCount; i++) {
+            const pivot = new THREE.Group();
+            pivot.rotation.y = (i / bladeCount) * Math.PI * 2;
+            const blade = new THREE.Mesh(bladeGeo, matAlum);
+            blade.position.x = radius * 0.54;
+            blade.rotation.x = 0.42;
+            pivot.add(blade);
+            rotor.add(pivot);
+          }
+          fanGroup.add(rotor);
+          fans.push({ rotor, ringMat, baseColor: new THREE.Color(ringColor) });
+          return fanGroup;
+        }
+
+        const vrmTop = createFinHeatsink(3.6, 0.85, 0.9, 12);
+        vrmTop.position.set(-1.3, 0, -3.55);
+        boardGroup.add(vrmTop);
+        for (let i = 0; i < 10; i++) {
+          const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.28, 12), matAlum);
+          cap.position.set(-3.2 + i * 0.38, 0.14, -2.9);
+          boardGroup.add(cap);
+        }
+
+        const atx24 = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.42, 2.2), matDarkPlastic);
+        atx24.position.set(5.2, 0.21, -1.2);
+        boardGroup.add(atx24);
+
+        const pchGroup = new THREE.Group();
+        const pch = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.42, 2.1), matGunmetal);
+        pch.position.set(3.8, 0.21, 2.8);
+        pch.castShadow = true;
+        pchGroup.add(pch);
+        pchAccentMat = new THREE.MeshStandardMaterial({ color: 0xd99b43, emissive: 0xd99b43, emissiveIntensity: 0.4 });
+        const pchAccent = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.05, 0.12), pchAccentMat);
+        pchAccent.position.set(3.8, 0.44, 2.8);
+        pchGroup.add(pchAccent);
+        boardGroup.add(pchGroup);
+        componentAnchors.chipset = new THREE.Vector3(3.8, 0.85, 2.8);
+        tagInteractive(pchGroup, 'chipset');
+
+        const cpuGroup = new THREE.Group();
+        cpuGroup.position.set(-1.3, 0, -1.35);
+        boardGroup.add(cpuGroup);
+        // Socket ILM Frame
+        const cpuSocket = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.16, 2.35), matDarkPlastic);
+        cpuSocket.position.y = 0.08;
+        cpuGroup.add(cpuSocket);
+        const ilmFrame = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.18, 2.05), matAlum);
+        ilmFrame.position.y = 0.14;
+        cpuGroup.add(ilmFrame);
+        const cpuSubstrate = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.12, 1.78), new THREE.MeshStandardMaterial({ color: 0x0b2e2c, roughness: 0.4 }));
+        cpuSubstrate.position.y = 0.22;
+        cpuGroup.add(cpuSubstrate);
+
+        // 8 Individual Active 3D Cores on Silicon Die (4x2)
+        for (let i = 0; i < 8; i++) {
+          const col = i % 4;
+          const row = Math.floor(i / 4);
+          const cMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.35, roughness: 0.25 });
+          const cMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.56), cMat);
+          cMesh.position.set(-0.56 + col * 0.37, 0.32, -0.34 + row * 0.68);
+          cpuGroup.add(cMesh);
+          coreMeshes.push({ mesh: cMesh, mat: cMat });
+        }
+
+        // 1) Box Cooler (Compact circular aluminum)
+        boxCoolerGroup = new THREE.Group();
+        const boxBase = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.08, 0.42, 24), matAlum);
+        boxBase.position.y = 0.54;
+        boxBase.castShadow = true;
+        boxCoolerGroup.add(boxBase);
+        const boxFan = createSpinningFan(0.95, 9, 0x38bdf8);
+        boxFan.position.y = 0.78;
+        boxCoolerGroup.add(boxFan);
+        cpuGroup.add(boxCoolerGroup);
+
+        // 2) Tower Cooler (Tall dual-fin heatsink + copper heatpipes)
+        towerCoolerGroup = new THREE.Group();
+        const towerStack = createFinHeatsink(1.75, 1.25, 1.55, 14);
+        towerStack.position.y = 0.36;
+        towerCoolerGroup.add(towerStack);
+        for (let p = -1; p <= 1; p += 2) {
+          const hp = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.35, 10), matCopper);
+          hp.position.set(p * 0.45, 0.98, 0.65);
+          towerCoolerGroup.add(hp);
+        }
+        const towerFan = createSpinningFan(0.75, 9, 0x38bdf8);
+        towerFan.rotation.z = Math.PI / 2;
+        towerFan.position.set(0.96, 1.05, 0);
+        towerCoolerGroup.add(towerFan);
+        cpuGroup.add(towerCoolerGroup);
+
+        // 3) AIO Watercooling (Pump block + tubes + side radiator)
+        aioCoolerGroup = new THREE.Group();
+        const pumpBlock = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.86, 0.45, 28), matGunmetal);
+        pumpBlock.position.y = 0.54;
+        pumpBlock.castShadow = true;
+        aioCoolerGroup.add(pumpBlock);
+        const pumpRing = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.04, 10, 28), new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.45 }));
+        pumpRing.rotation.x = Math.PI / 2;
+        pumpRing.position.y = 0.78;
+        aioCoolerGroup.add(pumpRing);
+        // Radiator on top edge of motherboard
+        const aioRad = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.55, 1.1), matGunmetal);
+        aioRad.position.set(0, 1.25, -2.55);
+        aioRad.castShadow = true;
+        aioCoolerGroup.add(aioRad);
+        for (let f = -1; f <= 1; f += 2) {
+          const rFan = createSpinningFan(0.52, 9, 0x38bdf8);
+          rFan.position.set(f * 0.95, 1.56, -2.55);
+          aioCoolerGroup.add(rFan);
+        }
+        // Tubes connecting pump to radiator
+        for (let t = -1; t <= 1; t += 2) {
+          const tubeCurve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(t * 0.3, 0.65, -0.6),
+            new THREE.Vector3(t * 0.45, 1.1, -1.5),
+            new THREE.Vector3(t * 0.4, 1.25, -2.1)
+          ]);
+          const tube = new THREE.Mesh(new THREE.TubeGeometry(tubeCurve, 16, 0.06, 8, false), matDarkPlastic);
+          aioCoolerGroup.add(tube);
+        }
+        cpuGroup.add(aioCoolerGroup);
+
+        componentAnchors.cpu = new THREE.Vector3(-1.3, 1.45, -1.35);
+        tagInteractive(cpuGroup, 'cpu');
+
+        const ramGroup = new THREE.Group();
+        ramGroup.position.set(1.65, 0, -1.35);
+        boardGroup.add(ramGroup);
+        for (let i = 0; i < 4; i++) {
+          const slotX = -0.54 + i * 0.36;
+          const slot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 3.15), matDarkPlastic);
+          slot.position.set(slotX, 0.07, 0);
+          ramGroup.add(slot);
+
+          const stickGroup = new THREE.Group();
+          const stick = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.92, 2.95), matGunmetal);
+          stick.position.set(slotX, 0.54, 0);
+          stick.castShadow = true;
+          stickGroup.add(stick);
+          const barMat = new THREE.MeshStandardMaterial({ color: 0xd99b43, emissive: 0xd99b43, emissiveIntensity: 0.38, roughness: 0.2 });
+          const lightBar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 2.92), barMat);
+          lightBar.position.set(slotX, 1.02, 0);
+          stickGroup.add(lightBar);
+          ramGroup.add(stickGroup);
+          ramStickGroups.push(stickGroup);
+          ramLightBars.push(barMat);
+        }
+        componentAnchors.ram = new THREE.Vector3(1.65, 1.3, -1.35);
+        tagInteractive(ramGroup, 'ram');
+
+        const ssdGroup = new THREE.Group();
+        ssdGroup.position.set(0.15, 0, 0.65);
+        boardGroup.add(ssdGroup);
+
+        nvmeGroup = new THREE.Group();
+        const m2Slot = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.16, 0.72), matDarkPlastic);
+        m2Slot.position.set(-1.35, 0.08, 0);
+        nvmeGroup.add(m2Slot);
+        const ssdPcb = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.07, 0.68), matDarkPlastic);
+        ssdPcb.position.set(0, 0.16, 0);
+        nvmeGroup.add(ssdPcb);
+        const ssdHeatsink = createFinHeatsink(2.2, 0.36, 0.66, 10);
+        ssdHeatsink.position.set(0.1, 0.19, 0);
+        nvmeGroup.add(ssdHeatsink);
+        ssdLedMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.5 });
+        const ssdLed = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.45), ssdLedMat);
+        ssdLed.position.set(-1.1, 0.24, 0);
+        nvmeGroup.add(ssdLed);
+        ssdGroup.add(nvmeGroup);
+
+        // HDD 3.5" Mechanical Drive representation
+        hddGroup = new THREE.Group();
+        const hddBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.52, 1.65), matGunmetal);
+        hddBody.position.set(0, 0.26, 0);
+        hddBody.castShadow = true;
+        hddGroup.add(hddBody);
+        const hddPlatter = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.06, 24), matAlum);
+        hddPlatter.position.set(-0.25, 0.54, 0);
+        hddGroup.add(hddPlatter);
+        hddGroup.visible = false;
+        ssdGroup.add(hddGroup);
+
+        componentAnchors.ssd = new THREE.Vector3(0.15, 0.8, 0.65);
+        tagInteractive(ssdGroup, 'ssd');
+
+        const gpuGroup = new THREE.Group();
+        gpuGroup.position.set(-0.65, 0, 2.35);
+        boardGroup.add(gpuGroup);
+        const pcieSlot = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.22, 0.32), matAlum);
+        pcieSlot.position.set(-0.4, 0.11, 0);
+        gpuGroup.add(pcieSlot);
+        const gpuBody = new THREE.Mesh(new THREE.BoxGeometry(6.4, 1.48, 1.05), matGunmetal);
+        gpuBody.position.set(0, 0.96, 0);
+        gpuBody.castShadow = true;
+        gpuGroup.add(gpuBody);
+        const gpuTopPlate = new THREE.Mesh(new THREE.BoxGeometry(6.42, 0.1, 1.07), matAlum);
+        gpuTopPlate.position.set(0, 1.72, 0);
+        gpuGroup.add(gpuTopPlate);
+        for (let i = 0; i < 3; i++) {
+          const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 5.8, 12), matCopper);
+          pipe.rotation.z = Math.PI / 2;
+          pipe.position.set(0, 0.45 + i * 0.22, 0.53);
+          gpuGroup.add(pipe);
+        }
+        gpuLedMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.4 });
+        const gpuLed = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.09, 0.05), gpuLedMat);
+        gpuLed.position.set(-0.5, 1.56, 0.54);
+        gpuGroup.add(gpuLed);
+        for (let i = -1; i <= 1; i++) {
+          const gFan = createSpinningFan(0.56, 9, 0x38bdf8);
+          gFan.rotation.x = Math.PI / 2;
+          gFan.position.set(i * 1.85, 0.96, 0.56);
+          gpuGroup.add(gFan);
+        }
+        componentAnchors.gpu = new THREE.Vector3(-0.65, 2.0, 2.35);
+        tagInteractive(gpuGroup, 'gpu');
+      }
+
+      function buildBuses() {
+        const endpoints = {
+          ssd: new THREE.Vector3(0.15, 0.28, 0.65),
+          ram: new THREE.Vector3(1.65, 0.36, -1.35),
+          cpu: new THREE.Vector3(-1.3, 0.36, -1.35),
+          gpu: new THREE.Vector3(-0.65, 0.36, 2.35),
+          chipset: new THREE.Vector3(3.8, 0.28, 2.8)
+        };
+        const pairs = [
+          { key: 'cpu-ram', a: 'cpu', b: 'ram', color: 0x38bdf8, arc: 0.22 },
+          { key: 'cpu-chipset', a: 'cpu', b: 'chipset', color: 0x38bdf8, arc: 0.26 },
+          { key: 'ssd-chipset', a: 'ssd', b: 'chipset', color: 0x22c55e, arc: 0.22 },
+          { key: 'chipset-ram', a: 'chipset', b: 'ram', color: 0xf59e0b, arc: 0.28 },
+          { key: 'cpu-gpu', a: 'cpu', b: 'gpu', color: 0xfbbf24, arc: 0.30 }
+        ];
+        pairs.forEach((bp) => {
+          const start = endpoints[bp.a].clone();
+          const end = endpoints[bp.b].clone();
+          const mid = start.clone().lerp(end, 0.5);
+          mid.y += bp.arc;
+          const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+          const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.036, 8, false);
+          const tubeMat = new THREE.MeshStandardMaterial({
+            color: bp.color, emissive: bp.color, emissiveIntensity: 0.25, transparent: true, opacity: 0.55, roughness: 0.3
+          });
+          const mesh = new THREE.Mesh(tubeGeo, tubeMat);
+          mesh.userData.hwKey = 'bus';
+          mesh.userData.busKey = bp.key;
+          interactiveMeshes.push(mesh);
+          scene.add(mesh);
+          buses[bp.key] = { curve, mat: tubeMat, baseColor: new THREE.Color(bp.color) };
+        });
+      }
+
+      function buildLabels() {
+        const meta = [
+          { key: 'cpu', title: 'CPU', stat: '38°C' },
+          { key: 'ram', title: 'ОЗП (DDR5)', stat: '13%' },
+          { key: 'ssd', title: 'SSD (Склад)', stat: 'OK' },
+          { key: 'gpu', title: 'GPU', stat: '60 FPS' },
+          { key: 'chipset', title: 'Чипсет', stat: 'DMI' }
+        ];
+        meta.forEach(m => {
+          const el = document.createElement('div');
+          el.className = 'hw-label-3d';
+          el.innerHTML = `<span class="lbl-dot"></span><span class="lbl-name">${m.title}</span><span class="lbl-stat mono">${m.stat}</span>`;
+          el.addEventListener('click', () => { if (onSelect) onSelect(m.key); });
+          labelsLayer.appendChild(el);
+          labelEls[m.key] = el;
+        });
+      }
+
+      const packetGeo = new THREE.SphereGeometry(0.09, 12, 12);
+      const haloGeo = new THREE.SphereGeometry(0.16, 10, 10);
+
+      function syncPackets() {
+        const HW = window.PCSim.Hardware;
+        const s = HW.state;
+        const speedMul = s.speedMode === 'slow' ? 0.38 : 1.0;
+
+        for (let i = s.packets.length - 1; i >= 0; i--) {
+          const p = s.packets[i];
+          if (!p._mesh3d) {
+            const bus = buses[p.bus];
+            if (!bus) { s.packets.splice(i, 1); continue; }
+            const col = new THREE.Color(p.color || '#38bdf8');
+            const g = new THREE.Group();
+            const core = new THREE.Mesh(packetGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+            const halo = new THREE.Mesh(haloGeo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.55 }));
+            g.add(core, halo);
+            scene.add(g);
+            p._mesh3d = g;
+            p._curve = bus.curve;
+          }
+
+          p.t += p.speed * speedMul;
+          const u = Math.max(0, Math.min(1, p.reverse ? 1 - p.t : p.t));
+          p._mesh3d.position.copy(p._curve.getPointAt(u));
+
+          if (p.t >= 1) {
+            scene.remove(p._mesh3d);
+            if (p.onArrive) p.onArrive();
+            s.packets.splice(i, 1);
+          }
+        }
+      }
+
+      function updateLabels() {
+        if (!labelsLayer || !container) return;
+        const HW = window.PCSim.Hardware;
+        const s = HW.state;
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        const v = new THREE.Vector3();
+
+        Object.entries(componentAnchors).forEach(([key, anchor]) => {
+          const el = labelEls[key];
+          if (!el) return;
+          v.copy(anchor).project(camera);
+          if (v.z > 1) { el.style.opacity = '0'; return; }
+          el.style.left = `${(v.x * 0.5 + 0.5) * w}px`;
+          el.style.top = `${(-v.y * 0.5 + 0.5) * h}px`;
+          el.style.opacity = '1';
+
+          const statEl = el.querySelector('.lbl-stat');
+          if (key === 'cpu') statEl.textContent = `${Math.round(s.cpuTemp)}°C • ${Math.round(s.cpuLoad)}%`;
+          else if (key === 'ram') statEl.textContent = `${Math.round(s.ramPct)}% (${s.ramMax} ГБ)`;
+          else if (key === 'ssd') statEl.textContent = s.isOverflow ? 'SWAP!' : (s.config.diskType === 'hdd' ? 'HDD' : 'NVMe');
+          else if (key === 'gpu') statEl.textContent = `${Math.round(s.fps)} FPS`;
+          else if (key === 'chipset') statEl.textContent = `${s.busThroughput.toFixed(1)} ГБ/с`;
+
+          el.classList.toggle('throttled', s.isOverflow && (key === 'ram' || key === 'ssd' || key === 'cpu'));
+          el.classList.toggle('active', s.selectedPart === key);
+        });
+      }
+
+      function render() {
+        if (!renderer) return;
+        const HW = window.PCSim.Hardware;
+        const s = HW.state;
+
+        if (dustPoints) {
+          dustPoints.rotation.y += 0.00035;
+        }
+
+        if (s.powered) {
+          syncPackets();
+          const cpuSpin = 0.08 + (s.fanRpm / 3800) * 0.25;
+          const gpuSpin = 0.05 + (s.gpuLoad / 100) * 0.22;
+          fans.forEach((f, idx) => {
+            // Fans 0,1,2,3 are CPU coolers (box, tower, aio x2), rest are GPU
+            const isGpu = idx >= fans.length - 3;
+            f.rotor.rotation.y += isGpu ? gpuSpin : cpuSpin;
+            if (s.isOverflow) {
+              f.ringMat.color.setHex(0xef4444);
+              f.ringMat.emissive.setHex(0xef4444);
+            } else {
+              f.ringMat.color.copy(f.baseColor);
+              f.ringMat.emissive.copy(f.baseColor);
+            }
+          });
+
+          // Show/hide coolers: xrayCpu removes cooling completely!
+          if (boxCoolerGroup) boxCoolerGroup.visible = !s.xrayCpu && s.config.coolerType === 'box';
+          if (towerCoolerGroup) towerCoolerGroup.visible = !s.xrayCpu && s.config.coolerType === 'tower';
+          if (aioCoolerGroup) aioCoolerGroup.visible = !s.xrayCpu && s.config.coolerType === 'aio';
+
+          // Show/hide RAM sticks (4GB = 1 stick, 16/32GB = 4 sticks)
+          ramStickGroups.forEach((sg, i) => {
+            sg.visible = s.config.ramGb === 4 ? i === 0 : true;
+          });
+
+          // Show/hide NVMe vs HDD
+          if (nvmeGroup) nvmeGroup.visible = s.config.diskType === 'nvme';
+          if (hddGroup) hddGroup.visible = s.config.diskType === 'hdd';
+
+          // Animate 8 individual CPU cores
+          coreMeshes.forEach((cm, i) => {
+            const load = s.cpuCores[i] || 5;
+            const col = load > 78 ? 0xef4444 : load > 45 ? 0xf59e0b : 0x38bdf8;
+            cm.mat.color.setHex(col);
+            cm.mat.emissive.setHex(col);
+            cm.mat.emissiveIntensity = 0.25 + (load / 100) * 0.9;
+            cm.mesh.scale.y = 0.8 + (load / 100) * 0.6;
+          });
+
+          ramLightBars.forEach(mat => {
+            const col = s.isOverflow ? 0xef4444 : 0xd99b43;
+            mat.color.setHex(col);
+            mat.emissive.setHex(col);
+          });
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+        updateLabels();
+      }
+
+      return { init, render, resetCamera };
+    })();
+
+    window.dispatchEvent(new Event('pcsim-3d-ready'));
+  </script>
+</body>
+</html>
