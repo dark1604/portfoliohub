@@ -276,6 +276,96 @@
     .toc-link.active { color: #6366f1; border-color: #6366f1; }
     html.dark .toc-link.active { color: #a5b4fc; border-color: #818cf8; }
 
+    /* ===================== WOW-ЕФЕКТ: AURORA MESH & BENTO ===================== */
+    .aurora-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .aurora-orb {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(110px);
+      opacity: 0.28;
+      animation: auroraFloat 18s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    html:not(.dark) .aurora-orb { opacity: 0.16; }
+    .aurora-orb-1 {
+      width: 520px; height: 520px;
+      top: -140px; left: -100px;
+      background: radial-gradient(circle, #6366f1, transparent 70%);
+    }
+    .aurora-orb-2 {
+      width: 480px; height: 480px;
+      top: 12%; right: -120px;
+      background: radial-gradient(circle, #0ea5e9, transparent 70%);
+      animation-delay: -6s;
+    }
+    .aurora-orb-3 {
+      width: 440px; height: 440px;
+      bottom: -140px; left: 32%;
+      background: radial-gradient(circle, #f59e0b, transparent 70%);
+      opacity: 0.16;
+      animation-delay: -11s;
+    }
+    @keyframes auroraFloat {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(40px, -30px, 0) scale(1.12); }
+    }
+
+    .wow-gradient-text {
+      background: linear-gradient(120deg, #6366f1 0%, #a855f7 35%, #38bdf8 70%, #f59e0b 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmerText 8s linear infinite;
+    }
+    @keyframes shimmerText {
+      to { background-position: 200% center; }
+    }
+
+    .bento-card {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease, box-shadow 0.35s ease;
+    }
+    .bento-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.45), rgba(56, 189, 248, 0.25), rgba(245, 158, 11, 0.35));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .bento-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 22px 45px -12px rgba(99, 102, 241, 0.22);
+    }
+    html.dark .bento-card:hover {
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.7), 0 0 32px -8px rgba(99, 102, 241, 0.25);
+    }
+    .bento-card:hover::after { opacity: 1; }
+
+    .nav-pill-active {
+      border-color: rgba(99, 102, 241, 0.65) !important;
+      background: rgba(99, 102, 241, 0.12) !important;
+      color: #6366f1 !important;
+    }
+    html.dark .nav-pill-active {
+      color: #a5b4fc !important;
+      background: rgba(99, 102, 241, 0.2) !important;
+    }
+
     @media print {
       header, #hubBar, #hubSidebar, #tocPane, #readerNav, footer { display: none !important; }
       body { background: #fff !important; color: #000 !important; }
@@ -284,6 +374,13 @@
 </head>
 
 <body class="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500/20">
+
+  <!-- Атмосферне фонове світіння (Aurora Mesh) -->
+  <div class="aurora-bg" aria-hidden="true">
+    <div class="aurora-orb aurora-orb-1"></div>
+    <div class="aurora-orb aurora-orb-2"></div>
+    <div class="aurora-orb aurora-orb-3"></div>
+  </div>
 
   <!-- ======================================================================
        ШАПКА (STICKY NAVBAR)
@@ -306,11 +403,11 @@
 
       <!-- Динамічні посилання та інструменти -->
       <div class="flex items-center gap-2">
-        <a href="#/simulators" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-amber-500/50 hover:text-amber-600 dark:hover:text-amber-400 transition-all font-tech">
+        <a href="#/simulators" id="navSimulatorsBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-amber-500/50 hover:text-amber-600 dark:hover:text-amber-400 transition-all font-tech">
           <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           <span>Симулятори</span>
         </a>
-        <a href="#/projects" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-tech">
+        <a href="#/projects" id="navProjectsBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-tech">
           <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
           <span>Мої проєкти</span>
         </a>
@@ -360,10 +457,10 @@
             <span class="text-zinc-600 dark:text-zinc-300">Сердюк Богдан Романович</span>
           </div>
 
-          <h1 class="text-4xl sm:text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.08]">
+          <h1 class="text-4xl sm:text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.06]">
             Вчимо мислити<br />
-            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-violet-500 to-amber-500">
-              як <span id="heroRoleFlip" class="role-flipper text-indigo-600 dark:text-indigo-400 font-tech">інженер</span>
+            <span class="wow-gradient-text">
+              як <span id="heroRoleFlip" class="role-flipper font-tech">інженер</span>
             </span>
           </h1>
 
@@ -490,6 +587,140 @@
           <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">3D-моделі, Python та реальні задачі</div>
         </div>
 
+      </div>
+    </section>
+
+    <!-- ---------- BENTO SHOWCASE: 3D-СИМУЛЯТОРИ ТА ПРЕДМЕТНІ НАПРЯМКИ ---------- -->
+    <section id="bentoShowcase" class="relative z-10 w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-10 sm:py-14 reveal-on-scroll">
+      <div class="max-w-6xl mx-auto space-y-8">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-tech">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+              <span>3D Лабораторії · Інтерактив</span>
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Віртуальні симулятори нового покоління</h2>
+            <p class="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl">
+              Досліджуйте мережеві пакети, машинний код та архітектуру комп'ютера наживо прямо у браузері — без встановлення програм.
+            </p>
+          </div>
+          <a href="#/simulators" class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold font-tech bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:scale-[1.03] transition-transform shadow-lg">
+            <span>Усі симулятори</span>
+            <span>→</span>
+          </a>
+        </div>
+
+        <!-- 3 Bento-картки симуляторів -->
+        <div class="grid md:grid-cols-3 gap-5">
+          <!-- 1. OneClick Network Lab -->
+          <a href="./simulators/one-click-network-lab/index.html" target="_blank" rel="noopener noreferrer" class="bento-card glass-panel rounded-3xl p-6 flex flex-col justify-between group">
+            <div class="space-y-4">
+              <div class="relative h-28 rounded-2xl bg-gradient-to-br from-sky-500/20 via-indigo-500/10 to-transparent border border-sky-500/20 overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 grid-pattern opacity-60"></div>
+                <svg class="w-24 h-16 text-sky-400 relative z-10 group-hover:scale-110 transition-transform duration-500" viewBox="0 0 120 64" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="20" cy="32" r="8" fill="rgba(56,189,248,0.2)"/>
+                  <circle cx="60" cy="16" r="8" fill="rgba(99,102,241,0.25)"/>
+                  <circle cx="60" cy="48" r="8" fill="rgba(56,189,248,0.2)"/>
+                  <circle cx="100" cy="32" r="8" fill="rgba(16,185,129,0.25)"/>
+                  <path d="M28 29L52 19M28 35L52 45M68 19L92 29M68 45L92 35" stroke-dasharray="4 3"/>
+                </svg>
+                <span class="absolute top-2.5 right-2.5 font-tech text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30">LIVE 3D</span>
+              </div>
+              <div>
+                <div class="font-tech text-[11px] text-sky-500 mb-1">LAN → WAN · Three.js</div>
+                <h3 class="text-lg font-bold group-hover:text-sky-400 transition-colors">OneClick Network Lab</h3>
+                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                  Шлях одного кліку: DNS, NAT, маршрутизація пакетів, VPN-тунель та брандмауер у 3D.
+                </p>
+              </div>
+            </div>
+            <div class="pt-4 mt-4 border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-between text-xs font-tech text-sky-500 font-semibold">
+              <span>Запустити лабораторію</span>
+              <span class="group-hover:translate-x-1 transition-transform">↗</span>
+            </div>
+          </a>
+
+          <!-- 2. Machine Language 3D -->
+          <a href="./simulators/machine-language-3d/index.html" target="_blank" rel="noopener noreferrer" class="bento-card glass-panel rounded-3xl p-6 flex flex-col justify-between group">
+            <div class="space-y-4">
+              <div class="relative h-28 rounded-2xl bg-gradient-to-br from-violet-500/20 via-fuchsia-500/10 to-transparent border border-violet-500/20 overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 grid-pattern opacity-60"></div>
+                <div class="relative z-10 font-tech text-sm sm:text-base font-bold tracking-widest text-violet-400 group-hover:scale-105 transition-transform duration-500">
+                  01001011 · 10110100
+                </div>
+                <span class="absolute top-2.5 right-2.5 font-tech text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/30">3D LAB</span>
+              </div>
+              <div>
+                <div class="font-tech text-[11px] text-violet-400 mb-1">Сигнали · Двійковий код</div>
+                <h3 class="text-lg font-bold group-hover:text-violet-400 transition-colors">Machine Language 3D</h3>
+                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                  Перекладач на мову машин: кодування сигналів, бінарна логіка та машинні інструкції.
+                </p>
+              </div>
+            </div>
+            <div class="pt-4 mt-4 border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-between text-xs font-tech text-violet-400 font-semibold">
+              <span>Запустити лабораторію</span>
+              <span class="group-hover:translate-x-1 transition-transform">↗</span>
+            </div>
+          </a>
+
+          <!-- 3. PC Architecture Sim -->
+          <a href="./simulators/pc-architecture-sim/index.html" target="_blank" rel="noopener noreferrer" class="bento-card glass-panel rounded-3xl p-6 flex flex-col justify-between group">
+            <div class="space-y-4">
+              <div class="relative h-28 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-transparent border border-amber-500/20 overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 grid-pattern opacity-60"></div>
+                <svg class="w-16 h-16 text-amber-400 relative z-10 group-hover:rotate-6 group-hover:scale-110 transition-transform duration-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="7" y="7" width="10" height="10" rx="2" fill="rgba(245,158,11,0.18)"/>
+                  <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+                </svg>
+                <span class="absolute top-2.5 right-2.5 font-tech text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">X-RAY OS</span>
+              </div>
+              <div>
+                <div class="font-tech text-[11px] text-amber-400 mb-1">KiberOS 12 · CPU / RAM / SSD</div>
+                <h3 class="text-lg font-bold group-hover:text-amber-400 transition-colors">PC Architecture Sim</h3>
+                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                  Логістичний центр ПК: віртуальна ОС, X-Ray плата, Swap та цикл Fetch → Decode → Execute.
+                </p>
+              </div>
+            </div>
+            <div class="pt-4 mt-4 border-t border-zinc-200/60 dark:border-zinc-800/80 flex items-center justify-between text-xs font-tech text-amber-400 font-semibold">
+              <span>Запустити лабораторію</span>
+              <span class="group-hover:translate-x-1 transition-transform">↗</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Швидкий доступ до предметів -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <a href="#/hub/9/cs" class="bento-card glass-panel rounded-2xl p-4 flex items-center gap-3 group">
+            <span class="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center text-lg">💻</span>
+            <div class="min-w-0">
+              <div class="text-sm font-bold truncate group-hover:text-sky-400 transition-colors">Інформатика</div>
+              <div class="text-[11px] text-zinc-500 font-tech truncate">Python · JS · SQL</div>
+            </div>
+          </a>
+          <a href="#/hub/8/alg" class="bento-card glass-panel rounded-2xl p-4 flex items-center gap-3 group">
+            <span class="w-10 h-10 rounded-xl bg-violet-500/15 text-violet-400 flex items-center justify-center text-lg">📐</span>
+            <div class="min-w-0">
+              <div class="text-sm font-bold truncate group-hover:text-violet-400 transition-colors">Алгебра</div>
+              <div class="text-[11px] text-zinc-500 font-tech truncate">Рівняння · Похідна</div>
+            </div>
+          </a>
+          <a href="#/hub/8/geom" class="bento-card glass-panel rounded-2xl p-4 flex items-center gap-3 group">
+            <span class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-lg">📏</span>
+            <div class="min-w-0">
+              <div class="text-sm font-bold truncate group-hover:text-emerald-400 transition-colors">Геометрія</div>
+              <div class="text-[11px] text-zinc-500 font-tech truncate">Піфагор · Вектори</div>
+            </div>
+          </a>
+          <a href="#/hub/10/fin" class="bento-card glass-panel rounded-2xl p-4 flex items-center gap-3 group">
+            <span class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-lg">💰</span>
+            <div class="min-w-0">
+              <div class="text-sm font-bold truncate group-hover:text-amber-400 transition-colors">Фінграмотність</div>
+              <div class="text-[11px] text-zinc-500 font-tech truncate">Бюджет · Депозити</div>
+            </div>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -2070,7 +2301,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
         .join("");
 
       return `
-        <div class="glass-card glass-panel group rounded-2xl p-6 transition-all duration-200 flex flex-col justify-between">
+        <div class="bento-card glass-card glass-panel group rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between">
           <div class="relative z-10">
             <div class="flex items-center justify-between gap-2 mb-4">
               <div class="w-12 h-12 rounded-xl border ${t.soft} ${t.text} flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -2799,6 +3030,10 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     const readBar = $("#readProgressBar");
 
     if (readBar) readBar.classList.add("hidden");
+    const navSim = $("#navSimulatorsBtn");
+    const navProj = $("#navProjectsBtn");
+    if (navSim) navSim.classList.toggle("nav-pill-active", hash.startsWith("#/simulators"));
+    if (navProj) navProj.classList.toggle("nav-pill-active", hash.startsWith("#/projects"));
 
     // 1. ПРОЄКТИ
     if (hash.startsWith("#/projects")) {
