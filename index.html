@@ -1727,6 +1727,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       desc: "Алгоритми, Python, веб-розробка, бази даних і цифрова безпека.",
       icon: "M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
       books: [
+        { title: "Інформатика, 4 клас (Корнієнко та ін.)", grade: 4, meta: "pidruchnik.com", url: "https://pidruchnik.com/1470-nformatika-kornyenko-4-klas.html" },
         { title: "Інформатика, 5 клас (Ривкінд та ін.)", grade: 5, meta: "pidruchnik.com", url: "https://pidruchnik.com/1653-informatyka-bios-5-klas.html" },
         { title: "Інформатика, 6 клас (Ривкінд та ін.)", grade: 6, meta: "pidruchnik.com", url: "https://pidruchnik.com/2683-informatyka-6-klas-bios.html" },
         { title: "Інформатика, 7 клас (Ривкінд та ін., 2024)", grade: 7, meta: "pidruchnik.com", url: "https://pidruchnik.com/2806-informatyka-bios-7-klas-2024.html" },
@@ -2774,10 +2775,10 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     const t = tone(subject);
     const allowed = GRADE_SUBJECTS[grade] || ["math", "cs"];
 
-    const books = (subj.books || []).filter((b) => b.grade == null || Number(b.grade) === Number(grade));
+    const books = (subj.books || []).filter((b) => (b.grade == null && Number(grade) !== 4) || Number(b.grade) === Number(grade));
     const items = bySubject(subject);
     const lessons = items.filter((a) => a.type === "lesson" && (a.grade == null || Number(a.grade) === Number(grade)));
-    const refs = items.filter((a) => a.type === "ref");
+    const refs = items.filter((a) => a.type === "ref" && !(Number(grade) === 4 && a.id === "cs-ref-python"));
 
     container.innerHTML = `
       <div class="space-y-8 view-enter">
