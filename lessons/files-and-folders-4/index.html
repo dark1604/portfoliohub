@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Файли і папки — Інтерактивний урок (4 клас)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- Top Navigation / Gamified HUD -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">📁</div>
+        <div class="brand-text">
+          <span class="brand-badge">4 КЛАС • СТОР. 43–46</span>
+          <h1>Файли і папки</h1>
+        </div>
+      </div>
+
+      <nav class="mission-nav" aria-label="Навігація по місіях">
+        <button class="nav-pill active" data-target="hero-hook">
+          <span class="pill-num">⚡</span>
+          <span class="pill-label">Старт</span>
+        </button>
+        <button class="nav-pill" data-target="theory-section">
+          <span class="pill-num">📖</span>
+          <span class="pill-label">Теорія</span>
+        </button>
+        <button class="nav-pill" data-target="mission-1">
+          <span class="pill-num">1</span>
+          <span class="pill-label">Ім'я файлу</span>
+        </button>
+        <button class="nav-pill" data-target="mission-2">
+          <span class="pill-num">2</span>
+          <span class="pill-label">Дерево і Шлях</span>
+        </button>
+        <button class="nav-pill" data-target="mission-3">
+          <span class="pill-num">3</span>
+          <span class="pill-label">STEM і Логіка</span>
+        </button>
+        <button class="nav-pill" data-target="mission-4">
+          <span class="pill-num">🏆</span>
+          <span class="pill-label">Бліц-фінал</span>
+        </button>
+      </nav>
+
+      <div class="hud-controls">
+        <div class="xp-pill" title="Твої зароблені бали">
+          <span class="xp-star">⭐</span>
+          <span id="xp-value">0</span>
+          <span class="xp-max">/ 250 XP</span>
+        </div>
+        <button id="sound-toggle" class="icon-btn" title="Увімкнути або вимкнути звуки" aria-pressed="true">
+          🔊
+        </button>
+        <button id="projector-toggle" class="teacher-btn" title="Режим дошки / проєктора (більший шрифт)" aria-pressed="false">
+          🖥️ Дошка
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- SECTION 0: HOOK / WARM-UP -->
+    <section id="hero-hook" class="module-section active">
+      <div class="hero-card">
+        <div class="hero-content">
+          <div class="tag-row">
+            <span class="tag tag-blue">Інтерактивна місія</span>
+            <span class="tag tag-purple">Підручник с. 43–46</span>
+          </div>
+          <h2>Порядок у цифровому світі: рятуємо диск <code class="inline-code">D:\</code>!</h2>
+          <p class="hero-desc">
+            Уяви, що всі твої фотографії, презентації, музика та ігри впали в одну гігантську купу!
+            Щоб комп'ютер миттєво знаходив потрібне, люди вигадали <strong>файли</strong> та <strong>папки (теки)</strong>.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="goToSection('theory-section')">
+              📖 Спочатку теорія
+            </button>
+            <button class="btn btn-ghost" onclick="goToSection('mission-1')">
+              🚀 Одразу до практики
+            </button>
+            <button class="btn btn-ghost" id="btn-warmup-toggle">
+              🧠 Швидка розминка (1 хв)
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="floating-os-card">
+            <div class="os-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="os-preview-tree">
+              <div class="mini-node root">💾 Диск D:\</div>
+              <div class="mini-branch">
+                <div class="mini-node folder">📁 Мої уроки</div>
+                <div class="mini-branch">
+                  <div class="mini-node folder">📁 Інформатика</div>
+                  <div class="mini-branch">
+                    <div class="mini-node file highlight">🖼️ монітор.jpg</div>
+                    <div class="mini-node file">📊 комп’ютер.pptx</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mini-path-bar">
+              <span>Шлях:</span>
+              <code>D:\Мої уроки\Інформатика\монітор.jpg</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive 1-minute Warm-up Drawer -->
+      <div id="warmup-box" class="card warmup-card hidden">
+        <div class="card-header">
+          <h3>⚡ Розминка: Що зберігається у файлах?</h3>
+          <span class="badge-xp">+20 XP</span>
+        </div>
+        <p>Натисни на кожну картку, щоб визначити, чим є цей об'єкт: <strong>Файл</strong> (окремий документ/фото/програма) чи <strong>Папка</strong> (контейнер для порядку).</p>
+        <div class="warmup-grid" id="warmup-grid"></div>
+        <div id="warmup-feedback" class="feedback-banner hidden"></div>
+      </div>
+    </section>
+
+    <!-- SECTION T: INTERACTIVE THEORY (pp. 43-46) -->
+    <section id="theory-section" class="module-section">
+      <div class="section-header">
+        <div>
+          <span class="step-badge">ТЕОРІЯ УРОКУ • СТОРІНКИ 43–46</span>
+          <h2>Вивчаємо: як влаштовані файли та папки</h2>
+        </div>
+        <div class="section-progress">
+          Вивчено карток: <span id="theory-done">1</span>/4 <span class="badge-xp" style="margin-left:6px;">+20 XP</span>
+        </div>
+      </div>
+
+      <div class="theory-tabs" role="tablist" aria-label="Теоретичні картки">
+        <button class="theory-tab active" data-theory-step="0">📄 1. Файл і папка</button>
+        <button class="theory-tab" data-theory-step="1">🏷️ 2. Ім'я та 9 заборон</button>
+        <button class="theory-tab" data-theory-step="2">🌳 3. Дерево папок</button>
+        <button class="theory-tab" data-theory-step="3">🧭 4. Шлях і Провідник</button>
+      </div>
+
+      <!-- Slide 0: File & Folder -->
+      <div class="card theory-slide active" data-theory-panel="0">
+        <div class="theory-grid">
+          <div class="theory-text">
+            <span class="tag tag-blue">Підручник, с. 43</span>
+            <h3>Що таке файл і навіщо потрібні папки?</h3>
+            <p>
+              У зовнішній пам'яті комп'ютера (на дисках, флешках) усі програми, тексти, малюнки та фільми зберігаються у вигляді <strong>файлів</strong>.
+            </p>
+            <div class="theory-callout">
+              <strong>📁 Папка (тека)</strong> — це спеціальний «контейнер», у якому зберігають файли та інші папки, щоб на комп'ютері завжди був порядок.
+            </div>
+            <p class="theory-tip">👉 Натисни на будь-який значок праворуч, щоб дізнатися, який файл він позначає!</p>
+          </div>
+          <div class="theory-visual-box">
+            <div class="icon-legend-grid">
+              <button class="legend-card" onclick="showLegendInfo('📝 Текстовий документ (.docx, .txt) — реферати, задачі, казки.')">
+                <span class="lg-ico">📝</span><strong>Текст</strong><code>.docx</code>
+              </button>
+              <button class="legend-card" onclick="showLegendInfo('🖼️ Зображення (.jpg, .png) — фотографії, малюнки, скріншоти.')">
+                <span class="lg-ico">🖼️</span><strong>Малюнок</strong><code>.jpg / .png</code>
+              </button>
+              <button class="legend-card" onclick="showLegendInfo('📊 Презентація (.pptx) — слайди для виступу на уроці.')">
+                <span class="lg-ico">📊</span><strong>Презентація</strong><code>.pptx</code>
+              </button>
+              <button class="legend-card" onclick="showLegendInfo('🎬 Відео та 🎵 Музика (.mp4, .mp3) — фільми, кліпи, пісні.')">
+                <span class="lg-ico">🎬</span><strong>Медіа</strong><code>.mp4 / .mp3</code>
+              </button>
+            </div>
+            <div id="legend-info-box" class="legend-info-box">
+              Кожен тип даних має свою <strong>піктограму (значок)</strong>, щоб ти одразу впізнавав файл!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 1: Filename Anatomy & 9 Forbidden Symbols -->
+      <div class="card theory-slide" data-theory-panel="1">
+        <div class="theory-grid">
+          <div class="theory-text">
+            <span class="tag tag-purple">Підручник, с. 43</span>
+            <h3>З чого складається ім'я файлу?</h3>
+            <p>
+              Зазвичай ім'я файлу має <strong>дві частини</strong>, розділені крапкою (<code>.</code>):
+            </p>
+            <ul class="theory-list">
+              <li><strong style="color:#2563eb;">Власне ім'я</strong> — дає користувач (ти сам), наприклад <code>моя подорож</code> або <code>myschool</code>.</li>
+              <li><strong style="color:#7c3aed;">Розширення</strong> — автоматично додає програма (наприклад, <code>pptx</code> для PowerPoint, <code>docx</code> для Word).</li>
+            </ul>
+            <div class="theory-callout danger-callout">
+              <strong>⛔ 9 заборонених символів:</strong> <code>\</code> <code>*</code> <code>/</code> <code>:</code> <code>?</code> <code>"</code> <code>&lt;</code> <code>&gt;</code> <code>|</code><br />
+              Їх не можна використовувати в назвах файлів і папок — комп'ютер вважає їх службовими командами!
+            </div>
+          </div>
+          <div class="theory-visual-box">
+            <div class="anatomy-demo">
+              <div class="demo-chip blue-chip" onclick="showAnatomyHint('Власне ім’я описує, що всередині файлу. Його вигадуєш ти!')">
+                <small>Даєш ти</small>
+                <span>моя_подорож</span>
+              </div>
+              <div class="demo-dot" onclick="showAnatomyHint('Крапка завжди розділяє власне ім’я та розширення.')">.</div>
+              <div class="demo-chip purple-chip" onclick="showAnatomyHint('Розширення підказує комп’ютеру, якою програмою відкрити файл!')">
+                <small>Додає програма</small>
+                <span>pptx</span>
+              </div>
+            </div>
+            <div id="anatomy-hint-box" class="legend-info-box">
+              👆 Натисни на будь-яку частину імені <code>моя_подорож.pptx</code>, щоб побачити пояснення.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Nested Folders & Folder Tree -->
+      <div class="card theory-slide" data-theory-panel="2">
+        <div class="theory-grid">
+          <div class="theory-text">
+            <span class="tag tag-blue">Підручник, с. 44</span>
+            <h3>Вкладені папки та «Дерево каталогів»</h3>
+            <p>
+              Уяви, що в папці <code>Фото</code> зібралося багато світлин. Щоб не шукати їх довго, усередині створюють <strong>вкладені папки</strong>!
+            </p>
+            <ul class="theory-list">
+              <li>Папки ще називають <strong>каталогами</strong>.</li>
+              <li>Схему, яка показує, яка папка в якій лежить, називають <strong>деревом папок (деревом каталогів)</strong>.</li>
+              <li>Одні й ті самі фото можна розкласти по-різному: <em>за подіями</em> або <em>за тематикою</em>!</li>
+            </ul>
+          </div>
+          <div class="theory-visual-box">
+            <div class="tree-diagram-demo">
+              <div class="td-root">💾 Диск D:\</div>
+              <div class="td-branch">
+                <div class="td-folder">📁 Мої уроки</div>
+                <div class="td-branch">
+                  <div class="td-folder">📁 Математика → <span class="td-file">📝 задачі.docx</span></div>
+                  <div class="td-folder">📁 Інформатика → <span class="td-file">📊 комп’ютер.pptx</span>, <span class="td-file">🖼️ монітор.jpg</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Full Path & Explorer -->
+      <div class="card theory-slide" data-theory-panel="3">
+        <div class="theory-grid">
+          <div class="theory-text">
+            <span class="tag tag-purple">Підручник, с. 44–45</span>
+            <h3>Повне ім'я (шлях) та Провідник Windows</h3>
+            <p>
+              Щоб точно вказати, де лежить файл, записують його <strong>повне ім'я (шлях до файлу)</strong>:
+            </p>
+            <div class="theory-callout">
+              <strong>Формула шляху:</strong><br />
+              <code>Ім'я диска</code> + <code>послідовність папок</code> + <code>ім'я файлу</code><br />
+              Роздільник між ними — <strong>зворотний слеш</strong> (<code>\</code>).
+            </div>
+            <p>
+              У програмі <strong>Провідник (Цей ПК)</strong> поточний шлях завжди видно у верхньому рядку, а повернутися назад допомагає кнопка <strong>← Назад</strong>.
+            </p>
+          </div>
+          <div class="theory-visual-box">
+            <div class="path-breakdown">
+              <div class="pb-row">
+                <span class="token token-disk">D:</span>
+                <span class="pb-desc">← Ім'я диска</span>
+              </div>
+              <div class="pb-row">
+                <span class="token token-folder">\Мої уроки\Інформатика</span>
+                <span class="pb-desc">← Послідовність папок</span>
+              </div>
+              <div class="pb-row">
+                <span class="token token-file">\монітор.jpg</span>
+                <span class="pb-desc">← Ім'я файлу</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="theory-footer-nav">
+        <button id="theory-prev-btn" class="btn btn-ghost" disabled>← Попередня</button>
+        <div class="theory-dots" id="theory-dots"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="theory-next-btn" class="btn btn-ghost">Наступна →</button>
+          <button class="btn btn-primary" onclick="goToSection('mission-1')">🚀 Перейти до практики (Місія 1) →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: MISSION 1 — ANATOMY OF A FILENAME & FORBIDDEN CHARS (p. 43) -->
+    <section id="mission-1" class="module-section">
+      <div class="section-header">
+        <div>
+          <span class="step-badge">МІСІЯ 1 • СТОРІНКА 43</span>
+          <h2>Анатомія імені файлу та заборонені символи</h2>
+        </div>
+        <div class="section-progress">
+          Завдання: <span id="m1-done">0</span>/2 виконано
+        </div>
+      </div>
+
+      <!-- 1A: Live Filename Scanner -->
+      <div class="card lab-card">
+        <div class="card-header">
+          <div>
+            <h3>🔬 Живий сканер імені файлу</h3>
+            <p class="subtitle">Введи будь-яке ім'я файлу (наприклад: <code>моя_школа.png</code> або <code>привіт?світ.docx</code>) і подивись, як його бачить комп'ютер!</p>
+          </div>
+          <div class="preset-chips">
+            <button class="chip" onclick="setScannerInput('моя_подорож.pptx')">моя_подорож.pptx</button>
+            <button class="chip" onclick="setScannerInput('myschool.docx')">myschool.docx</button>
+            <button class="chip" onclick="setScannerInput('**Світлини**.jpg')">**Світлини**.jpg</button>
+          </div>
+        </div>
+
+        <div class="scanner-workspace">
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="filename-input"
+              class="scanner-input"
+              value="моя_школа.png"
+              maxlength="40"
+              aria-label="Введи ім'я файлу для перевірки"
+            />
+            <span id="scanner-status-pill" class="status-pill valid">✅ Ім'я коректне</span>
+          </div>
+
+          <div class="anatomy-visualizer">
+            <div class="icon-preview-box" id="scanner-icon-box">
+              <div class="file-big-icon" id="scanner-icon">🖼️</div>
+              <div class="file-type-label" id="scanner-type-label">Зображення</div>
+            </div>
+
+            <div class="anatomy-parts">
+              <div class="part-box part-name">
+                <span class="part-title">Власне ім'я (даєш ти)</span>
+                <code id="part-basename">моя_школа</code>
+              </div>
+              <div class="part-dot">.</div>
+              <div class="part-box part-ext">
+                <span class="part-title">Розширення (додає програма)</span>
+                <code id="part-extension">png</code>
+              </div>
+            </div>
+          </div>
+
+          <div id="forbidden-alert" class="forbidden-alert hidden">
+            <strong>⚠️ Знайдено заборонені символи:</strong> <span id="forbidden-found"></span>
+          </div>
+
+          <div class="forbidden-strip">
+            <span class="strip-label">9 заборонених символів (натисни, щоб протестувати):</span>
+            <div class="forbidden-keys" id="forbidden-keys"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1B: Textbook Task p. 43 (6 filenames) -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>🛡️ Перевірка імен із підручника (с. 43)</h3>
+            <p class="subtitle">Які з цих імен можна дати файлам або папкам, а які — ні? Обери для кожної картки!</p>
+          </div>
+          <span class="badge-xp">+60 XP</span>
+        </div>
+
+        <div class="name-check-grid" id="name-check-grid"></div>
+        <div id="m1-complete-banner" class="feedback-banner success hidden">
+          🎉 Чудово! Ти розпізнав усі коректні та заборонені імена з підручника!
+          <button class="btn btn-sm btn-primary" onclick="goToSection('mission-2')">Далі: Дерево папок →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: MISSION 2 — FOLDER TREE, NESTING & EXPLORER (pp. 44-45) -->
+    <section id="mission-2" class="module-section">
+      <div class="section-header">
+        <div>
+          <span class="step-badge">МІСІЯ 2 • СТОРІНКИ 44–45</span>
+          <h2>Дерево папок, вкладеність і шлях до файлу</h2>
+        </div>
+        <div class="section-progress">
+          Квести: <span id="m2-done">0</span>/3 виконано
+        </div>
+      </div>
+
+      <!-- 2A: Synchronized Tree + Windows Explorer Simulator (pp. 44-45) -->
+      <div class="card explorer-lab">
+        <div class="card-header">
+          <div>
+            <h3>🌳 Живе «Дерево каталогів» + Провідник Windows</h3>
+            <p class="subtitle">Клікай по папках у <strong>Дереві</strong> зліва або у вікні <strong>Цей ПК</strong> справа. Спостерігай, як формується <strong>повне ім'я файлу</strong>!</p>
+          </div>
+          <span class="badge-xp">+60 XP</span>
+        </div>
+
+        <!-- Mini Quests Bar (p. 45 practice) -->
+        <div class="quest-bar" id="explorer-quests">
+          <div class="quest-info">
+            <span class="quest-label">🎯 Практичне завдання (с. 45):</span>
+            <span id="current-quest-text">Відкрий папку <code>Інформатика</code> та натисни на файл <code>монітор.jpg</code></span>
+          </div>
+          <div class="quest-dots" id="quest-dots"></div>
+        </div>
+
+        <div class="split-explorer">
+          <!-- Left: Visual Folder Tree -->
+          <div class="tree-panel">
+            <div class="panel-title">Дерево папок (каталогів)</div>
+            <div class="tree-container" id="visual-tree"></div>
+          </div>
+
+          <!-- Right: Simulated Windows Explorer -->
+          <div class="win-explorer">
+            <div class="win-titlebar">
+              <div class="win-title">💻 Цей ПК — Провідник</div>
+              <div class="win-controls"><span>—</span><span>□</span><span>×</span></div>
+            </div>
+
+            <div class="win-toolbar">
+              <button id="explorer-back-btn" class="back-btn" title="Кнопка Назад" disabled>
+                ← Назад
+              </button>
+              <div class="address-bar" title="Шлях до поточної папки">
+                <span class="addr-icon">📁</span>
+                <span id="explorer-address">D:\</span>
+              </div>
+            </div>
+
+            <div class="win-body" id="explorer-items"></div>
+
+            <div class="win-statusbar">
+              <span id="explorer-status-count">Елементів: 1</span>
+              <span id="explorer-selected-info">Нічого не вибрано</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Path Anatomy Formula -->
+        <div class="path-formula-box">
+          <div class="formula-title">Повне ім'я (шлях) вибраного об'єкта:</div>
+          <div class="formula-tokens" id="formula-tokens">
+            <span class="token token-disk">D:</span>
+            <span class="token-sep">\</span>
+          </div>
+          <p class="formula-hint">
+            Запам'ятай: ім'я диска та імена папок розділяються <strong>зворотним слешем</strong> (<code>\</code>).
+          </p>
+        </div>
+      </div>
+
+      <!-- 2B: Photo Sorting into Nested Folders (p. 44) -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>📸 Вкладені папки: Упорядкуй папку «Фото» (с. 44)</h3>
+            <p class="subtitle">Фотографії можна сортувати по-різному! Обери спосіб організації та розклади фото по вкладених папках.</p>
+          </div>
+          <div class="mode-switch" role="group" aria-label="Спосіб сортування фото">
+            <button class="switch-btn active" data-sort-mode="events">🎉 За подіями</button>
+            <button class="switch-btn" data-sort-mode="topics">🐾 За тематикою</button>
+          </div>
+        </div>
+
+        <div class="sorter-arena">
+          <div class="unsorted-tray">
+            <div class="tray-title">Несортовані фото (натисни на фото, а потім на папку):</div>
+            <div class="photo-cards" id="photo-tray"></div>
+          </div>
+          <div class="folder-targets" id="folder-targets"></div>
+        </div>
+        <div id="sorter-feedback" class="feedback-banner hidden"></div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: MISSION 3 — COMBINATORICS & STEM CLASSIFICATION TREE (p. 46) -->
+    <section id="mission-3" class="module-section">
+      <div class="section-header">
+        <div>
+          <span class="step-badge">МІСІЯ 3 • СТОРІНКА 46</span>
+          <h2>Комбінаторика та STEM-лабораторія класифікації</h2>
+        </div>
+        <div class="section-progress">
+          Завдання: <span id="m3-done">0</span>/2 виконано
+        </div>
+      </div>
+
+      <!-- 3A: Combinatorics Task (cat/dog x docx/pptx/jpg) -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>🧩 Логічна задача (с. 46): Скільки різних імен файлів?</h3>
+            <p class="subtitle">
+              Ім'я файлу може бути <code>cat</code> або <code>dog</code>, а розширення — <code>docx</code>, <code>pptx</code> або <code>jpg</code>.
+              Склади <strong>усі можливі комбінації</strong>!
+            </p>
+          </div>
+          <div class="combo-counter">
+            Знайдено: <strong id="combo-count">0</strong> / 6
+          </div>
+        </div>
+
+        <div class="combo-builder">
+          <div class="combo-picker">
+            <div class="picker-col">
+              <div class="picker-label">1. Обери власне ім'я:</div>
+              <div class="picker-btns">
+                <button class="pick-btn" data-pick-name="cat">🐱 cat</button>
+                <button class="pick-btn" data-pick-name="dog">🐶 dog</button>
+              </div>
+            </div>
+            <div class="picker-dot">.</div>
+            <div class="picker-col">
+              <div class="picker-label">2. Обери розширення:</div>
+              <div class="picker-btns">
+                <button class="pick-btn" data-pick-ext="docx">📝 docx</button>
+                <button class="pick-btn" data-pick-ext="pptx">📊 pptx</button>
+                <button class="pick-btn" data-pick-ext="jpg">🖼️ jpg</button>
+              </div>
+            </div>
+            <button id="create-combo-btn" class="btn btn-primary" disabled>
+              ➕ Створити файл
+            </button>
+          </div>
+
+          <div class="combo-slots" id="combo-slots"></div>
+        </div>
+        <div id="combo-feedback" class="feedback-banner success hidden">
+          🎉 Бінго! <strong>2 × 3 = 6</strong> різних файлів! (2 імені помножити на 3 розширення = 6 комбінацій!)
+        </div>
+      </div>
+
+      <!-- 3B: STEM Laboratory — Classification Tree (p. 46) -->
+      <div class="card stem-card">
+        <div class="card-header">
+          <div>
+            <h3>🔬 Дослідницька лабораторія (STEM, с. 46): Як класифікувати об'єкти?</h3>
+            <p class="subtitle">
+              Перед тобою 8 фігур: великі (в.) і малі (м.), круги (кр.) і квадрати (кв.), червоні (ч.) і зелені (з.).
+              Побудуй <strong>дерево класифікації</strong>, обираючи ознаки по черзі!
+            </p>
+          </div>
+          <span class="badge-xp">+50 XP</span>
+        </div>
+
+        <div class="stem-controls">
+          <div class="stem-step-box">
+            <label for="prop-1">Крок 1 (головна ознака):</label>
+            <select id="prop-1" class="stem-select">
+              <option value="shape">Форма (Круг / Квадрат)</option>
+              <option value="color">Колір (Червоний / Зелений)</option>
+              <option value="size">Розмір (Великий / Малий)</option>
+            </select>
+          </div>
+          <div class="stem-step-box">
+            <label for="prop-2">Крок 2 (друга ознака):</label>
+            <select id="prop-2" class="stem-select">
+              <option value="color">Колір (Червоний / Зелений)</option>
+              <option value="size">Розмір (Великий / Малий)</option>
+              <option value="shape">Форма (Круг / Квадрат)</option>
+            </select>
+          </div>
+          <div class="stem-step-box">
+            <label for="prop-3">Крок 3 (третя ознака):</label>
+            <select id="prop-3" class="stem-select">
+              <option value="size">Розмір (Великий / Малий)</option>
+              <option value="shape">Форма (Круг / Квадрат)</option>
+              <option value="color">Колір (Червоний / Зелений)</option>
+            </select>
+          </div>
+          <button id="stem-build-btn" class="btn btn-primary">🌿 Побудувати дерево</button>
+        </div>
+
+        <div id="stem-error" class="forbidden-alert hidden">
+          Обери 3 <strong>різні</strong> ознаки для кроків 1, 2 і 3!
+        </div>
+
+        <div class="stem-tree-viewport" id="stem-tree-viewport"></div>
+
+        <div class="stem-insight" id="stem-insight">
+          💡 <strong>STEM-дослідження:</strong> Спробуй змінити порядок ознак (наприклад, спочатку <em>Колір</em>, а не <em>Форма</em>) і подивись на нижній рядок (листя дерева). Чи отримали ми ті самі кінцеві групи?
+          <span id="stem-conclusion" class="hidden">
+            <strong>Так!</strong> Порядок гілок змінюється, але кожна фігура внизу однаково потрапляє у свою унікальну групу!
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: FINAL QUIZ & CELEBRATION -->
+    <section id="mission-4" class="module-section">
+      <div class="section-header">
+        <div>
+          <span class="step-badge">ФІНАЛ УРОКУ</span>
+          <h2>Бліц-челендж: Майстер файлів і папок</h2>
+        </div>
+      </div>
+
+      <div class="card quiz-card" id="quiz-card">
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 20%"></div>
+        </div>
+        <div id="quiz-stage"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Інтерактивний тренажер до підручника «Інформатика, 4 клас» (М. М. Корнієнко та ін., 2026), с. 43–46</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
