@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>А. Кузнєцова — Підприємництво і фінансова грамотність (8–9 класи)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,600;0,700;0,800;0,900;1,700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-author="kuzniecova" data-grade="8" data-section="1">
+  <div id="reading-progress-bar" class="reading-progress-bar" aria-hidden="true"></div>
+
+  <!-- =========================================================
+       TOP STUDIO BAR
+       ========================================================= -->
+  <header class="studio-topbar" id="studio-topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle-btn" aria-label="Відкрити навігатор курсу" aria-expanded="false" aria-controls="course-navigator">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <a href="index.html" class="topbar-back-link" title="До вибору підручників">← Всі підручники</a>
+
+        <div class="topbar-brand">
+          <span class="tilted-badge badge-brand">8–9</span>
+          <div class="brand-text">
+            <span class="brand-kicker">Підручник А. Кузнєцової</span>
+            <strong class="brand-title">Підприємництво і фінансова грамотність</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <div class="grade-switcher" id="grade-switcher" role="group" aria-label="Перемикач класу">
+          <button type="button" class="grade-btn is-active" data-grade-btn="8" aria-pressed="true">
+            8 клас
+          </button>
+          <button type="button" class="grade-btn" data-grade-btn="9" aria-pressed="false">
+            9 клас
+          </button>
+        </div>
+
+        <a href="plastun.html" class="author-switch-pill" title="Перейти до підручника О. Пластун">
+          О. Пластун →
+        </a>
+      </div>
+
+      <div class="mode-tabs" id="mode-tabs" role="tablist" aria-label="Режим перегляду">
+        <button type="button" class="mode-tab is-active" data-mode="map" role="tab" aria-selected="true">
+          Карта курсу
+        </button>
+        <button type="button" class="mode-tab" data-mode="paragraph" role="tab" aria-selected="false">
+          Досвід
+        </button>
+      </div>
+
+      <div class="student-progress" id="student-progress" aria-label="Прогрес учня">
+        <div class="progress-stats">
+          <span id="student-rank" class="student-rank-pill">Рівень 1 • Новачок</span>
+          <span class="progress-stat">
+            <span class="stat-label">Досвіди:</span>
+            <strong id="progress-paragraphs">0 / 15</strong>
+          </span>
+          <span class="progress-stat progress-xp">
+            <strong id="progress-xp">0 XP</strong>
+          </span>
+          <button id="sound-toggle-btn" class="sound-toggle-btn" type="button" aria-pressed="true" title="Звукові ефекти">
+            🔊 Звук
+          </button>
+          <button type="button" class="reset-progress-btn" id="reset-progress-btn" title="Скинути прогрес" aria-label="Скинути прогрес">
+            ↺
+          </button>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="progress-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       APP WORKSPACE (SIDEBAR NAVIGATOR + MAIN INTERACTIVE CANVAS)
+       ========================================================= -->
+  <div class="app-workspace">
+    <aside class="course-navigator" id="course-navigator" aria-label="Навігатор розділів, тем та досвідів">
+      <div class="navigator-header">
+        <div>
+          <span class="nav-eyebrow">Зміст курсу · А. Кузнєцова</span>
+          <h2 class="nav-grade-title" id="nav-grade-label">8 клас</h2>
+        </div>
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Закрити навігатор">
+          ✕
+        </button>
+      </div>
+
+      <div class="navigator-tree" id="navigator-tree">
+        <!-- Динамічно заповнюється з KUZ_GRADE_8_DATA / KUZ_GRADE_9_DATA через app.js -->
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+    <main class="app-main" id="app-main" tabindex="-1" aria-live="polite">
+      <div class="loading-state" id="loading-state">
+        <p>Завантаження матеріалів підручника…</p>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site-footer" aria-label="Інформація про автора">
+    <div class="site-footer-inner">
+      <div class="footer-author">
+        <strong class="footer-author-name">Сердюк Богдан Романович</strong>
+        <span class="footer-author-role">Вчитель інформатики, математики та фінансової грамотності</span>
+      </div>
+
+      <nav class="footer-links" aria-label="Контакти">
+        <a class="footer-link-btn" href="mailto:serdiukcd@gmail.com">serdiukcd@gmail.com</a>
+        <a class="footer-link-btn" href="https://t.me/serka1604" target="_blank" rel="noopener noreferrer">Telegram ↗</a>
+        <a class="footer-link-btn" href="https://github.com/dark1604?tab=repositories" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      </nav>
+
+      <div class="footer-meta">
+        © 2026 · Фінансова грамотність · 8–9 класи
+      </div>
+    </div>
+  </footer>
+
+  <div id="xp-toast-container" class="xp-toast-container" aria-live="polite"></div>
+
+  <script src="data-kuzniecova-8.js"></script>
+  <script src="data-kuzniecova-9.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

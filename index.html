@@ -2622,11 +2622,6 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       if (btn) updatePreview(Number(btn.dataset.portalGrade));
     });
 
-    chipsContainer.addEventListener("mouseover", (e) => {
-      const btn = e.target.closest("[data-portal-grade]");
-      if (btn) updatePreview(Number(btn.dataset.portalGrade));
-    });
-
     updatePreview(activePortalGrade);
   }
 
@@ -2845,6 +2840,27 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
               <a href="#/simulators" class="shrink-0 px-6 py-3.5 rounded-2xl bg-amber-500 text-zinc-950 font-tech font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
                 <span>Відкрити симулятори</span>
                 <span>→</span>
+              </a>
+            </div>
+          </div>
+        ` : ""}
+
+        <!-- ІНТЕРАКТИВНИЙ ПІДРУЧНИК З ФІНАНСОВОЇ ГРАМОТНОСТІ (8–9 КЛАСИ) -->
+        ${subject === "fin" && (Number(grade) === 8 || Number(grade) === 9) ? `
+          <div class="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-emerald-500/15 via-amber-500/5 to-transparent border border-emerald-500/30">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-zinc-950 font-tech">
+                  <span>💰 8–9 класи · О. Пластун та А. Кузнєцова</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100">Інтерактивний підручник</h2>
+                <p class="text-sm text-zinc-600 dark:text-zinc-400 max-w-2xl">
+                  Повний інтерактивний курс підприємництва і фінансової грамотності для ${grade} класу: конспекти, кейси, тренажери та вибір авторської лінії.
+                </p>
+              </div>
+              <a href="./lessons/fin-literacy-8-9/index.html" target="_blank" rel="noopener noreferrer" class="shrink-0 px-6 py-3.5 rounded-2xl bg-emerald-500 text-zinc-950 font-tech font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-emerald-500/20 inline-flex items-center gap-2">
+                <span>Відкрити підручник</span>
+                <span>↗</span>
               </a>
             </div>
           </div>
