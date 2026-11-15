@@ -413,6 +413,10 @@
           <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
           <span>Мої проєкти</span>
         </a>
+        <a href="#/certificates" id="navCertificatesBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 hover:border-emerald-500/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all font-tech">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Сертифікати</span>
+        </a>
         <a href="https://www.classtime.com/uk/" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-colors">
           <span class="w-2 h-2 rounded-full bg-sky-500"></span>ClassTime<span class="text-zinc-400 text-[10px]">↗</span>
         </a>
@@ -483,6 +487,9 @@
             </a>
             <a href="#/projects" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-tech">
               Мої авторські проєкти ⚡
+            </a>
+            <a href="#/certificates" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/60 hover:bg-emerald-500/15 transition-all font-tech">
+              Сертифікати 📜
             </a>
           </div>
         </div>
@@ -839,6 +846,52 @@
     </div>
     <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
       <div id="simulatorsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       ОКРЕМИЙ ПРОСТІР: СЕРТИФІКАТИ ТА НЕФОРМАЛЬНА ОСВІТА
+       ====================================================================== -->
+  <div id="certificatesView" class="hidden flex-1 flex flex-col view-enter">
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <a href="#/" class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline mb-2 font-tech">← На головну</a>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Сертифікати та неформальна освіта</h1>
+          <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">Підвищення кваліфікації, онлайн-курси та професійний розвиток (відсортовано по роках).</p>
+        </div>
+        <div id="certYearFilters" class="flex flex-wrap gap-2 font-tech text-xs"></div>
+      </div>
+    </div>
+
+    <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-10 space-y-12" id="certTimelineContainer"></div>
+  </div>
+
+  <!-- Модальний переглядач сертифіката (Lightbox) -->
+  <div id="certLightbox" class="hidden fixed inset-0 z-50 bg-zinc-950/88 backdrop-blur-md flex flex-col">
+    <div class="px-4 sm:px-6 py-3.5 border-b border-zinc-800/90 flex items-center justify-between gap-4 bg-zinc-950/70">
+      <div class="min-w-0">
+        <div id="certLbTitle" class="font-bold text-sm sm:text-base text-zinc-100 truncate"></div>
+        <div id="certLbMeta" class="font-tech text-xs text-zinc-400 truncate"></div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0 font-tech text-xs">
+        <div id="certLbPageControls" class="hidden items-center gap-1.5 mr-2">
+          <button type="button" id="certLbPagePrev" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 hover:bg-zinc-700 transition-colors">‹</button>
+          <span id="certLbPageInfo" class="px-2 text-zinc-300">1 / 1</span>
+          <button type="button" id="certLbPageNext" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 hover:bg-zinc-700 transition-colors">›</button>
+        </div>
+        <a id="certLbDownload" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors">Оригінал ↗</a>
+        <button type="button" id="certLbClose" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold transition-colors" title="Закрити (Esc)">✕</button>
+      </div>
+    </div>
+
+    <div class="flex-1 relative flex items-center justify-center p-4 sm:p-8 overflow-auto">
+      <button type="button" id="certLbPrev" class="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/85 border border-zinc-700 text-zinc-100 hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center text-lg shadow-xl" title="Попередній (←)">←</button>
+      <div id="certLbStage" class="max-w-5xl max-h-full flex items-center justify-center">
+        <div id="certLbSpinner" class="hidden font-tech text-sm text-zinc-400 animate-pulse">Завантаження сертифіката...</div>
+        <img id="certLbImg" src="" alt="" class="max-h-[82vh] w-auto max-w-full rounded-xl shadow-2xl border border-zinc-800 bg-white object-contain" />
+      </div>
+      <button type="button" id="certLbNext" class="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/85 border border-zinc-700 text-zinc-100 hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center text-lg shadow-xl" title="Наступний (→)">→</button>
     </div>
   </div>
 
@@ -2357,6 +2410,160 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     renderCardGrid($("#simulatorsGrid"), MY_SIMULATORS, "Запустити симулятор ↗");
   }
 
+  /* ==========================================================================
+     8Б. СЕРТИФІКАТИ ТА НЕФОРМАЛЬНА ОСВІТА (ГРУПУВАННЯ ПО РОКАХ · WEBP)
+     ========================================================================== */
+  const CERTIFICATES = [
+    // 2026
+    { year: 2026, date: "18.08.2026", title: "Мрія для освітян: Практичний гід по роботі з системою", org: "Зрозуміло! · МОН", meta: "45 год · 1.5 ЄКТС", file: "2026-08-18_mriia-dlia-osvitian.webp" },
+    { year: 2026, date: "27.04.2026", title: "Протимінна безпека", org: "Дія.Освіта", meta: "0.1 ЄКТС", file: "2026-04-27_protyminna-bezpeka-diia-osvita.webp" },
+    { year: 2026, date: "19.04.2026", title: "НУШ у час змін: математика", org: "Підвищення кваліфікації", meta: "Математика", file: "2026-04-19_nush-u-chas-zmin-matematyka.webp" },
+    { year: 2026, date: "18.03.2026", title: "6 кроків до доброчесності: від теорії до практики", org: "НАЗК", meta: "7 год", file: "2026-03-18_6-krokiv-do-dobrochesnosti.webp" },
+    { year: 2026, date: "18.03.2026", title: "Прозора школа: як побудувати доброчесне середовище", org: "НАЗК", meta: "7 год", file: "2026-03-18_prozora-shkola-dobrochesne-seredovyshche.webp" },
+    { year: 2026, date: "25.02.2026", title: "Інтеграція підприємництва і фінансової грамотності у навчальні предмети НУШ", org: "Видавничий дім «Освіта»", meta: "2 год · 0.07 ЄКТС", file: "2026-02-25_integratsiia-fin-gramotnosti-nush.webp" },
+    { year: 2026, date: "04.02.2026", title: "У поміч учителю: «Підприємництво і фінансова грамотність» у 9 класі", org: "Видавничий дім «Освіта»", meta: "2 год · 0.07 ЄКТС", file: "2026-02-04_osvita-fin-gramotnist-9-klas.webp" },
+    { year: 2026, date: "28.01.2026", title: "Предметно-методична компетентність учителя інформатики", org: "СОІППО", meta: "30 год · 1 ЄКТС", file: "2026-01-28_soippo-kompetentnist-vchytelia-informatyky.webp" },
+    // 2025
+    { year: 2025, date: "09.02.2025", title: "Освітній проєкт «На Урок» — Інтерактивні онлайн-тести", org: "На Урок", meta: "Базовий рівень", file: "2025-02-09_na-urok-bazovyi-riven.webp" },
+    // 2024
+    { year: 2024, date: "15.12.2024", title: "Многокутники у фокусі: сучасний підхід до вивчення", org: "Неформальна освіта", meta: "Геометрія", file: "2024-12-15_mnohokutnyky-u-fokusi.webp" },
+    { year: 2024, date: "15.12.2024", title: "Цифрові інструменти для створення медіапродуктів на уроках інформатики", org: "Неформальна освіта", meta: "Інформатика", file: "2024-12-15_tsyfrovi-instrumenty-mediaprodukty.webp" },
+    { year: 2024, date: "14.12.2024", title: "Зміст і методика навчання інформатичної галузі (7 клас НУШ)", org: "СОІППО", meta: "30 год · 1 ЄКТС", file: "2024-12-14_soippo-nush-informatyka-7-klas.webp" },
+    { year: 2024, date: "17.11.2024", title: "Практичні аспекти у викладанні математики в 5 класах НУШ", org: "Atoms Hub", meta: "2 год · 0.1 ЄКТС", file: "2024-11-17_praktychni-aspekty-matematyka-5-nush.webp" },
+    { year: 2024, date: "27.09.2024", title: "Адміністрування в системі «Єдина школа»", org: "Єдина школа · ТАТЛ Технолоджі", meta: "7 год · 0.2 ЄКТС", file: "2024-09-27_iedyna-shkola-administruvannia.webp" },
+    { year: 2024, date: "27.09.2024", title: "Електронний журнал в системі «Єдина школа»", org: "Єдина школа · ТАТЛ Технолоджі", meta: "7 год · 0.2 ЄКТС", file: "2024-09-27_iedyna-shkola-elektronnyi-zhurnal.webp" },
+    { year: 2024, date: "29.07.2024", title: "Teachers’ Smart Up: Summer Edition 2024", org: "Sigma Software University", meta: "30 год · 1 ЄКТС", file: "2024-07-29_sigma-sertyfikat-teachers-smartup.webp" },
+    { year: 2024, date: "29.07.2024", title: "Teachers’ Smart Up: Додаток до сертифіката", org: "Sigma Software University", meta: "Power BI · JS · IaC", file: "2024-07-29_sigma-dodatok-teachers-smartup.webp" },
+    { year: 2024, date: "09.04.2024", title: "Бути поруч: основи психологічної підтримки", org: "Дія.Освіта", meta: "0.1 ЄКТС", file: "2024-04-09_buty-poruch-psykholohichna-pidtrymka.webp" },
+    { year: 2024, date: "10.03.2024", title: "Навчання під час воєнного стану", org: "Дія.Освіта", meta: "0.1 ЄКТС", file: "2024-03-10_navchannia-pid-chas-voiennoho-stanu.webp" },
+    { year: 2024, date: "10.03.2024", title: "Організація ефективного онлайн-навчання", org: "Дія.Освіта · Grade", meta: "0.1 ЄКТС", file: "2024-03-10_efektyvne-onlain-navchannia.webp" },
+    { year: 2024, date: "10.03.2024", title: "Основи кібергігієни", org: "Дія.Освіта · НАДС", meta: "0.33 ЄКТС", file: "2024-03-10_osnovy-kiberhihiieny.webp" },
+    // 2023
+    { year: 2023, date: "06.11.2023", title: "Ефективна освіта під час війни", org: "Неформальна освіта", meta: "Курс", file: "2023-11-06_efektyvna-osvita-pid-chas-viiny.webp" },
+    { year: 2023, date: "06.11.2023", title: "Цифровий учитель", org: "EdEra · Google.org · UNESCO", meta: "30 год · 1 ЄКТС", file: "2023-11-06_tsyfrovyi-uchytel-edera.webp" },
+    { year: 2023, date: "29.10.2023", title: "Академічна доброчесність", org: "EdEra · SAIUP", meta: "4 год · 0.15 ЄКТС", file: "2023-10-29_akademichna-dobrochesnist.webp" },
+    { year: 2023, date: "28.10.2023", title: "Навчати(ся): що розповісти про доброчесність на уроці", org: "НАЗК", meta: "12 год · 0.33 ЄКТС", file: "2023-10-28_navchatysia-dobrochesnist-na-urotsi.webp" },
+    { year: 2023, date: "21.10.2023", title: "Школа стійкості", org: "EdEra", meta: "30 год · 1 ЄКТС", file: "2023-10-21_shkola-stiikosti-edera.webp" },
+    { year: 2023, date: "07.10.2023", title: "НУШ: Оцінювання", org: "Нова українська школа", meta: "Оцінювання", file: "2023-10-07_nush-otsiniuvannia.webp" },
+    { year: 2023, date: "07.10.2023", title: "Нова українська школа", org: "НУШ", meta: "Сертифікат", file: "2023-10-07_nush-sertyfikat.webp" },
+    { year: 2023, date: "07.10.2023", title: "Цифрограм для вчителів (Високий C1 · 53/63)", org: "Дія.Освіта", meta: "Цифрова грамотність", file: "2023-10-07_tsyfrohram-dlia-vchyteliv-diia.webp" }
+  ];
+
+  let activeCertYear = "all";
+  let lbItems = [];
+  let lbIndex = 0;
+
+  function certFileUrl(file) {
+    return encodeURI(`./sertificates/${file}`);
+  }
+
+  function openCertLightbox(items, idx) {
+    const lb = $("#certLightbox");
+    if (!lb || !items.length) return;
+    lbItems = items;
+    lbIndex = (idx + items.length) % items.length;
+    const item = lbItems[lbIndex];
+    const url = certFileUrl(item.file);
+
+    $("#certLbTitle").textContent = item.title;
+    $("#certLbMeta").textContent = `${item.date} · ${item.org}${item.meta ? " · " + item.meta : ""}`;
+    $("#certLbDownload").href = url;
+
+    const imgEl = $("#certLbImg");
+    const spinner = $("#certLbSpinner");
+    const pageCtrl = $("#certLbPageControls");
+    pageCtrl.classList.add("hidden");
+    pageCtrl.classList.remove("flex");
+    spinner.classList.add("hidden");
+    imgEl.classList.remove("hidden");
+    imgEl.src = url;
+    imgEl.alt = item.title;
+
+    lb.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeCertLightbox() {
+    const lb = $("#certLightbox");
+    if (!lb) return;
+    lb.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+
+  function renderCertificatesView() {
+    const filtersEl = $("#certYearFilters");
+    const container = $("#certTimelineContainer");
+    if (!filtersEl || !container) return;
+
+    const years = [...new Set(CERTIFICATES.map((c) => c.year))].sort((a, b) => b - a);
+    const counts = years.reduce((acc, y) => {
+      acc[y] = CERTIFICATES.filter((c) => c.year === y).length;
+      return acc;
+    }, {});
+
+    filtersEl.innerHTML = [
+      `<button type="button" data-cert-year="all" class="px-3.5 py-1.5 rounded-xl border transition-all ${activeCertYear === "all" ? "bg-indigo-600 text-white border-indigo-600 shadow-sm" : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-indigo-500/50"}">Усі (${CERTIFICATES.length})</button>`,
+      ...years.map((y) => `<button type="button" data-cert-year="${y}" class="px-3.5 py-1.5 rounded-xl border transition-all ${activeCertYear === String(y) ? "bg-indigo-600 text-white border-indigo-600 shadow-sm" : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-indigo-500/50"}">${y} (${counts[y]})</button>`)
+    ].join("");
+
+    const visibleYears = activeCertYear === "all" ? years : years.filter((y) => String(y) === activeCertYear);
+    const filteredList = activeCertYear === "all" ? CERTIFICATES : CERTIFICATES.filter((c) => String(c.year) === activeCertYear);
+
+    container.innerHTML = visibleYears.map((y) => {
+      const yearItems = filteredList.filter((c) => c.year === y);
+      const cardsHtml = yearItems.map((c) => {
+        const globalIdx = filteredList.indexOf(c);
+        const url = certFileUrl(c.file);
+
+        return `
+          <button type="button" data-cert-open="${globalIdx}" class="glass-card glass-panel text-left rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer hover:border-indigo-500/50">
+            <div class="relative aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex items-center justify-center border-b border-zinc-200/70 dark:border-zinc-800/80">
+              <img src="${esc(url)}" loading="lazy" alt="${esc(c.title)}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+              <span class="absolute top-2.5 right-2.5 font-tech text-[10px] px-2 py-0.5 rounded-md bg-zinc-950/75 text-zinc-100 backdrop-blur-sm border border-white/10">WEBP</span>
+              <span class="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-colors"></span>
+            </div>
+            <div class="p-4 flex-1 flex flex-col justify-between gap-3 w-full">
+              <div class="space-y-1">
+                <div class="font-tech text-[11px] text-indigo-600 dark:text-indigo-400">${esc(c.date)} · ${esc(c.org)}</div>
+                <h3 class="font-bold text-sm leading-snug line-clamp-2 group-hover:text-indigo-500 transition-colors">${esc(c.title)}</h3>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-zinc-200/60 dark:border-zinc-800/70 font-tech text-[11px] text-zinc-500">
+                <span>${esc(c.meta)}</span>
+                <span class="text-indigo-500 font-semibold">Переглянути →</span>
+              </div>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      return `
+        <section class="space-y-5">
+          <div class="flex items-center gap-4">
+            <span class="font-tech text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">${y}</span>
+            <span class="px-2.5 py-0.5 rounded-lg font-tech text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">${yearItems.length} сертиф.</span>
+            <span class="flex-1 h-px bg-zinc-200 dark:bg-zinc-800"></span>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            ${cardsHtml}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    container.onclick = (e) => {
+      const btn = e.target.closest("[data-cert-open]");
+      if (btn) openCertLightbox(filteredList, Number(btn.dataset.certOpen));
+    };
+
+    filtersEl.onclick = (e) => {
+      const btn = e.target.closest("[data-cert-year]");
+      if (btn) {
+        activeCertYear = btn.dataset.certYear;
+        renderCertificatesView();
+      }
+    };
+  }
+
   function initTiltCard() {
     const scene = $("#tiltScene");
     const card = $("#heroCard");
@@ -3074,14 +3281,17 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     if (readBar) readBar.classList.add("hidden");
     const navSim = $("#navSimulatorsBtn");
     const navProj = $("#navProjectsBtn");
+    const navCert = $("#navCertificatesBtn");
     if (navSim) navSim.classList.toggle("nav-pill-active", hash.startsWith("#/simulators"));
     if (navProj) navProj.classList.toggle("nav-pill-active", hash.startsWith("#/projects"));
+    if (navCert) navCert.classList.toggle("nav-pill-active", hash.startsWith("#/certificates"));
 
     // 1. ПРОЄКТИ
     if (hash.startsWith("#/projects")) {
       state.view = "projects";
       $("#portfolioView").classList.add("hidden");
       $("#simulatorsView").classList.add("hidden");
+      $("#certificatesView").classList.add("hidden");
       $("#hubView").classList.add("hidden");
       $("#projectsView").classList.remove("hidden");
       renderProjectsView();
@@ -3094,9 +3304,23 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       state.view = "simulators";
       $("#portfolioView").classList.add("hidden");
       $("#projectsView").classList.add("hidden");
+      $("#certificatesView").classList.add("hidden");
       $("#hubView").classList.add("hidden");
       $("#simulatorsView").classList.remove("hidden");
       renderSimulatorsView();
+      window.scrollTo({ top: 0 });
+      return;
+    }
+
+    // 1В. СЕРТИФІКАТИ
+    if (hash.startsWith("#/certificates")) {
+      state.view = "certificates";
+      $("#portfolioView").classList.add("hidden");
+      $("#projectsView").classList.add("hidden");
+      $("#simulatorsView").classList.add("hidden");
+      $("#hubView").classList.add("hidden");
+      $("#certificatesView").classList.remove("hidden");
+      renderCertificatesView();
       window.scrollTo({ top: 0 });
       return;
     }
@@ -3107,6 +3331,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
       $("#portfolioView").classList.add("hidden");
       $("#projectsView").classList.add("hidden");
       $("#simulatorsView").classList.add("hidden");
+      $("#certificatesView").classList.add("hidden");
       $("#hubView").classList.remove("hidden");
 
       const parts = hash.replace(/^#\/hub\/?/, "").split("/").filter(Boolean);
@@ -3170,6 +3395,7 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     $("#hubView").classList.add("hidden");
     $("#projectsView").classList.add("hidden");
     $("#simulatorsView").classList.add("hidden");
+    $("#certificatesView").classList.add("hidden");
     $("#portfolioView").classList.remove("hidden");
     if (wasOther) window.scrollTo({ top: state.portfolioScroll || 0 });
   }
@@ -3214,6 +3440,27 @@ $$S = P(1 + i)^n + M \cdot \frac{(1 + i)^n - 1}{i}, \qquad i = \frac{r}{12}$$
     }, { passive: true });
 
     window.addEventListener("hashchange", syncRoute);
+
+    // Обробники Lightbox для сертифікатів
+    $("#certLbClose")?.addEventListener("click", closeCertLightbox);
+    $("#certLbPrev")?.addEventListener("click", () => openCertLightbox(lbItems, lbIndex - 1, 1));
+    $("#certLbNext")?.addEventListener("click", () => openCertLightbox(lbItems, lbIndex + 1, 1));
+    $("#certLbPagePrev")?.addEventListener("click", () => {
+      if (lbPage > 1) openCertLightbox(lbItems, lbIndex, lbPage - 1);
+    });
+    $("#certLbPageNext")?.addEventListener("click", () => {
+      if (lbPage < lbTotalPages) openCertLightbox(lbItems, lbIndex, lbPage + 1);
+    });
+    $("#certLightbox")?.addEventListener("click", (e) => {
+      if (e.target === $("#certLightbox") || e.target === $("#certLbStage")) closeCertLightbox();
+    });
+    document.addEventListener("keydown", (e) => {
+      const lb = $("#certLightbox");
+      if (!lb || lb.classList.contains("hidden")) return;
+      if (e.key === "Escape") closeCertLightbox();
+      else if (e.key === "ArrowLeft") openCertLightbox(lbItems, lbIndex - 1, 1);
+      else if (e.key === "ArrowRight") openCertLightbox(lbItems, lbIndex + 1, 1);
+    });
   }
 
   document.addEventListener("DOMContentLoaded", init);
