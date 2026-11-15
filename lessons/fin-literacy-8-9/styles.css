@@ -3176,6 +3176,7 @@ body.is-welcome .app-workspace {
   width: 100%;
   padding: 12px 18px;
   border-radius: var(--radius-pill);
+  background-color: #1E2028;
   color: #FFFFFF;
   border: 2px solid #1E2028;
   box-shadow: 0 4px 0 #1E2028;
@@ -3739,6 +3740,14 @@ body.is-welcome .app-workspace {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.author-card-plastun .welcome-enter-btn {
+  background-color: #58AD3A;
+}
+
+.author-card-kuzniecova .welcome-enter-btn {
+  background-color: #B02A7E;
 }
 
 /* Kuzniecova per-topic palette overrides on Course Map */
