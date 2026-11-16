@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dark1604.github.io/portfoliohub/sitemap.xml
